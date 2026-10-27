@@ -1,7 +1,7 @@
 {
-  "name": "sorveteria-erp",
+  "name": "assados",
   "version": "1.0.0",
-  "description": "Sorveteria ERP — backend completo com PDV, produção, RH, financeiro, bot WhatsApp, site, email Outlook/Gmail, export Excel e Word",
+  "description": "ASSADOS ERP — backend completo com PDV, produção, RH, financeiro, bot WhatsApp, site, email Outlook/Gmail, export Excel e Word",
   "main": "server-supabase.js",
   "scripts": {
     "start": "node server-supabase.js",
