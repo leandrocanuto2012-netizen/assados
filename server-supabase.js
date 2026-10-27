@@ -2,7 +2,8 @@
 // ASSADOS ERP — BACKEND COM SUPABASE
 // Configure no Render (env vars):
 //   SUPABASE_URL = https://seu-projeto.supabase.co
-//   SUPABASE_KEY = sua chave anon (ou service_role para acesso total)
+//   SUPABASE_KEY = service_role do projeto (somente como segredo do servidor)
+// Nunca envie SUPABASE_KEY ao navegador, Git, mensagens ou respostas da API.
 // As tabelas devem ser criadas executando sql/01-estrutura-completa.sql
 // Se as env vars não estiverem definidas, usa arquivo local (data.json)
 // =====================================================
@@ -11,6 +12,10 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
+const crypto = require('crypto');
+const { promisify } = require('util');
+const gzipAsync = promisify(zlib.gzip);
 const { createClient } = require('@supabase/supabase-js');
 let nodemailer, XLSX, docx;
 try { nodemailer = require('nodemailer'); } catch(e) { console.log('nodemailer não instalado — email desativado'); }
@@ -22,9 +27,19 @@ const PORT = process.env.PORT || 8080;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const USAR_SUPABASE = !!(SUPABASE_URL && SUPABASE_KEY);
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+const ADMIN_RECOVERY_TOKEN = process.env.ADMIN_RECOVERY_TOKEN || '';
+const BACKUP_ADMIN_TOKEN = process.env.BACKUP_ADMIN_TOKEN || '';
+const BACKUP_DIR = process.env.BACKUP_DIR || (process.env.RENDER_DISK_PATH ? path.join(process.env.RENDER_DISK_PATH, 'backups') : path.join(__dirname, 'backups'));
+const BACKUP_ENABLED = process.env.BACKUP_ENABLED === 'true';
+const BACKUP_STORAGE_PERSISTENT = process.env.BACKUP_STORAGE_PERSISTENT === 'true';
+const BACKUP_INTERVAL_HOURS = Math.min(720, Math.max(1, Number(process.env.BACKUP_INTERVAL_HOURS || 24)));
+const BACKUP_RETENTION = Math.min(90, Math.max(1, Number(process.env.BACKUP_RETENTION || 7)));
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_LOCK_HOURS = 24;
 
 const supabase = USAR_SUPABASE ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-const DATA_FILE = path.join(__dirname, 'data.json');
+const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -41,6 +56,7 @@ app.get('/loja', (req, res) => res.redirect('/site.html'));
 let DB = {};
 const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','pedidos_site','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log'];
 let STATUS_BANCO = { tipo: USAR_SUPABASE ? 'supabase' : 'local', conectado: !USAR_SUPABASE, tabelas_com_erro: [] };
+let backupTimer = null;
 
 async function loadDB() {
   if (USAR_SUPABASE) {
@@ -88,7 +104,100 @@ function saveDB() {
     salvando = false;
   })();
 }
+
+// ===== BACKUP =====
+let backupEmAndamento = false;
+let ultimoBackup = null;
+let erroUltimoBackup = null;
+async function criarBackup() {
+  if (backupEmAndamento) return { sucesso: false, erro: 'Já existe um backup em andamento.' };
+  if (USAR_SUPABASE && !STATUS_BANCO.conectado) return { sucesso: false, erro: 'Banco degradado; backup cancelado para evitar cópia incompleta.' };
+  backupEmAndamento = true;
+  try {
+    await fs.promises.mkdir(BACKUP_DIR, { recursive: true });
+    const criadoEm = agora();
+    let dados;
+    if (USAR_SUPABASE) {
+      const colecoes = {};
+      for (const tabela of TABELAS) {
+        const { data, error } = await supabase.from(tabela).select('*');
+        if (error) throw new Error(`Falha lendo ${tabela}: ${error.message}`);
+        colecoes[tabela] = data || [];
+      }
+      for (const tabela of ['login_security', 'support_tickets']) {
+        const { data, error } = await supabase.from(tabela).select('*');
+        if (error) throw new Error(`Falha lendo ${tabela}: ${error.message}. Execute a migração de segurança antes de habilitar backups.`);
+        colecoes[tabela] = data || [];
+      }
+      const { data: controle, error } = await supabase.from('controle_sistema').select('*').limit(1).maybeSingle();
+      if (error) throw new Error(`Falha lendo controle_sistema: ${error.message}`);
+      colecoes.controle_sistema = controle;
+      dados = { sistema: 'Assados ERP', criado_em: criadoEm, colecoes };
+    } else {
+      const conteudo = await fs.promises.readFile(DATA_FILE, 'utf8');
+      dados = { sistema: 'Assados ERP', criado_em: criadoEm, colecoes: JSON.parse(conteudo) };
+    }
+    const nome = `assados-${criadoEm.replace(/[:.]/g, '-')}.json.gz`;
+    const destino = path.join(BACKUP_DIR, nome);
+    const compactado = await gzipAsync(Buffer.from(JSON.stringify(dados)), { level: 6 });
+    await fs.promises.writeFile(destino, compactado, { flag: 'wx', mode: 0o600 });
+    const arquivos = (await fs.promises.readdir(BACKUP_DIR))
+      .filter(n => /^assados-.*\.json\.gz$/.test(n))
+      .sort();
+    const excedentes = arquivos.slice(0, Math.max(0, arquivos.length - BACKUP_RETENTION));
+    for (const antigo of excedentes) await fs.promises.unlink(path.join(BACKUP_DIR, antigo));
+    ultimoBackup = { nome, criado_em: criadoEm, tamanho_bytes: compactado.length };
+    erroUltimoBackup = null;
+    console.log(`✅ Backup criado: ${nome} (${compactado.length} bytes)`);
+    return { sucesso: true, ...ultimoBackup };
+  } catch (e) {
+    erroUltimoBackup = e.message;
+    console.error('❌ Erro ao criar backup:', e.message);
+    return { sucesso: false, erro: 'Backup falhou. Consulte os logs do servidor.' };
+  } finally { backupEmAndamento = false; }
+}
+
+async function statusBackups() {
+  try {
+    const arquivos = (await fs.promises.readdir(BACKUP_DIR)).filter(n => /^assados-.*\.json\.gz$/.test(n));
+    const registros = await Promise.all(arquivos.map(async nome => {
+      const stat = await fs.promises.stat(path.join(BACKUP_DIR, nome));
+      return { nome, criado_em: stat.mtime.toISOString(), tamanho_bytes: stat.size };
+    }));
+    registros.sort((a, b) => b.criado_em.localeCompare(a.criado_em));
+    return { habilitado: BACKUP_ENABLED, intervalo_horas: BACKUP_INTERVAL_HOURS, retencao: BACKUP_RETENTION, armazenamento_persistente: BACKUP_STORAGE_PERSISTENT, em_andamento: backupEmAndamento, ultimo_backup: ultimoBackup || registros[0] || null, erro_ultimo_backup: erroUltimoBackup, backups: registros };
+  } catch (e) {
+    return { habilitado: BACKUP_ENABLED, intervalo_horas: BACKUP_INTERVAL_HOURS, retencao: BACKUP_RETENTION, armazenamento_persistente: BACKUP_STORAGE_PERSISTENT, em_andamento: backupEmAndamento, ultimo_backup: ultimoBackup, erro_ultimo_backup: erroUltimoBackup || e.message, backups: [] };
+  }
+}
+
 function nextId(col) { DB[col] = DB[col] || []; return (DB[col].reduce((m, r) => Math.max(m, r.id || 0), 0)) + 1; }
+function hashSenha(senha) {
+  const salt = crypto.randomBytes(16);
+  const derived = crypto.scryptSync(String(senha), salt, 64);
+  return `scrypt$${salt.toString('hex')}$${derived.toString('hex')}`;
+}
+function verificarSenha(hash, senha) {
+  if (typeof hash !== 'string' || typeof senha !== 'string') return false;
+  if (hash.startsWith('scrypt$')) {
+    const [, saltHex, derivedHex] = hash.split('$');
+    if (!saltHex || !derivedHex) return false;
+    try {
+      const expected = Buffer.from(derivedHex, 'hex');
+      const actual = crypto.scryptSync(senha, Buffer.from(saltHex, 'hex'), expected.length);
+      return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+    } catch { return false; }
+  }
+  const expected = Buffer.from(hash);
+  const actual = Buffer.from(senha);
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+}
+function segredoValido(recebido, esperado) {
+  if (!esperado || !recebido) return false;
+  const a = Buffer.from(String(recebido));
+  const b = Buffer.from(String(esperado));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 function fmt(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
 function hoje() { return new Date().toISOString().slice(0, 10); }
 function agora() { return new Date().toISOString(); }
@@ -157,12 +266,109 @@ function verificarEstado(req, res, next) {
 
 // ===== AUTH =====
 app.post('/api/login', (req, res) => {
-  const { matricula, senha } = req.body;
-  const f = (DB.funcionarios || []).find(x => x.matricula === matricula && x.senha_hash === senha);
-  if (!f) return res.json({ erro: 'Matrícula ou senha inválidos' });
+  void loginSeguro(req, res);
+});
+
+async function obterSegurancaLogin(matricula) {
+  if (!USAR_SUPABASE) {
+    DB.login_security = DB.login_security || [];
+    let estado = DB.login_security.find(x => x.matricula === matricula);
+    if (!estado) { estado = { matricula, tentativas: 0, bloqueado_ate: null }; DB.login_security.push(estado); }
+    return estado;
+  }
+  const { data, error } = await supabase.from('login_security').select('*').eq('matricula', matricula).maybeSingle();
+  if (error) throw error;
+  return data || { matricula, tentativas: 0, bloqueado_ate: null };
+}
+
+async function guardarSegurancaLogin(estado) {
+  estado.atualizado_em = agora();
+  if (!USAR_SUPABASE) { saveDB(); return; }
+  const { error } = await supabase.from('login_security').upsert(estado, { onConflict: 'matricula' });
+  if (error) throw error;
+}
+
+async function notificarBloqueioLogin(funcionario, matricula) {
+  const protocolo = 'ALT-' + Date.now();
+  const descricao = `Matrícula bloqueada temporariamente após ${LOGIN_MAX_ATTEMPTS} tentativas inválidas. Nenhuma senha foi apagada ou enviada.`;
+  const ticket = { protocolo, matricula, funcionario_id: funcionario?.id || null, assunto: 'Bloqueio de acesso por tentativas inválidas', descricao, prioridade: 'alta', status: 'aberto', aberto_em: agora() };
+  let chamadoCriado = false;
+  try {
+    if (USAR_SUPABASE) {
+      const { error } = await supabase.from('support_tickets').insert(ticket);
+      if (error) throw error;
+    } else {
+      DB.support_tickets = DB.support_tickets || [];
+      DB.support_tickets.push({ id: nextId('support_tickets'), ...ticket });
+      saveDB();
+    }
+    chamadoCriado = true;
+  } catch (e) { console.error('Não foi possível registrar chamado de bloqueio:', e.message); }
+
+  if (transporter && ADMIN_EMAIL) {
+    try {
+      await transporter.sendMail({
+        from: SMTP_USER,
+        to: ADMIN_EMAIL,
+        subject: `[${protocolo}] Acesso bloqueado — matrícula ${matricula}`,
+        text: `${descricao}\nProtocolo: ${protocolo}\nBloqueio até ${new Date(Date.now() + LOGIN_LOCK_HOURS * 3600000).toISOString()}.`
+      });
+    } catch (e) { console.error('Não foi possível enviar alerta por e-mail:', e.message); }
+  }
+  return chamadoCriado;
+}
+
+async function loginSeguro(req, res) {
+  const matricula = String(req.body?.matricula || '').trim();
+  const senha = String(req.body?.senha || '');
+  if (!matricula || !senha || matricula.length > 100 || senha.length > 200) {
+    return res.status(400).json({ sucesso: false, erro: 'Informe matrícula e senha.' });
+  }
+
+  let estado;
+  try { estado = await obterSegurancaLogin(matricula); }
+  catch (e) {
+    console.error('Falha ao consultar proteção de login:', e.message);
+    return res.status(503).json({ sucesso: false, erro: 'Não foi possível validar o acesso. Tente novamente mais tarde.' });
+  }
+
+  if (estado.bloqueado_ate && new Date(estado.bloqueado_ate).getTime() > Date.now()) {
+    const minutos = Math.ceil((new Date(estado.bloqueado_ate).getTime() - Date.now()) / 60000);
+    return res.status(423).json({ sucesso: false, bloqueado: true, erro: `Acesso temporariamente bloqueado após tentativas inválidas. Tente novamente em aproximadamente ${minutos} minuto(s) ou contate o administrador.` });
+  }
+
+  const f = (DB.funcionarios || []).find(x => x.matricula === matricula && verificarSenha(x.senha_hash, senha) && x.status !== 'INATIVO');
+  if (!f) {
+    estado.tentativas = Number(estado.tentativas || 0) + 1;
+    estado.ultima_tentativa = agora();
+    if (estado.tentativas >= LOGIN_MAX_ATTEMPTS) {
+      estado.bloqueado_ate = new Date(Date.now() + LOGIN_LOCK_HOURS * 3600000).toISOString();
+      try { await guardarSegurancaLogin(estado); } catch (e) { console.error('Falha ao salvar bloqueio:', e.message); return res.status(503).json({ sucesso: false, erro: 'Não foi possível registrar a proteção de acesso. Tente novamente mais tarde.' }); }
+      const chamado = await notificarBloqueioLogin((DB.funcionarios || []).find(x => x.matricula === matricula), matricula);
+      return res.status(423).json({ sucesso: false, bloqueado: true, chamado, erro: chamado ? 'Acesso bloqueado por 24 horas após 5 tentativas. Um chamado foi aberto para o administrador.' : 'Acesso bloqueado por 24 horas após 5 tentativas. Não foi possível registrar o chamado; avise o administrador.' });
+    }
+    try { await guardarSegurancaLogin(estado); }
+    catch (e) {
+      console.error('Falha ao salvar tentativa:', e.message);
+      if (USAR_SUPABASE) return res.status(503).json({ sucesso: false, erro: 'Não foi possível registrar a tentativa com segurança. Tente novamente mais tarde.' });
+    }
+    return res.status(401).json({ sucesso: false, tentativas_restantes: LOGIN_MAX_ATTEMPTS - estado.tentativas, erro: `Matrícula ou senha inválidos. Restam ${LOGIN_MAX_ATTEMPTS - estado.tentativas} tentativa(s).` });
+  }
+
+  estado.tentativas = 0;
+  estado.bloqueado_ate = null;
+  estado.ultima_tentativa = agora();
+  if (!String(f.senha_hash).startsWith('scrypt$')) f.senha_hash = hashSenha(senha);
+  try { await guardarSegurancaLogin(estado); }
+  catch (e) { console.error('Falha ao zerar tentativas de login:', e.message); return res.status(503).json({ sucesso: false, erro: 'Não foi possível confirmar o estado de segurança. Tente novamente.' }); }
+  if (!USAR_SUPABASE) saveDB();
+  else {
+    const { error } = await supabase.from('funcionarios').update({ senha_hash: f.senha_hash }).eq('id', f.id);
+    if (error) { console.error('Falha ao proteger senha legada:', error.message); return res.status(503).json({ sucesso: false, erro: 'Não foi possível atualizar a proteção da senha. Tente novamente.' }); }
+  }
   const { senha_hash, ...usuario } = f;
   res.json({ sucesso: true, token: 'tok-' + f.id, usuario, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
-});
+}
 
 // ===== DASHBOARD =====
 app.get('/api/dashboard/resumo', (req, res) => {
@@ -425,7 +631,7 @@ app.get('/api/fornecedores', (req, res) => res.json({ fornecedores: DB.fornecedo
 app.post('/api/fornecedores/salvar', (req, res) => { DB.fornecedores.push({ id: nextId('fornecedores'), ...req.body, status: 'ATIVO' }); saveDB(); res.json({ sucesso: true }); });
 
 // ===== FUNCIONÁRIOS =====
-app.get('/api/funcionarios', (req, res) => res.json({ funcionarios: (DB.funcionarios || []).map(f => ({ ...f, unidade_nome: ((DB.unidades || []).find(u => u.id === f.unidade_id) || {}).nome })) }));
+app.get('/api/funcionarios', (req, res) => res.json({ funcionarios: (DB.funcionarios || []).map(({ senha_hash, ultimas_senhas, ...f }) => ({ ...f, unidade_nome: ((DB.unidades || []).find(u => u.id === f.unidade_id) || {}).nome })) }));
 app.post('/api/funcionarios/salvar', (req, res) => { DB.funcionarios.push({ id: nextId('funcionarios'), ...req.body, status: 'ATIVO', data_admissao: hoje() }); saveDB(); res.json({ sucesso: true }); });
 
 // ===== PATRIMÔNIO =====
@@ -1227,7 +1433,7 @@ app.get('/api/meta-ia/historico', (req, res) => res.json({ historico: (DB.meta_i
 app.post('/api/nf/cancelar', async (req, res) => {
   const { nf_id, motivo, senha_adm } = req.body;
   if (!senha_adm) return res.json({ erro: 'Cancelamento de NF exige senha do administrador' });
-  const adm = (DB.funcionarios || []).find(f => f.senha_hash === senha_adm && f.role === 'admin');
+  const adm = (DB.funcionarios || []).find(f => verificarSenha(f.senha_hash, senha_adm) && f.role === 'admin');
   if (!adm) return res.json({ erro: 'Senha de administrador inválida' });
   const nf = (DB.notas_fiscais || []).find(n => n.id == nf_id);
   if (!nf) return res.json({ erro: 'NF não encontrada' });
@@ -1327,8 +1533,8 @@ app.post('/api/checklist/marcar-item', (req, res) => {
   const { checklist_id, item_id, senha_operador, senha_adm } = req.body;
   if (!senha_operador) return res.json({ erro: 'Senha do operador obrigatória' });
   if (!senha_adm) return res.json({ erro: 'Senha do ADMINISTRADOR obrigatória' });
-  const op = (DB.funcionarios || []).find(f => f.senha_hash === senha_operador);
-  const adm = (DB.funcionarios || []).find(f => f.senha_hash === senha_adm && f.role === 'admin');
+  const op = (DB.funcionarios || []).find(f => verificarSenha(f.senha_hash, senha_operador));
+  const adm = (DB.funcionarios || []).find(f => verificarSenha(f.senha_hash, senha_adm) && f.role === 'admin');
   if (!op) return res.json({ erro: 'Senha do operador inválida' });
   if (!adm) return res.json({ erro: 'Senha do administrador inválida' });
   const chk = (DB.checklists_exec || []).find(c => c.id == checklist_id);
@@ -1342,7 +1548,7 @@ app.post('/api/checklist/marcar-item', (req, res) => {
 app.post('/api/checklist/finalizar', (req, res) => {
   const { checklist_id, senha_adm } = req.body;
   if (!senha_adm) return res.json({ erro: 'Finalizar exige senha do administrador' });
-  const adm = (DB.funcionarios || []).find(f => f.senha_hash === senha_adm && f.role === 'admin');
+  const adm = (DB.funcionarios || []).find(f => verificarSenha(f.senha_hash, senha_adm) && f.role === 'admin');
   if (!adm) return res.json({ erro: 'Senha do administrador inválida' });
   const chk = (DB.checklists_exec || []).find(c => c.id == checklist_id);
   if (!chk) return res.json({ erro: 'Checklist não encontrado' });
@@ -1386,7 +1592,7 @@ app.post('/api/unidades/excluir', (req, res) => {
 app.post('/api/funcionarios/permissao', (req, res) => {
   const { funcionario_id, nivel_permissao, senha_adm } = req.body;
   if (!senha_adm) return res.json({ erro: 'Alterar permissão exige senha do administrador' });
-  const adm = (DB.funcionarios || []).find(f => f.senha_hash === senha_adm && f.role === 'admin');
+  const adm = (DB.funcionarios || []).find(f => verificarSenha(f.senha_hash, senha_adm) && f.role === 'admin');
   if (!adm) return res.json({ erro: 'Senha do administrador inválida' });
   const f = (DB.funcionarios || []).find(x => x.id == funcionario_id);
   if (!f) return res.json({ erro: 'Funcionário não encontrado' });
@@ -1505,6 +1711,17 @@ app.post('/api/frota/manutencao/registrar', (req, res) => {
 // ===== HEALTH CHECK =====
 app.get('/api/health', (req, res) => res.status(STATUS_BANCO.conectado ? 200 : 503).json({ status: STATUS_BANCO.conectado ? 'ok' : 'degradado', sistema: DB.controle_sistema?.status_geral, ...STATUS_BANCO, hora: agora() }));
 
+// Operações administrativas não usam dados de navegador nem ficam públicas.
+app.get('/api/admin/backups', async (req, res) => {
+  if (!segredoValido(req.get('x-backup-admin-token'), BACKUP_ADMIN_TOKEN)) return res.status(403).json({ erro: 'Operação não autorizada.' });
+  res.json(await statusBackups());
+});
+app.post('/api/admin/backups/criar', async (req, res) => {
+  if (!segredoValido(req.get('x-backup-admin-token'), BACKUP_ADMIN_TOKEN)) return res.status(403).json({ erro: 'Operação não autorizada.' });
+  const resultado = await criarBackup();
+  res.status(resultado.sucesso ? 201 : 503).json(resultado);
+});
+
 // ===== STARTUP (carrega Supabase antes de subir) =====
 (async () => {
   await loadDB();
@@ -1513,6 +1730,11 @@ app.get('/api/health', (req, res) => res.status(STATUS_BANCO.conectado ? 200 : 5
     console.log('   Dashboard: http://localhost:' + PORT + '/dashboard.html');
     console.log('   Site:      http://localhost:' + PORT + '/site.html');
     console.log('   Bot webhook: POST /api/bot/webhook');
+    if (BACKUP_ENABLED) {
+      console.log(`🗄️ Backups automáticos ativos: intervalo ${BACKUP_INTERVAL_HOURS}h, retenção ${BACKUP_RETENTION}`);
+      backupTimer = setInterval(() => { void criarBackup(); }, BACKUP_INTERVAL_HOURS * 60 * 60 * 1000);
+      setTimeout(() => { void criarBackup(); }, 15000).unref();
+    } else console.log('⚠️ Backups automáticos desativados; configure BACKUP_ENABLED=true no ambiente.');
   });
   // ==========================================
 // 👤 FUNCIONÁRIOS COMPLETOS
@@ -1587,44 +1809,45 @@ app.get('/api/funcionarios/:id/sensiveis', async (req, res) => {
   }
 });
 
-// Trocar senha com validação de histórico
-app.put('/api/funcionarios/:id/trocar-senha', async (req, res) => {
+// Endpoint antigo era público; desabilitado para impedir tomada de conta.
+app.put('/api/funcionarios/:id/trocar-senha', (req, res) => res.status(410).json({ sucesso: false, erro: 'Rota desativada. Solicite a redefinição segura ao administrador.' }));
+
+// Redefinição emergencial: exige segredo configurado apenas no ambiente do servidor.
+app.post('/api/admin/funcionarios/:id/reset-senha', async (req, res) => {
+  if (!segredoValido(req.get('x-admin-recovery-token'), ADMIN_RECOVERY_TOKEN)) {
+    return res.status(403).json({ sucesso: false, erro: 'Operação não autorizada.' });
+  }
   try {
     const { id } = req.params;
     const { nova_senha } = req.body;
-
-    // Busca usuário atual e últimas senhas
-    const { data: func, error: eBusca } = await supabase
-      .from('funcionarios')
-      .select('senha_hash, ultimas_senhas')
-      .eq('id', id)
-      .single();
-
-    if (eBusca) throw eBusca;
-
-    // Verifica se nova senha é igual às 2 últimas
-    if (func.ultimas_senhas?.includes(nova_senha)) {
-      return res.status(400).json({
-        sucesso: false,
-        erro: 'A nova senha deve ser diferente das 2 últimas'
-      });
+    if (typeof nova_senha !== 'string' || nova_senha.length < 12 || nova_senha.length > 200) {
+      return res.status(400).json({ sucesso: false, erro: 'A nova senha deve ter entre 12 e 200 caracteres.' });
     }
-
-    // Atualiza guardando histórico
-    const ultimas = [...(func.ultimas_senhas || []), func.senha_hash].slice(-2);
-
-    const { error: eAtualiza } = await supabase
-      .from('funcionarios')
-      .update({
-        senha_hash: nova_senha,
-        ultimas_senhas: ultimas
-      })
-      .eq('id', id);
-
-    if (eAtualiza) throw eAtualiza;
-    res.json({ sucesso: true, mensagem: 'Senha alterada com sucesso' });
+    let funcionario;
+    if (USAR_SUPABASE) {
+      const { data, error } = await supabase.from('funcionarios').update({ senha_hash: hashSenha(nova_senha) }).eq('id', id).select('id, nome, email, matricula').maybeSingle();
+      if (error) throw error;
+      funcionario = data;
+    } else {
+      funcionario = (DB.funcionarios || []).find(f => String(f.id) === String(id));
+      if (funcionario) { funcionario.senha_hash = hashSenha(nova_senha); saveDB(); }
+    }
+    if (!funcionario) return res.status(404).json({ sucesso: false, erro: 'Funcionário não encontrado.' });
+    const estado = await obterSegurancaLogin(funcionario.matricula);
+    estado.tentativas = 0;
+    estado.bloqueado_ate = null;
+    await guardarSegurancaLogin(estado);
+    let emailAviso = false;
+    if (transporter && funcionario.email) {
+      try {
+        await transporter.sendMail({ from: SMTP_USER, to: funcionario.email, subject: 'Sua senha do Assados ERP foi redefinida', text: 'Um administrador redefiniu sua senha. Por segurança, a senha não é enviada por e-mail ou SMS. Entre em contato com a administração para recebê-la por um canal seguro.' });
+        emailAviso = true;
+      } catch (e) { console.error('Falha ao notificar funcionário sobre redefinição:', e.message); }
+    }
+    res.json({ sucesso: true, mensagem: 'Senha redefinida. A credencial não foi enviada por email ou SMS.', funcionario_id: funcionario.id, email_aviso_enviado: emailAviso });
   } catch (erro) {
-    res.status(400).json({ sucesso: false, erro: erro.message });
+    console.error('Falha na redefinição de senha:', erro.message);
+    res.status(500).json({ sucesso: false, erro: 'Não foi possível redefinir a senha. Consulte os logs do servidor.' });
   }
 });
 
