@@ -3669,6 +3669,284 @@ function renderLgpdAceite() {
     </div>
   </div>
   `;
+  // ==========================================
+// 🛒 DASHBOARD + PDV — CASA DE ASSADOS
+// ==========================================
+let pedidoItens = [];
+
+function renderDashboard() {
+  return `
+  <div class="space-y-6">
+    <!-- CABEÇALHO DO DASHBOARD -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border shadow-sm">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">🏠 Casa de Assados — Painel PDV</h1>
+        <p class="text-slate-500 text-sm mt-1">Gerenciamento de mesas, comandas e vendas em tempo real.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="carregarEstadoSistema(); renderDashboard();" class="btn btn-secondary text-xs">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i> Atualizar Dados
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs RÁPIDOS DO DIA -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--accent-soft); color: var(--accent-dark);">
+          <i data-lucide="dollar-sign"></i>
+        </div>
+        <div>
+          <div class="kpi-label">Faturamento Hoje</div>
+          <div class="kpi-value" id="kpi-faturamento">R$ 1.450,00</div>
+          <div class="kpi-sub">+12% vs. ontem</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #dcfce7; color: #15803d;">
+          <i data-lucide="shopping-bag"></i>
+        </div>
+        <div>
+          <div class="kpi-label">Pedidos Realizados</div>
+          <div class="kpi-value" id="kpi-pedidos">34</div>
+          <div class="kpi-sub">Média R$ 42,60/pedido</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #fef3c7; color: #92400e;">
+          <i data-lucide="users"></i>
+        </div>
+        <div>
+          <div class="kpi-label">Mesas Ativas</div>
+          <div class="kpi-value">5 / 12</div>
+          <div class="kpi-sub">Fluxo moderado</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÓDULO PDV INTEGRADO NO DASHBOARD -->
+    <div class="bg-white rounded-2xl p-6 border shadow-sm space-y-5">
+      <div class="flex items-center justify-between border-b pb-4">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="receipt" class="text-red-700"></i> Frente de Caixa (PDV)
+        </h2>
+        <span class="badge ok">Caixa Aberto</span>
+      </div>
+
+      <!-- MESA / COMANDA / ATENDENTE -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border">
+        <div>
+          <label class="text-xs font-bold text-slate-600 uppercase tracking-wide">Mesa / Comanda</label>
+          <select id="pdv-mesa" class="w-full border rounded-lg p-2.5 mt-1 bg-white font-medium text-sm">
+            <option value="">Balcão / Sem Mesa</option>
+            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>`<option value="${n}">Mesa ${n}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-600 uppercase tracking-wide">Tipo de Atendimento</label>
+          <select id="pdv-tipo" class="w-full border rounded-lg p-2.5 mt-1 bg-white font-medium text-sm">
+            <option value="consumir">Consumir no Local</option>
+            <option value="retirada">Retirada no Balcão</option>
+            <option value="entrega">Delivery / Entrega</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-600 uppercase tracking-wide">Atendente / Operador</label>
+          <input type="text" class="w-full border rounded-lg p-2.5 mt-1 bg-white font-medium text-sm text-slate-700" value="${currentUser?.nome || 'Operador'}" readonly>
+        </div>
+      </div>
+
+      <!-- CATEGORIAS -->
+      <div>
+        <label class="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2 block">Categorias de Produtos</label>
+        <div class="flex gap-2 overflow-x-auto pb-2">
+          <button class="px-4 py-2 bg-red-700 text-white rounded-full whitespace-nowrap font-semibold text-xs shadow-sm hover:bg-red-800 transition" onclick="filtrarCategoria(1)">🥩 Assados</button>
+          <button class="px-4 py-2 bg-amber-600 text-white rounded-full whitespace-nowrap font-semibold text-xs shadow-sm hover:bg-amber-700 transition" onclick="filtrarCategoria(2)">🍟 Porções</button>
+          <button class="px-4 py-2 bg-orange-500 text-white rounded-full whitespace-nowrap font-semibold text-xs shadow-sm hover:bg-orange-600 transition" onclick="filtrarCategoria(3)">🥪 Lanches</button>
+          <button class="px-4 py-2 bg-yellow-600 text-white rounded-full whitespace-nowrap font-semibold text-xs shadow-sm hover:bg-yellow-700 transition" onclick="filtrarCategoria(4)">🍚 Acompanhamentos</button>
+          <button class="px-4 py-2 bg-blue-600 text-white rounded-full whitespace-nowrap font-semibold text-xs shadow-sm hover:bg-blue-700 transition" onclick="filtrarCategoria(5)">🥤 Bebidas</button>
+          <button class="px-4 py-2 bg-amber-200 text-amber-900 rounded-full whitespace-nowrap font-semibold text-xs shadow-sm hover:bg-amber-300 transition" onclick="filtrarCategoria(6)">🍰 Sobremesas</button>
+          <button class="px-4 py-2 bg-slate-200 text-slate-700 rounded-full whitespace-nowrap font-semibold text-xs shadow-sm hover:bg-slate-300 transition" onclick="filtrarCategoria('todos')">📋 Todos</button>
+        </div>
+      </div>
+
+      <!-- GRID DE PRODUTOS -->
+      <div>
+        <label class="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2 block">Selecione os Produtos</label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="lista-produtos">
+          <div class="bg-white rounded-xl p-4 border hover:border-amber-400 cursor-pointer transition shadow-sm hover:shadow-md flex flex-col justify-between" onclick="adicionarItem(1, 'Costela de Boi', 89.90)">
+            <div>
+              <div class="text-3xl mb-2">🥩</div>
+              <h4 class="font-bold text-slate-800">Costela de Boi</h4>
+              <p class="text-xs text-slate-500 mt-0.5">Assada no fogo de lenha</p>
+            </div>
+            <div class="mt-4">
+              <p class="text-lg font-extrabold text-red-700">R$ 89,90</p>
+              <p class="text-[11px] text-slate-400">⏱ 45 min</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl p-4 border hover:border-amber-400 cursor-pointer transition shadow-sm hover:shadow-md flex flex-col justify-between" onclick="adicionarItem(2, 'Pernil Suíno', 54.90)">
+            <div>
+              <div class="text-3xl mb-2">🍖</div>
+              <h4 class="font-bold text-slate-800">Pernil Suíno</h4>
+              <p class="text-xs text-slate-500 mt-0.5">Tempero especial</p>
+            </div>
+            <div class="mt-4">
+              <p class="text-lg font-extrabold text-red-700">R$ 54,90</p>
+              <p class="text-[11px] text-slate-400">⏱ 35 min</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl p-4 border hover:border-amber-400 cursor-pointer transition shadow-sm hover:shadow-md flex flex-col justify-between" onclick="adicionarItem(3, 'Porção de Mandioca', 18.00)">
+            <div>
+              <div class="text-3xl mb-2">🍠</div>
+              <h4 class="font-bold text-slate-800">Mandioca Frita</h4>
+              <p class="text-xs text-slate-500 mt-0.5">Crocante e sequinha</p>
+            </div>
+            <div class="mt-4">
+              <p class="text-lg font-extrabold text-amber-600">R$ 18,00</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl p-4 border hover:border-amber-400 cursor-pointer transition shadow-sm hover:shadow-md flex flex-col justify-between" onclick="adicionarItem(4, 'Sanduíche de Pernil', 18.00)">
+            <div>
+              <div class="text-3xl mb-2">🥪</div>
+              <h4 class="font-bold text-slate-800">Sanduíche de Pernil</h4>
+              <p class="text-xs text-slate-500 mt-0.5">Pão francês fresco</p>
+            </div>
+            <div class="mt-4">
+              <p class="text-lg font-extrabold text-orange-600">R$ 18,00</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARRINHO / RESUMO DO PEDIDO -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4 border-t">
+        <div class="lg:col-span-2 bg-slate-50 rounded-xl p-4 border flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-base mb-3 flex items-center justify-between text-slate-800">
+              <span>📋 Itens do Pedido Atual</span>
+              <span class="text-xs font-semibold text-slate-500">Qtd Total: <span id="qtd-itens">0</span></span>
+            </h3>
+            <div id="itens-pedido" class="space-y-2 min-h-[140px] max-h-[220px] overflow-y-auto pr-1">
+              <p class="text-slate-400 text-center py-10 text-sm">Nenhum item adicionado à comanda ainda.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 rounded-xl p-5 border border-amber-200 flex flex-col justify-between shadow-sm">
+          <div>
+            <h3 class="font-bold text-sm text-amber-900 uppercase tracking-wide">Total a Pagar</h3>
+            <p class="text-3xl font-black text-amber-800 mt-1" id="valor-total">R$ 0,00</p>
+          </div>
+          <div class="space-y-2.5 mt-6">
+            <button onclick="finalizarVenda()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold text-base transition flex items-center justify-center gap-2 shadow-sm">
+              ✅ Finalizar Venda
+            </button>
+            <button onclick="limparPedido()" class="w-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 py-2.5 rounded-xl font-semibold text-sm transition">
+              🗑️ Limpar Pedido
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+// ==========================================
+// FUNÇÕES DE CONTROLE DO PDV
+// ==========================================
+function adicionarItem(id, nome, preco) {
+  const itemExistente = pedidoItens.find(i => i.id === id);
+  if (itemExistente) {
+    itemExistente.quantidade += 1;
+  } else {
+    pedidoItens.push({ id, nome, preco, quantidade: 1 });
+  }
+  atualizarPedido();
+  if (typeof toast === 'function') toast(`${nome} adicionado!`, 'success');
+}
+
+function atualizarPedido() {
+  const container = document.getElementById('itens-pedido');
+  const totalEl = document.getElementById('valor-total');
+  const qtdEl = document.getElementById('qtd-itens');
+  
+  if (!container || !totalEl || !qtdEl) return;
+
+  if (pedidoItens.length === 0) {
+    container.innerHTML = '<p class="text-slate-400 text-center py-10 text-sm">Nenhum item adicionado à comanda ainda.</p>';
+    totalEl.textContent = 'R$ 0,00';
+    qtdEl.textContent = '0';
+    return;
+  }
+
+  let total = 0;
+  let totalItens = 0;
+
+  container.innerHTML = pedidoItens.map((item, idx) => {
+    const subtotal = item.preco * item.quantidade;
+    total += subtotal;
+    totalItens += item.quantidade;
+    return `
+    <div class="flex justify-between items-center p-2.5 bg-white rounded-lg border shadow-xs">
+      <div class="flex-1">
+        <span class="font-semibold text-slate-800 text-sm">${item.nome}</span>
+        <div class="text-xs text-slate-500">R$ ${item.preco.toFixed(2).replace('.', ',')} un</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-bold bg-slate-100 px-2.5 py-1 rounded-md text-slate-700">x${item.quantidade}</span>
+        <span class="font-bold text-slate-800 w-20 text-right text-sm">R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
+        <button onclick="removerItem(${idx})" class="text-red-500 hover:text-red-700 font-bold p-1 rounded transition">✕</button>
+      </div>
+    </div>
+    `;
+  }).join('');
+
+  totalEl.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+  qtdEl.textContent = totalItens;
+}
+
+function removerItem(index) {
+  pedidoItens.splice(index, 1);
+  atualizarPedido();
+}
+
+function limparPedido() {
+  if (pedidoItens.length === 0) return;
+  if (confirm('Deseja realmente limpar todos os itens do pedido?')) {
+    pedidoItens = [];
+    atualizarPedido();
+  }
+}
+
+function finalizarVenda() {
+  if (pedidoItens.length === 0) {
+    if (typeof toast === 'function') toast('Adicione itens ao pedido primeiro!', 'error');
+    else alert('Adicione itens ao pedido primeiro!');
+    return;
+  }
+  const mesa = document.getElementById('pdv-mesa')?.value || 'Balcão';
+  const tipo = document.getElementById('pdv-tipo')?.value || 'consumir';
+  const total = pedidoItens.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+  
+  if (confirm(`Confirmar fechamento do pedido?\nMesa/Local: ${mesa}\nTotal: R$ ${total.toFixed(2).replace('.', ',')}`)) {
+    if (typeof toast === 'function') toast('✅ Venda finalizada com sucesso!');
+    else alert(`✅ Venda finalizada com sucesso!\nTotal: R$ ${total.toFixed(2).replace('.', ',')}`);
+    
+    pedidoItens = [];
+    atualizarPedido();
+  }
+}
+
+function filtrarCategoria(catId) {
+  if (typeof toast === 'function') {
+    toast(`Filtrando produtos da categoria ${catId}`, 'success');
+  }
+}
 }
 
 // Funções auxiliares (chamadas pelos botões)
