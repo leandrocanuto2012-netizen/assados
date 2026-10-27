@@ -1,25 +1,27 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<hitml lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Assados ERP - Gestão Completa</title>
+<title>Assados Nobre ERP - Gestão Completa</title>
+<link rel="icon" type="image/png" href="/icons/nobre_premium_moderno.png">
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@1/dist/umd/lucide.min.js"></script>
 <style>
 :root{
-  --bg:#faf7f2; --card:#fff; --text:#292524; --muted:#78716c;
-  --accent:#ea580c; --accent-dark:#c2410c; --accent-soft:#ffedd5;
-  --accent2:#f59e0b; --danger:#dc2626; --danger-soft:#fee2e2;
-  --border:#e7ded4; --header:#292524; --sidebar:#fff; --sidebar-hover:#f5f0e9;
+  --bg:#f7f5ef; --card:#fff; --text:#202b3c; --muted:#697586;
+  --accent:#d4a72c; --accent-dark:#a8790b; --accent-soft:#fbf2d5;
+  --accent2:#8c1d2c; --danger:#c62828; --danger-soft:#fde8e7;
+  --border:#e5e0d4; --header:#092d73; --sidebar:#fff; --sidebar-hover:#f4f1e8;
   --shadow:0 1px 3px rgba(0,0,0,.06);
 }
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Quicksand',sans-serif}
 body{background:var(--bg);color:var(--text);font-size:14px}
 .hidden{display:none!important}
-#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#7c2d12 0%,#292524 100%)}
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 20% 15%,#1749a0 0%,transparent 38%),linear-gradient(135deg,#071d49 0%,#092d73 58%,#541c2b 100%);padding:24px}
 .login-box{background:#fff;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:380px;max-width:90vw}
+.login-brand{display:block;width:220px;height:176px;object-fit:contain;background:#0645ad;border-radius:14px;margin:0 auto 20px}
 .login-box h1{font-size:28px;font-weight:700;color:var(--accent-dark);margin-bottom:4px}
 .login-box p{color:var(--muted);margin-bottom:24px;font-size:14px}
 .login-box label{display:block;font-weight:600;margin:12px 0 6px;font-size:13px;color:var(--text)}
@@ -30,9 +32,10 @@ body{background:var(--bg);color:var(--text);font-size:14px}
 .login-error{color:var(--danger);font-size:13px;margin-top:10px;min-height:18px}
 .login-hint{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;background:var(--accent-soft);padding:8px;border-radius:6px}
 #app{display:flex;min-height:100vh}
-header.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--header);display:flex;align-items:center;padding:0 18px;z-index:100;gap:12px;box-shadow:0 3px 14px rgba(41,37,36,.16)}
-.logo{color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px}
-.logo span{color:#fdba74}
+header.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--header);display:flex;align-items:center;padding:0 18px;z-index:100;gap:12px;box-shadow:0 3px 14px rgba(9,45,115,.24)}
+.logo{color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;gap:9px;letter-spacing:.04em}
+.logo img{width:57px;height:46px;object-fit:contain;background:#0645ad;border-radius:6px}
+.logo span{color:#f3cf69}
 .topbar .spacer{flex:1}
 .top-icon{color:#cbd5e1;cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;transition:background .2s}
 .top-icon:hover{background:rgba(255,255,255,.1);color:#fff}
@@ -163,7 +166,8 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
-    <h1>Assados <span style="color:var(--accent)">ERP</span></h1>
+    <img class="login-brand" src="/icons/nobre_premium_moderno.png" alt="Logo Assados Nobre" fetchpriority="high">
+    <h1>Assados Nobre <span style="color:var(--accent)">ERP</span></h1>
     <p>Gestão completa do seu negócio</p>
     <label>Matrícula</label>
     <input type="text" id="loginMatricula" placeholder="Digite sua matrícula" autocomplete="username">
@@ -178,7 +182,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
 <div id="app" class="hidden">
   <header class="topbar">
     <div class="top-icon" onclick="toggleSidebar()"><i data-lucide="menu"></i></div>
-    <div class="logo">Assados<span>ERP</span></div>
+    <div class="logo"><img src="/icons/nobre_premium_moderno.png" alt="" aria-hidden="true"><span>ERP</span></div>
     <div class="spacer"></div>
     <div id="statusSistemaTopo" style="margin-right:8px"></div>
     <div class="top-icon" onclick="showView('dashboard')" title="Início"><i data-lucide="layout-grid"></i></div>
@@ -251,7 +255,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
         <div class="menu-item" data-view="ifood" onclick="showView('ifood')"><i data-lucide="utensils"></i> Integração iFood</div>
         <div class="menu-item" data-view="integracoes" onclick="showView('integracoes')"><i data-lucide="mail"></i> Email / Excel / Word</div>
         <div class="menu-item" data-view="metas" onclick="showView('metas')"><i data-lucide="target"></i> Metas / Objetivos</div>
-        <div class="menu-item" data-view="meta-ia" onclick="showView('meta-ia')" style="background:linear-gradient(135pdeg,#7c3aed22,#4f46e522);border-left:3px solid #7c3aed;position:relative">
+        <div class="menu-item" data-view="meta-ia" onclick="showView('meta-ia')" style="background:linear-gradient(135deg,#7c3aed22,#4f46e522);border-left:3px solid #7c3aed;position:relative">
           <span style="display:inline-flex;align-items:center;gap:6px">
             <span style="position:relative;display:inline-flex">
               <i data-lucide="brain-circuit" style="color:#7c3aed"></i>
