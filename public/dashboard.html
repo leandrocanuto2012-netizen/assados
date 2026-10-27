@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorveteria ERP - Gestão Completa</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@1/dist/umd/lucide.min.js"></script>
+<style>
+:root{
+  --bg:#f1f5f9; --card:#fff; --text:#0f172a; --muted:#64748b;
+  --accent:#0891b2; --accent-dark:#0e7490; --accent-soft:#cffafe;
+  --accent2:#f59e0b; --danger:#dc2626; --danger-soft:#fee2e2;
+  --border:#e2e8f0; --header:#0c4a6e; --sidebar:#fff; --sidebar-hover:#f1f5f9;
+  --shadow:0 1px 3px rgba(0,0,0,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Quicksand',sans-serif}
+body{background:var(--bg);color:var(--text);font-size:14px}
+.hidden{display:none!important}
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0c4a6e 0%,#082f49 100%)}
+.login-box{background:#fff;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:380px;max-width:90vw}
+.login-box h1{font-size:28px;font-weight:700;color:var(--accent-dark);margin-bottom:4px}
+.login-box p{color:var(--muted);margin-bottom:24px;font-size:14px}
+.login-box label{display:block;font-weight:600;margin:12px 0 6px;font-size:13px;color:var(--text)}
+.login-box input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:border .2s}
+.login-box input:focus{border-color:var(--accent)}
+.login-box button{width:100%;margin-top:20px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s}
+.login-box button:hover{background:var(--accent-dark)}
+.login-error{color:var(--danger);font-size:13px;margin-top:10px;min-height:18px}
+.login-hint{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;background:var(--accent-soft);padding:8px;border-radius:6px}
+#app{display:flex;min-height:100vh}
+header.topbar{position:fixed;top:0;left:0;right:0;height:52px;background:var(--header);display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px}
+.logo{color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px}
+.logo span{color:#67e8f9}
+.topbar .spacer{flex:1}
+.top-icon{color:#cbd5e1;cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;transition:background .2s}
+.top-icon:hover{background:rgba(255,255,255,.1);color:#fff}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;cursor:pointer}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#fff}
+.status-pill.aberta{background:#16a34a}
+.status-pill.fechada{background:#dc2626}
+.status-pill.emergencial{background:#f59e0b}
+.banner{background:#fef3c7;padding:8px 20px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:12px;position:fixed;top:52px;left:0;right:0;z-index:99}
+.banner button{background:var(--accent);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
+aside.sidebar{position:fixed;top:52px;left:0;bottom:0;width:240px;background:var(--sidebar);border-right:1px solid var(--border);overflow-y:auto;padding:8px 0;z-index:90}
+.sidebar::-webkit-scrollbar{width:5px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.menu-group{margin-bottom:2px}
+.menu-group-header{display:flex;align-items:center;gap:8px;padding:10px 16px;font-weight:700;font-size:13px;color:var(--text);cursor:pointer;user-select:none}
+.menu-group-header:hover{background:var(--sidebar-hover)}
+.menu-group-header svg{width:18px;height:18px;color:var(--muted)}
+.menu-group-header .chev{margin-left:auto;width:14px;height:14px;transition:transform .2s}
+.menu-group.collapsed .chev{transform:rotate(-90deg)}
+.menu-group.collapsed .menu-items{display:none}
+.menu-items{padding:2px 0}
+.menu-item{display:flex;align-items:center;gap:10px;padding:8px 16px 8px 42px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;text-decoration:none}
+.menu-item:hover{background:var(--sidebar-hover);color:var(--text)}
+.menu-item.active{background:var(--accent-soft);color:var(--accent-dark);font-weight:700;border-right:3px solid var(--accent)}
+.menu-item svg{width:15px;height:15px}
+main.content{margin-left:240px;margin-top:52px;padding:24px;flex:1;min-width:0}
+.page-title{font-size:22px;font-weight:700;margin-bottom:4px}
+.page-sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start}
+.kpi-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpi-icon svg{width:20px;height:20px}
+.kpi-label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.kpi-value{font-size:22px;font-weight:700;margin-top:2px}
+.kpi-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-title svg{width:18px;height:18px;color:var(--muted)}
+.card-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+table.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.data-table tr:hover td{background:#f8fafc}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge.ok{background:#dcfce7;color:#15803d}
+.badge.warn{background:#fef3c7;color:#92400e}
+.badge.danger{background:var(--danger-soft);color:var(--danger)}
+.badge.info{background:#dbeafe;color:#1e40af}
+.badge.cyan{background:var(--accent-soft);color:var(--accent-dark)}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;font-weight:700;color:var(--text)}
+.form-group input,.form-group select,.form-group textarea{padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;outline:none;font-family:inherit}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+.btn{padding:9px 18px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn svg{width:15px;height:15px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-dark)}
+.btn-secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--sidebar-hover)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+.form-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.chat-box{border:1px solid var(--border);border-radius:10px;height:400px;display:flex;flex-direction:column;background:#fff}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:75%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;white-space:pre-wrap}
+.chat-msg.bot{background:#f1f5f9;color:var(--text);align-self:flex-start;border-bottom-left-radius:4px}
+.chat-msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}
+.chat-input input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:20px;font-size:13px;outline:none}
+.chat-input button{background:var(--accent);color:#fff;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.alert-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border)}
+.alert-item.critico{background:var(--danger-soft);border-color:#fecaca}
+.alert-item.alerta{background:#fef3c7;border-color:#fde68a}
+.alert-item.atencao{background:#dbeafe;border-color:#bfdbfe}
+.alert-item svg{width:20px;height:20px;flex-shrink:0}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal{background:#fff;border-radius:12px;padding:24px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-state svg{width:48px;height:48px;margin-bottom:12px;opacity:.4}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;box-shadow:0 4px 12px rgba(0,0,0,.2);animation:slideIn .3s ease}
+.toast.success{background:#15803d}
+.toast.error{background:var(--danger)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.app-tile{display:flex;gap:12px;padding:14px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;align-items:flex-start}
+.app-tile:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(8,145,178,.15);transform:translateY(-2px)}
+.app-tile-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.app-tile-icon svg{width:18px;height:18px;color:#fff}
+.app-tile-name{font-weight:700;font-size:13px}
+.app-tile-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.chart-container{width:100%;height:300px}
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;border:1px solid var(--border);background:#fff}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.checklist-item{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+.checklist-item input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--accent)}
+.bloqueio-box{background:var(--danger-soft);border:2px solid var(--danger);border-radius:12px;padding:30px;text-align:center;margin:20px 0}
+.bloqueio-box h2{color:var(--danger);margin-bottom:10px}
+.emergencia-box{background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:20px;margin:16px 0}
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>Sorveteria <span style="color:var(--accent)">ERP</span></h1>
+    <p>Gestão completa da sua sorveteria, açaí e picolés</p>
+    <label>Matrícula</label>
+    <input type="text" id="loginMatricula" placeholder="SV-2026-0001" value="SV-2026-0001">
+    <label>Senha</label>
+    <input type="password" id="loginSenha" placeholder="•••" value="123">
+    <button onclick="fazerLogin()">Entrar</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-hint">Padrão: SV-2026-0001 / 123</div>
+  </div>
+</div>
+<!-- APP -->
+<div id="app" class="hidden">
+  <header class="topbar">
+    <div class="top-icon" onclick="toggleSidebar()"><i data-lucide="menu"></i></div>
+    <div class="logo">Sorveteria<span>ERP</span></div>
+    <div class="spacer"></div>
+    <div id="statusSistemaTopo" style="margin-right:8px"></div>
+    <div class="top-icon" onclick="showView('dashboard')" title="Início"><i data-lucide="layout-grid"></i></div>
+    <div class="top-icon" onclick="showView('controle-matriz')" title="Controle Matriz"><i data-lucide="key-round"></i></div>
+    <div class="top-icon" onclick="showView('ia-vendas')" title="IA de Vendas"><i data-lucide="sparkles"></i></div>
+    <div class="top-icon" onclick="showView('gerente')" title="Alertas"><i data-lucide="bell"></i></div>
+    <div class="user-avatar" onclick="fazerLogout()" title="Sair">AD</div>
+  </header>
+  <aside class="sidebar" id="sidebar">
+    <div class="menu-group" data-group="dash">
+      <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="home"></i> Dashboard <i data-lucide="chevron-down" class="chev"></i></div>
+      <div class="menu-items">
+        <div class="menu-item active" data-view="dashboard" onclick="showView('dashboard')"><i data-lucide="activity"></i> Visão Geral</div>
+        <div class="menu-item" data-view="controle-matriz" onclick="showView('controle-matriz')"><i data-lucide="key-round"></i> Controle Matriz</div>
+        <div class="menu-item" data-view="caixa" onclick="showView('caixa')"><i data-lucide="cash-register"></i> Caixa / PDV</div>
+        <div class="menu-item" data-view="pdv-emergencial" onclick="showView('pdv-emergencial')"><i data-lucide="alert-triangle"></i> PDV Emergencial</div>
+      </div>
+    </div>
+    <div class="menu-group" data-group="cad">
+      <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="database"></i> Cadastros <i data-lucide="chevron-down" class="chev"></i></div>
+      <div class="menu-items">
+        <div class="menu-item" data-view="produtos" onclick="showView('produtos')"><i data-lucide="ice-cream-cone"></i> Produtos</div>
+        <div class="menu-item" data-view="clientes" onclick="showView('clientes')"><i data-lucide="users"></i> Clientes + Fidelidade</div>
+        <div class="menu-item" data-view="crm" onclick="showView('crm')"><i data-lucide="phone-call"></i> CRM / Contatos</div>
+        <div class="menu-item" data-view="fornecedores" onclick="showView('fornecedores')"><i data-lucide="truck"></i> Fornecedores</div>
+        <div class="menu-item" data-view="funcionarios" onclick="showView('funcionarios')"><i data-lucide="user-cog"></i> Funcionários</div>
+        <div class="menu-item" data-view="unidades" onclick="showView('unidades')"><i data-lucide="building-2"></i> Unidades (Matriz/Filial)</div>
+        <div class="menu-item" data-view="permissoes" onclick="showView('permissoes')"><i data-lucide="shield-check"></i> Permissões de Acesso</div>
+        <div class="menu-item" data-view="patrimonio" onclick="showView('patrimonio')"><i data-lucide="armchair"></i> Patrimônio</div>
+        <div class="menu-item" data-view="imoveis" onclick="showView('imoveis')"><i data-lucide="building-2"></i> Imóveis / Aluguel</div>
+      </div>
+    </div>
+    <div class="menu-group" data-group="prod">
+      <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="chef-hat"></i> Produção <i data-lucide="chevron-down" class="chev"></i></div>
+      <div class="menu-items">
+        <div class="menu-item" data-view="fichas-tecnicas" onclick="showView('fichas-tecnicas')"><i data-lucide="file-recipe"></i> Fichas Técnicas</div>
+        <div class="menu-item" data-view="ordens-servico" onclick="showView('ordens-servico')"><i data-lucide="clipboard-check"></i> Ordens de Serviço</div>
+        <div class="menu-item" data-view="producao" onclick="showView('producao')"><i data-lucide="calculator"></i> Produção / Insumos</div>
+      </div>
+    </div>
+    <div class="menu-group" data-group="vend">
+      <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="shopping-cart"></i> Vendas <i data-lucide="chevron-down" class="chev"></i></div>
+      <div class="menu-items">
+        <div class="menu-item" data-view="vendas" onclick="showView('vendas')"><i data-lucide="receipt"></i> Vendas</div>
+        <div class="menu-item" data-view="comandas" onclick="showView('comandas')"><i data-lucide="clipboard-list"></i> Comandas</div>
+        <div class="menu-item" data-view="pedidos-site" onclick="showView('pedidos-site')"><i data-lucide="globe"></i> Pedidos / iFood</div>
+        <div class="menu-item" data-view="eventos" onclick="showView('eventos')"><i data-lucide="party-popper"></i> Eventos / Festas</div>
+      </div>
+    </div>
+    <div class="menu-group" data-group="est">
+      <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="warehouse"></i> Estoque / Remessas <i data-lucide="chevron-down" class="chev"></i></div>
+      <div class="menu-items">
+        <div class="menu-item" data-view="estoque" onclick="showView('estoque')"><i data-lucide="boxes"></i> Estoque</div>
+        <div class="menu-item" data-view="compras" onclick="showView('compras')"><i data-lucide="shopping-cart"></i> Compras (Fornecedores)</div>
+        <div class="menu-item" data-view="devolucoes" onclick="showView('devolucoes')"><i data-lucide="undo-2"></i> Devoluções</div>
+        <div class="menu-item" data-view="fluxo-caixa" onclick="showView('fluxo-caixa')"><i data-lucide="trending-up"></i> Fluxo de Caixa Futuro</div>
+        <div class="menu-item" data-view="conciliacao" onclick="showView('conciliacao')"><i data-lucide="landmark"></i> Conciliação Bancária</div>
+        <div class="menu-item" data-view="auditoria" onclick="showView('auditoria')"><i data-lucide="scroll-text"></i> Log de Auditoria</div>
+        <div class="menu-item" data-view="movimentos" onclick="showView('movimentos')"><i data-lucide="arrow-left-right"></i> Movimentações</div>
+        <div class="menu-item" data-view="remessas" onclick="showView('remessas')"><i data-lucide="package-open"></i> Remessas p/ Filial</div>
+      </div>
+    </div>
+    <div class="menu-group" data-group="fin">
+      <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="wallet"></i> Financeiro <i data-lucide="chevron-down" class="chev"></i></div>
+      <div class="menu-items">
+        <div class="menu-item" data-view="contas" onclick="showView('contas')"><i data-lucide="file-text"></i> Contas a Pagar/Receber</div>
+        <div class="menu-item" data-view="tesouraria" onclick="showView('tesouraria')"><i data-lucide="safe"></i> Tesouraria</div>
+        <div class="menu-item" data-view="notas-fiscais" onclick="showView('notas-fiscais')"><i data-lucide="file-signature"></i> Notas Fiscais</div>
+        <div class="menu-item" data-view="boletos" onclick="showView('boletos')"><i data-lucide="barcode"></i> Boletos / Bancos</div>
+        <div class="menu-item" data-view="ifood" onclick="showView('ifood')"><i data-lucide="utensils"></i> Integração iFood</div>
+        <div class="menu-item" data-view="integracoes" onclick="showView('integracoes')"><i data-lucide="mail"></i> Email / Excel / Word</div>
+        <div class="menu-item" data-view="metas" onclick="showView('metas')"><i data-lucide="target"></i> Metas / Objetivos</div>
+        <div class="menu-item" data-view="meta-ia" onclick="showView('meta-ia')" style="background:linear-gradient(135deg,#7c3aed22,#4f46e522);border-left:3px solid #7c3aed;position:relative">
+          <span style="display:inline-flex;align-items:center;gap:6px">
+            <span style="position:relative;display:inline-flex">
+        
