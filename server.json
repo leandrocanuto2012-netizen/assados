@@ -1,0 +1,22 @@
+{
+  "name": "sorveteria-erp",
+  "version": "1.0.0",
+  "description": "Sorveteria ERP — backend completo com PDV, produção, RH, financeiro, bot WhatsApp, site, email Outlook/Gmail, export Excel e Word",
+  "main": "server-supabase.js",
+  "scripts": {
+    "start": "node server-supabase.js",
+    "dev": "node server-supabase.js",
+    "local": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "nodemailer": "^6.10.1",
+    "xlsx": "^0.18.5"
+  }
+}
