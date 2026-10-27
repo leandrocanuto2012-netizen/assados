@@ -1,5 +1,5 @@
 // =====================================================
-// SORVETERIA ERP — BACKEND COM SUPABASE
+// ASSADOS ERP — BACKEND COM SUPABASE
 // Configure no Render (env vars):
 //   SUPABASE_URL = https://seu-projeto.supabase.co
 //   SUPABASE_KEY = sua chave anon (ou service_role para acesso total)
@@ -40,28 +40,35 @@ app.get('/loja', (req, res) => res.redirect('/site.html'));
 // ===== STORE — Supabase (se configurado) ou arquivo local =====
 let DB = {};
 const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','pedidos_site','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log'];
+let STATUS_BANCO = { tipo: USAR_SUPABASE ? 'supabase' : 'local', conectado: !USAR_SUPABASE, tabelas_com_erro: [] };
 
 async function loadDB() {
   if (USAR_SUPABASE) {
     console.log('🔌 Conectando ao Supabase:', SUPABASE_URL);
+    const falhas = [];
     DB = {};
     for (const tabela of TABELAS) {
       try {
         const { data, error } = await supabase.from(tabela).select('*');
         if (!error) DB[tabela] = data || [];
-        else DB[tabela] = [];
-      } catch(e) { DB[tabela] = []; }
+        else { DB[tabela] = []; falhas.push(tabela); console.error(`Erro ao ler tabela ${tabela}:`, error.message); }
+      } catch(e) { DB[tabela] = []; falhas.push(tabela); console.error(`Erro ao ler tabela ${tabela}:`, e.message); }
     }
     try {
-      const { data } = await supabase.from('controle_sistema').select('*').limit(1).single();
+      const { data, error } = await supabase.from('controle_sistema').select('*').limit(1).maybeSingle();
+      if (error) { falhas.push('controle_sistema'); console.error('Erro ao ler tabela controle_sistema:', error.message); }
       DB.controle_sistema = data || { id:1, matriz_aberta:true, status_geral:'aberta', permite_pdv_emergencial:true, mensagem_aviso:'Sistema operando normalmente' };
     } catch(e) {
+      falhas.push('controle_sistema');
+      console.error('Erro ao ler tabela controle_sistema:', e.message);
       DB.controle_sistema = { id:1, matriz_aberta:true, status_geral:'aberta', permite_pdv_emergencial:true, mensagem_aviso:'Sistema operando normalmente' };
     }
-    console.log('✅ Supabase carregado —', Object.keys(DB).length, 'coleções');
+    STATUS_BANCO = { tipo: 'supabase', conectado: falhas.length === 0, tabelas_carregadas: TABELAS.length + 1 - falhas.length, total_tabelas: TABELAS.length + 1, tabelas_com_erro: [...new Set(falhas)] };
+    console.log(STATUS_BANCO.conectado ? '✅ Supabase carregado —' : '⚠️ Supabase carregado parcialmente —', STATUS_BANCO.tabelas_carregadas, '/', STATUS_BANCO.total_tabelas, 'tabelas');
   } else {
     try { if (fs.existsSync(DATA_FILE)) DB = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch(e) { DB = {}; }
     if (!DB.unidades || !DB.unidades.length) seed();
+    STATUS_BANCO = { tipo: 'local', conectado: true, tabelas_carregadas: Object.keys(DB).length, total_tabelas: Object.keys(DB).length, tabelas_com_erro: [] };
   }
 }
 
@@ -153,7 +160,8 @@ app.post('/api/login', (req, res) => {
   const { matricula, senha } = req.body;
   const f = (DB.funcionarios || []).find(x => x.matricula === matricula && x.senha_hash === senha);
   if (!f) return res.json({ erro: 'Matrícula ou senha inválidos' });
-  res.json({ sucesso: true, token: 'tok-' + f.id, funcionario: f, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
+  const { senha_hash, ...usuario } = f;
+  res.json({ sucesso: true, token: 'tok-' + f.id, usuario, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
 });
 
 // ===== DASHBOARD =====
@@ -188,7 +196,16 @@ app.get('/api/gerente/alertas', (req, res) => {
 });
 
 // ===== CONTROLE SISTEMA (Matriz) =====
-app.get('/api/controle-sistema/estado', (req, res) => res.json({ ...DB.controle_sistema }));
+app.get('/api/controle-sistema/estado', (req, res) => {
+  const estado = DB.controle_sistema || {};
+  res.json({
+    matriz_aberta: estado.matriz_aberta ?? true,
+    status_geral: estado.status_geral || 'aberta',
+    permite_pdv_emergencial: estado.permite_pdv_emergencial ?? true,
+    mensagem_aviso: estado.mensagem_aviso || 'Sistema operando normalmente',
+    updated_at: estado.updated_at || null
+  });
+});
 app.post('/api/controle-sistema/abrir', (req, res) => {
   const { unidade_id, mensagem_aviso } = req.body;
   const unidade = (DB.unidades || []).find(u => u.id == unidade_id);
@@ -1486,13 +1503,13 @@ app.post('/api/frota/manutencao/registrar', (req, res) => {
 });
 
 // ===== HEALTH CHECK =====
-app.get('/api/health', (req, res) => res.json({ status: 'ok', sistema: DB.controle_sistema?.status_geral, banco: USAR_SUPABASE ? 'supabase' : 'local', hora: agora() }));
+app.get('/api/health', (req, res) => res.status(STATUS_BANCO.conectado ? 200 : 503).json({ status: STATUS_BANCO.conectado ? 'ok' : 'degradado', sistema: DB.controle_sistema?.status_geral, ...STATUS_BANCO, hora: agora() }));
 
 // ===== STARTUP (carrega Supabase antes de subir) =====
 (async () => {
   await loadDB();
   app.listen(PORT, () => {
-    console.log('🍦 Sorveteria ERP rodando na porta ' + PORT + ' | Banco: ' + (USAR_SUPABASE ? 'Supabase ✅' : 'Arquivo local (defina SUPABASE_URL e SUPABASE_KEY)'));
+    console.log('🍖 Assados ERP rodando na porta ' + PORT + ' | Banco: ' + (USAR_SUPABASE ? 'Supabase ✅' : 'Arquivo local (defina SUPABASE_URL e SUPABASE_KEY)'));
     console.log('   Dashboard: http://localhost:' + PORT + '/dashboard.html');
     console.log('   Site:      http://localhost:' + PORT + '/site.html');
     console.log('   Bot webhook: POST /api/bot/webhook');
