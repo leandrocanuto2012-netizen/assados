@@ -166,7 +166,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
-    <img class="login-brand" src="/icons/nobre_premium_moderno.png" alt="Logo Assados Nobre" fetchpriority="high">
+    <img class="login-brand brand-logo" src="/icons/nobre_premium_moderno.png" alt="Logo Assados Nobre" fetchpriority="high">
     <h1>Assados Nobre <span style="color:var(--accent)">ERP</span></h1>
     <p>Gestão completa do seu negócio</p>
     <label>Matrícula</label>
@@ -182,7 +182,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
 <div id="app" class="hidden">
   <header class="topbar">
     <div class="top-icon" onclick="toggleSidebar()"><i data-lucide="menu"></i></div>
-    <div class="logo"><img src="/icons/nobre_premium_moderno.png" alt="" aria-hidden="true"><span>ERP</span></div>
+    <div class="logo"><img class="brand-logo" src="/icons/nobre_premium_moderno.png" alt="" aria-hidden="true"><span>ERP</span></div>
     <div class="spacer"></div>
     <div id="statusSistemaTopo" style="margin-right:8px"></div>
     <div class="top-icon" onclick="showView('dashboard')" title="Início"><i data-lucide="layout-grid"></i></div>
@@ -312,9 +312,34 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
 <div id="toastContainer"></div>
 <script>
 const API_BASE = (window.location.protocol.startsWith('http')) ? window.location.origin : 'http://localhost:8080';
+const LOGOS_DISPONIVEIS = [
+  { valor: 'nobre_premium_moderno.png', nome: 'Premium Moderno' },
+  { valor: 'nobre_dourado_metalico.png', nome: 'Dourado Metálico' },
+  { valor: 'nobre_bordogold_metalico.png', nome: 'Bordo Gold Metálico' },
+  { valor: 'nobre_icon_carimbo_relevo_clean.png', nome: 'Ícone Carimbo' }
+];
 let currentUser = null;
 let currentView = 'dashboard';
 let estadoSistema = { matriz_aberta: false, status_geral: 'fechada', permite_pdv_emergencial: true };
+
+function getLogoSelecionada(){ return localStorage.getItem('assados_logo_selecionada') || 'nobre_premium_moderno.png'; }
+function atualizarListaDeLogos(){
+  const select = document.getElementById('brandLogoSelect');
+  if (!select) return;
+  select.innerHTML = LOGOS_DISPONIVEIS.map(l => `<option value="${l.valor}">${l.nome}</option>`).join('');
+  select.value = getLogoSelecionada();
+}
+function aplicarLogoSelecionada(arquivo = getLogoSelecionada()){
+  localStorage.setItem('assados_logo_selecionada', arquivo);
+  const caminho = '/icons/' + arquivo;
+  document.querySelectorAll('.brand-logo').forEach(img => {
+    if (img) img.src = caminho;
+  });
+  const favicon = document.querySelector('link[rel="icon"]');
+  if (favicon) favicon.href = caminho;
+  const select = document.getElementById('brandLogoSelect');
+  if (select) select.value = arquivo;
+}
 
 async function apiGET(path){ try{ const r = await fetch(API_BASE + path); return await r.json(); }catch(e){ return {erro:'Servidor offline: '+e.message}; } }
 async function apiPOST(path, data){ try{ const r = await fetch(API_BASE + path, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data||{})}); return await r.json(); }catch(e){ return {erro:'Servidor offline: '+e.message}; } }
@@ -364,6 +389,8 @@ async function fazerLogin(){
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
     document.querySelector('.user-avatar').textContent = (currentUser.nome||'AD').substring(0,2).toUpperCase();
+    atualizarListaDeLogos();
+    aplicarLogoSelecionada();
     await carregarEstadoSistema();
     showView('dashboard');
     lucide.createIcons();
@@ -688,6 +715,8 @@ async function renderDashboardERP(){
   const statusBanner = estadoSistema.matriz_aberta
     ? `<div class="alert-item" style="background:#dcfce7;border-color:#bbf7d0;margin-bottom:16px"><i data-lucide="check-circle-2" style="color:#15803d"></i><span style="font-weight:700">SISTEMA ABERTO — Matriz liberou todas as unidades.</span></div>`
     : `<div class="alert-item alerta" style="margin-bottom:16px"><i data-lucide="alert-triangle"></i><span style="font-weight:700">MATRIZ FECHADA — Apenas PDV Emergencial e Ponto disponíveis para filiais.</span></div>`;
+  atualizarListaDeLogos();
+  aplicarLogoSelecionada();
   c.innerHTML = `<h1 class="page-title">${saud}, ${(currentUser?.nome||'Gerente').split(' ')[0]}!</h1>
     <p class="page-sub">Resumo do seu negócio hoje.</p>
     ${statusBanner}
@@ -702,6 +731,32 @@ async function renderDashboardERP(){
     <div class="grid-2">
       <div class="card"><div class="card-header"><div><div class="card-title"><i data-lucide="trending-up"></i> Fluxo de vendas</div><div class="card-sub">Últimos 7 dias</div></div></div><div class="chart-container" id="chartVendas"></div></div>
       <div class="card"><div class="card-header"><div><div class="card-title"><i data-lucide="bell-ring"></i> Alertas do Sistema</div><div class="card-sub">Itens que precisam de atenção</div></div></div><div id="alertasBox"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title"><i data-lucide="database-backup"></i> Preferências / Backup</div>
+          <div class="card-sub">Defina como o sistema faz cópias de segurança e retenção de dados.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="executarBackupAgora()"><i data-lucide="hard-drive-upload"></i> Backup agora</button>
+          <button class="btn btn-primary btn-sm" onclick="salvarPreferenciasBackup()"><i data-lucide="save"></i> Salvar</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-grid">
+          <div class="form-group"><label>Backup automático</label><select id="backupHabilitado"><option value="true">Ativado</option><option value="false">Desativado</option></select></div>
+          <div class="form-group"><label>Frequência</label><select id="backupFrequencia"><option value="6">A cada 6 horas</option><option value="12">A cada 12 horas</option><option value="24">Diário</option><option value="48">A cada 48 horas</option><option value="168">Semanal</option></select></div>
+          <div class="form-group"><label>Destino</label><select id="backupDestino"><option value="local">Local</option><option value="externo">Externo</option><option value="nuvem">Nuvem</option></select></div>
+          <div class="form-group"><label>Retenção</label><input id="backupRetencao" type="number" min="1" max="90" value="7"></div>
+          <div class="form-group" style="grid-column:1 / -1"><label>Logo da marca</label><div style="display:flex;gap:8px;align-items:center"><select id="brandLogoSelect" style="flex:1"></select><button class="btn btn-secondary btn-sm" type="button" onclick="aplicarLogoSelecionada(document.getElementById('brandLogoSelect').value)"><i data-lucide="paintbrush-2"></i> Aplicar</button></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="alert-item atencao"><i data-lucide="info"></i><span id="backupStatusResumo">Carregando configurações...</span></div>
+          <div class="alert-item alerta"><i data-lucide="clock-3"></i><span id="backupStatusAgenda">Próximo backup: --</span></div>
+          <div class="alert-item" style="background:#f0fdf4;border-color:#bbf7d0"><i data-lucide="hard-drive"></i><span id="backupStatusUltimo">Último backup: --</span></div>
+        </div>
+      </div>
     </div>
     <div class="card"><div class="card-header"><div><div class="card-title"><i data-lucide="grid-2x2"></i> Módulos e Aplicativos</div><div class="card-sub">Acesse rapidamente as áreas</div></div></div>
       <div class="app-grid">
@@ -718,6 +773,7 @@ async function renderDashboardERP(){
       </div>
     </div>`;
   lucide.createIcons();
+  await carregarConfiguracaoBackup();
   const r = await apiGET('/api/dashboard/resumo');
   if(!r.erro){
     document.getElementById('kpiBancos').textContent = fmt(r.saldo_bancos);
@@ -744,7 +800,61 @@ async function renderDashboardERP(){
   } else {
     ab.innerHTML = `<div class="empty-state"><i data-lucide="check-circle-2"></i><p>Tudo em ordem! Nenhum alerta no momento.</p></div>`;
   }
+  atualizarListaDeLogos();
+  aplicarLogoSelecionada();
   lucide.createIcons();
+}
+
+async function carregarConfiguracaoBackup(){
+  const r = await apiGET('/api/backup/configuracoes');
+  const elH = document.getElementById('backupHabilitado');
+  const elF = document.getElementById('backupFrequencia');
+  const elD = document.getElementById('backupDestino');
+  const elR = document.getElementById('backupRetencao');
+  const elResumo = document.getElementById('backupStatusResumo');
+  const elAgenda = document.getElementById('backupStatusAgenda');
+  const elUltimo = document.getElementById('backupStatusUltimo');
+  if (!r || r.erro || !r.configuracao) {
+    if (elResumo) elResumo.textContent = 'Backup indisponível no momento.';
+    return;
+  }
+  const cfg = r.configuracao || {};
+  if (elH) elH.value = String(Boolean(cfg.habilitado));
+  if (elF) elF.value = String(cfg.intervalo_horas || 24);
+  if (elD) elD.value = cfg.destino || 'local';
+  if (elR) elR.value = cfg.retencao || 7;
+  if (elResumo) elResumo.textContent = `Configuração: ${cfg.habilitado ? 'Habilitado' : 'Desativado'} · ${cfg.destino || 'local'} · retenção ${cfg.retencao || 7}`;
+  if (elAgenda) elAgenda.textContent = `Próximo backup: ${cfg.intervalo_horas || 24}h`;
+  if (elUltimo) {
+    const ultimo = (r.status && r.status.ultimo_backup) || (r.ultimo_backup) || null;
+    elUltimo.textContent = ultimo ? `Último backup: ${new Date(ultimo.criado_em || ultimo.data || Date.now()).toLocaleString('pt-BR')}` : 'Último backup: nenhum registro ainda';
+  }
+}
+
+async function salvarPreferenciasBackup(){
+  const dados = {
+    habilitado: document.getElementById('backupHabilitado').value === 'true',
+    intervalo_horas: Number(document.getElementById('backupFrequencia').value || 24),
+    destino: document.getElementById('backupDestino').value || 'local',
+    retencao: Number(document.getElementById('backupRetencao').value || 7)
+  };
+  const r = await apiPOST('/api/backup/configuracoes', dados);
+  if (r && r.sucesso) {
+    toast('Preferências de backup salvas!');
+    await carregarConfiguracaoBackup();
+  } else {
+    toast(r && r.erro ? r.erro : 'Não foi possível salvar as preferências.', 'error');
+  }
+}
+
+async function executarBackupAgora(){
+  const r = await apiPOST('/api/backup/criar', {});
+  if (r && r.sucesso) {
+    toast('Backup executado com sucesso!');
+    await carregarConfiguracaoBackup();
+  } else {
+    toast(r && r.erro ? r.erro : 'Falha ao executar backup.', 'error');
+  }
 }
 // ===== CONTROLE MATRIZ =====
 async function renderControleMatriz(){
