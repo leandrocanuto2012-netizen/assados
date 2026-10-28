@@ -54,7 +54,7 @@ app.get('/loja', (req, res) => res.redirect('/site.html'));
 
 // ===== STORE — Supabase (se configurado) ou arquivo local =====
 let DB = {};
-const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','pedidos_site','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log'];
+const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','pedidos_site','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log','login_security','support_tickets','backup_settings','backup_runs'];
 let STATUS_BANCO = { tipo: USAR_SUPABASE ? 'supabase' : 'local', conectado: !USAR_SUPABASE, tabelas_com_erro: [] };
 let backupTimer = null;
 
@@ -158,6 +158,7 @@ async function criarBackup() {
 }
 
 async function statusBackups() {
+  const config = getBackupSettings();
   try {
     const arquivos = (await fs.promises.readdir(BACKUP_DIR)).filter(n => /^assados-.*\.json\.gz$/.test(n));
     const registros = await Promise.all(arquivos.map(async nome => {
@@ -165,12 +166,41 @@ async function statusBackups() {
       return { nome, criado_em: stat.mtime.toISOString(), tamanho_bytes: stat.size };
     }));
     registros.sort((a, b) => b.criado_em.localeCompare(a.criado_em));
-    return { habilitado: BACKUP_ENABLED, intervalo_horas: BACKUP_INTERVAL_HOURS, retencao: BACKUP_RETENTION, armazenamento_persistente: BACKUP_STORAGE_PERSISTENT, em_andamento: backupEmAndamento, ultimo_backup: ultimoBackup || registros[0] || null, erro_ultimo_backup: erroUltimoBackup, backups: registros };
+    const ultimo = ultimoBackup || registros[0] || null;
+    return { habilitado: Boolean(config.habilitado || BACKUP_ENABLED), destino: config.destino || 'local', intervalo_horas: Number(config.intervalo_horas || BACKUP_INTERVAL_HOURS), retencao: Number(config.retencao || BACKUP_RETENTION), armazenamento_persistente: BACKUP_STORAGE_PERSISTENT, em_andamento: backupEmAndamento, ultimo_backup: ultimo, erro_ultimo_backup: erroUltimoBackup, backups: registros, configuracao: config };
   } catch (e) {
-    return { habilitado: BACKUP_ENABLED, intervalo_horas: BACKUP_INTERVAL_HOURS, retencao: BACKUP_RETENTION, armazenamento_persistente: BACKUP_STORAGE_PERSISTENT, em_andamento: backupEmAndamento, ultimo_backup: ultimoBackup, erro_ultimo_backup: erroUltimoBackup || e.message, backups: [] };
+    return { habilitado: Boolean(config.habilitado || BACKUP_ENABLED), destino: config.destino || 'local', intervalo_horas: Number(config.intervalo_horas || BACKUP_INTERVAL_HOURS), retencao: Number(config.retencao || BACKUP_RETENTION), armazenamento_persistente: BACKUP_STORAGE_PERSISTENT, em_andamento: backupEmAndamento, ultimo_backup: ultimoBackup, erro_ultimo_backup: erroUltimoBackup || e.message, backups: [], configuracao: config };
   }
 }
 
+function getBackupSettings() {
+  DB.backup_settings = DB.backup_settings || [];
+  let cfg = DB.backup_settings.find(item => item.id === 1) || DB.backup_settings[0] || null;
+  if (!cfg) {
+    cfg = { id: 1, habilitado: false, destino: 'local', intervalo_horas: 24, retencao: 7, ultimo_backup: null, proximo_backup: null };
+    DB.backup_settings.push(cfg);
+  }
+  cfg.id = 1;
+  cfg.habilitado = cfg.habilitado !== undefined ? Boolean(cfg.habilitado) : false;
+  cfg.destino = cfg.destino || 'local';
+  cfg.intervalo_horas = Number(cfg.intervalo_horas || 24);
+  cfg.retencao = Number(cfg.retencao || 7);
+  return cfg;
+}
+function setBackupSettings(payload = {}) {
+  const cfg = getBackupSettings();
+  const dados = {
+    ...cfg,
+    habilitado: Boolean(payload.habilitado ?? cfg.habilitado),
+    destino: payload.destino || cfg.destino || 'local',
+    intervalo_horas: Number(payload.intervalo_horas || cfg.intervalo_horas || 24),
+    retencao: Number(payload.retencao || cfg.retencao || 7),
+    atualizado_em: agora()
+  };
+  DB.backup_settings = [{ ...dados, id: 1 }];
+  saveDB();
+  return DB.backup_settings[0];
+}
 function nextId(col) { DB[col] = DB[col] || []; return (DB[col].reduce((m, r) => Math.max(m, r.id || 0), 0)) + 1; }
 function hashSenha(senha) {
   const salt = crypto.randomBytes(16);
@@ -231,6 +261,7 @@ function seed() {
   DB.fichas_tecnicas = []; DB.ordens_servico = []; DB.estoque = []; DB.mov_estoque = [];
   DB.pdv_emergencial = []; DB.log_bloqueio = []; DB.log_caixa = []; DB.mov_caixa = [];
   DB.logistica = []; DB.frota = []; DB.checklists_exec = []; DB.pedidos_site = [];
+  DB.login_security = []; DB.support_tickets = []; DB.backup_runs = []; DB.backup_settings = [{ id: 1, habilitado: false, destino: 'local', intervalo_horas: 24, retencao: 7, atualizado_em: agora() }];
   DB.bot_config = [{ nome: 'nome_bot', valor: 'SorveteBot' }, { nome: 'saudacao', valor: 'Olá! Bem-vindo à Sorveteria!' }];
   DB.bot_regras = [
     { id: 1, palavras_chave: 'sabor|sabores|sorvete', resposta: 'Temos os sabores: Morango, Chocolate, Baunilha, Açaí com granola e muito mais!' },
@@ -277,7 +308,12 @@ async function obterSegurancaLogin(matricula) {
     return estado;
   }
   const { data, error } = await supabase.from('login_security').select('*').eq('matricula', matricula).maybeSingle();
-  if (error) throw error;
+  if (error) {
+    if (error.code === 'PGRST205' || error.code === '42P01' || /login_security.*(not found|does not exist|schema cache)/i.test(error.message || '')) {
+      throw new Error('Tabela public.login_security ausente. Execute sql/02-seguranca-backups.sql no SQL Editor do Supabase.');
+    }
+    throw error;
+  }
   return data || { matricula, tentativas: 0, bloqueado_ate: null };
 }
 
@@ -329,7 +365,8 @@ async function loginSeguro(req, res) {
   try { estado = await obterSegurancaLogin(matricula); }
   catch (e) {
     console.error('Falha ao consultar proteção de login:', e.message);
-    return res.status(503).json({ sucesso: false, erro: 'Não foi possível validar o acesso. Tente novamente mais tarde.' });
+    const tabelaAusente = /public\.login_security ausente/i.test(e.message || '');
+    return res.status(503).json({ sucesso: false, erro: tabelaAusente ? e.message : 'Não foi possível validar o acesso. Tente novamente mais tarde.' });
   }
 
   if (estado.bloqueado_ate && new Date(estado.bloqueado_ate).getTime() > Date.now()) {
@@ -1712,6 +1749,25 @@ app.post('/api/frota/manutencao/registrar', (req, res) => {
 app.get('/api/health', (req, res) => res.status(STATUS_BANCO.conectado ? 200 : 503).json({ status: STATUS_BANCO.conectado ? 'ok' : 'degradado', sistema: DB.controle_sistema?.status_geral, ...STATUS_BANCO, hora: agora() }));
 
 // Operações administrativas não usam dados de navegador nem ficam públicas.
+app.get('/api/backup/configuracoes', async (req, res) => {
+  const status = await statusBackups();
+  const config = status.configuracao || getBackupSettings();
+  res.json({ sucesso: true, configuracao: config, status });
+});
+app.post('/api/backup/configuracoes', (req, res) => {
+  const payload = req.body || {};
+  const config = setBackupSettings({
+    habilitado: payload.habilitado,
+    destino: payload.destino,
+    intervalo_horas: payload.intervalo_horas,
+    retencao: payload.retencao
+  });
+  res.json({ sucesso: true, configuracao: config });
+});
+app.post('/api/backup/criar', async (req, res) => {
+  const resultado = await criarBackup();
+  res.status(resultado.sucesso ? 201 : 503).json(resultado);
+});
 app.get('/api/admin/backups', async (req, res) => {
   if (!segredoValido(req.get('x-backup-admin-token'), BACKUP_ADMIN_TOKEN)) return res.status(403).json({ erro: 'Operação não autorizada.' });
   res.json(await statusBackups());
