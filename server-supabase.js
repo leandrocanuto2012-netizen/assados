@@ -37,6 +37,8 @@ const BACKUP_INTERVAL_HOURS = Math.min(720, Math.max(1, Number(process.env.BACKU
 const BACKUP_RETENTION = Math.min(90, Math.max(1, Number(process.env.BACKUP_RETENTION || 7)));
 const LOGIN_MAX_ATTEMPTS = 5;
 const LOGIN_LOCK_HOURS = 24;
+const USER_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const USER_SESSIONS = new Map();
 
 const supabase = USAR_SUPABASE ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
@@ -89,18 +91,22 @@ async function loadDB() {
 }
 
 let salvando = false;
+let salvarNovamente = false;
 function saveDB() {
   if (!USAR_SUPABASE) { fs.writeFileSync(DATA_FILE, JSON.stringify(DB, null, 2)); return; }
-  if (salvando) return;
+  if (salvando) { salvarNovamente = true; return; }
   salvando = true;
   (async () => {
-    try {
-      for (const tabela of TABELAS) {
-        const dados = DB[tabela] || [];
-        if (dados.length) await supabase.from(tabela).upsert(dados, { onConflict: 'id' });
-      }
-      if (DB.controle_sistema) await supabase.from('controle_sistema').upsert(DB.controle_sistema, { onConflict: 'id' });
-    } catch(e) { console.error('Erro ao salvar no Supabase:', e.message); }
+    do {
+      salvarNovamente = false;
+      try {
+        for (const tabela of TABELAS) {
+          const dados = DB[tabela] || [];
+          if (dados.length) await supabase.from(tabela).upsert(dados, { onConflict: 'id' });
+        }
+        if (DB.controle_sistema) await supabase.from('controle_sistema').upsert(DB.controle_sistema, { onConflict: 'id' });
+      } catch(e) { console.error('Erro ao salvar no Supabase:', e.message); }
+    } while (salvarNovamente);
     salvando = false;
   })();
 }
@@ -202,6 +208,39 @@ function setBackupSettings(payload = {}) {
   return DB.backup_settings[0];
 }
 function nextId(col) { DB[col] = DB[col] || []; return (DB[col].reduce((m, r) => Math.max(m, r.id || 0), 0)) + 1; }
+function upsertRecord(col, payload, defaults = {}) {
+  DB[col] = DB[col] || [];
+  const existing = payload.id ? DB[col].find(record => record.id == payload.id) : null;
+  if (existing) {
+    Object.assign(existing, payload, { id: existing.id });
+    saveDB();
+    return { record: existing, created: false };
+  }
+  const record = { ...defaults, ...payload, id: nextId(col) };
+  DB[col].push(record);
+  saveDB();
+  return { record, created: true };
+}
+function archiveRecord(col, id) {
+  const record = (DB[col] || []).find(item => item.id == id);
+  if (!record) return false;
+  record.status = 'INATIVO';
+  record.ativo = false;
+  saveDB();
+  return true;
+}
+async function deleteRecord(col, id) {
+  const rows = DB[col] || [];
+  const record = rows.find(item => item.id == id);
+  if (!record) return false;
+  if (USAR_SUPABASE) {
+    const { error } = await supabase.from(col).delete().eq('id', record.id);
+    if (error) throw error;
+  }
+  DB[col] = rows.filter(item => item.id != id);
+  saveDB();
+  return true;
+}
 function hashSenha(senha) {
   const salt = crypto.randomBytes(16);
   const derived = crypto.scryptSync(String(senha), salt, 64);
@@ -404,8 +443,77 @@ async function loginSeguro(req, res) {
     if (error) { console.error('Falha ao proteger senha legada:', error.message); return res.status(503).json({ sucesso: false, erro: 'Não foi possível atualizar a proteção da senha. Tente novamente.' }); }
   }
   const { senha_hash, ...usuario } = f;
-  res.json({ sucesso: true, token: 'tok-' + f.id, usuario, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
+  const token = crypto.randomBytes(32).toString('hex');
+  USER_SESSIONS.set(token, { funcionario_id: f.id, expires_at: Date.now() + USER_SESSION_TTL_MS });
+  for (const [sessionToken, sessao] of USER_SESSIONS) if (sessao.expires_at <= Date.now()) USER_SESSIONS.delete(sessionToken);
+  res.json({ sucesso: true, token, usuario, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
 }
+function exigirSessaoUsuario(req, res, next) {
+  const token = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  const sessao = USER_SESSIONS.get(token);
+  if (!sessao || sessao.expires_at <= Date.now()) {
+    USER_SESSIONS.delete(token);
+    return res.status(401).json({ erro: 'Sessão expirada. Entre novamente.' });
+  }
+  const funcionario = (DB.funcionarios || []).find(item => item.id === sessao.funcionario_id && item.status !== 'INATIVO');
+  if (!funcionario) return res.status(401).json({ erro: 'Funcionário não está ativo.' });
+  req.funcionario = funcionario;
+  next();
+}
+function exigirPerfilPdv(req, res, next) {
+  if (!['operador', 'caixa', 'vendedor', 'atendente'].includes(String(req.funcionario?.role || '').toLowerCase())) {
+    return res.status(403).json({ erro: 'Acesso disponível somente para perfis de caixa e vendas.' });
+  }
+  next();
+}
+function exigirPerfilAdministrativo(req, res, next) {
+  if (!['admin', 'gerente'].includes(String(req.funcionario?.role || '').toLowerCase())) {
+    return res.status(403).json({ erro: 'Acesso restrito à administração.' });
+  }
+  next();
+}
+function exigirConfirmacaoCrud(req, res, next) {
+  if (req.method !== 'POST' || req.path.startsWith('/api/site/')) return next();
+  const confirmar = /\/(salvar|criar|excluir|arquivar|registrar|configurar|config)$/.test(req.path) || [
+    '/api/agenda', '/api/post-its', '/api/pdv/usuario/ponto', '/api/perfis-permissao', '/api/integracoes/personalizadas',
+    '/api/funcionarios/permissao', '/api/controle-sistema/mensagem', '/api/backup/configuracoes', '/api/bot/config',
+    '/api/bot/regras', '/api/fidelidade/ajustar'
+  ].includes(req.path);
+  if (!confirmar) return next();
+  const token = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  const sessao = USER_SESSIONS.get(token);
+  if (!sessao || sessao.expires_at <= Date.now()) return res.status(401).json({ erro: 'Sessão expirada. Entre novamente.' });
+  const funcionario = (DB.funcionarios || []).find(item => item.id === sessao.funcionario_id && item.status !== 'INATIVO');
+  if (!funcionario) return res.status(401).json({ erro: 'Funcionário não está ativo.' });
+  const ignorarCampos = new Set(['matricula','funcionario_id','usuario','senha','senha_adm','senha_usuario','senha_confirmacao']);
+  const dadosUteis = Object.entries(req.body || {}).some(([chave,valor]) => {
+    if (ignorarCampos.has(chave) || valor === null || valor === undefined) return false;
+    if (typeof valor === 'string') return valor.trim().length > 0;
+    if (Array.isArray(valor)) return valor.length > 0;
+    if (typeof valor === 'number') return Number.isFinite(valor);
+    if (typeof valor === 'boolean') return true;
+    return typeof valor === 'object' && Object.keys(valor).length > 0;
+  });
+  if (!dadosUteis) return res.status(400).json({ erro: 'A solicitação está vazia. Preencha os campos obrigatórios.' });
+  const senha = String(req.body?.senha_confirmacao || req.body?.senha_usuario || req.body?.senha_adm || '');
+  if (!senha || !verificarSenha(funcionario.senha_hash, senha)) return res.status(401).json({ erro: 'Senha do usuário incorreta ou não informada.', codigo: 'CONFIRMACAO_SENHA' });
+  let mutacaoConfirmada = false;
+  const enviarJson = res.json.bind(res);
+  res.json = corpo => { if (corpo?.sucesso === true) mutacaoConfirmada = true; return enviarJson(corpo); };
+  res.once('finish', () => {
+    if (mutacaoConfirmada && res.statusCode >= 200 && res.statusCode < 300) {
+      const referencia = req.body?.id || req.body?.funcionario_id || req.body?.comanda_id || req.body?.registro_id || '';
+      registrarAuditoria('ALTERACAO_CONFIRMADA', `${req.method} ${req.path}${referencia ? ' · referência ' + referencia : ''}`, funcionario.id, funcionario.matricula);
+    }
+  });
+  next();
+}
+app.post('/api/logout', (req, res) => {
+  const token = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  if (token) USER_SESSIONS.delete(token);
+  res.json({ sucesso: true });
+});
+app.use(exigirConfirmacaoCrud);
 
 // ===== DASHBOARD =====
 app.get('/api/dashboard/resumo', (req, res) => {
@@ -504,13 +612,45 @@ app.post('/api/pdv-emergencial/sincronizar', (req, res) => {
 app.get('/api/unidades', (req, res) => res.json({ unidades: DB.unidades || [] }));
 
 // ===== CAIXA / PDV =====
-app.get('/api/caixa/status-online', (req, res) => {
+const FORMAS_PAGAMENTO_PDV = ['DINHEIRO', 'PIX', 'CARTAO', 'BOLETO', 'IFOOD'];
+function lerConfiguracaoPdv() {
+  const linha = (DB.bot_config || []).find(item => item.nome === 'pdv_config');
+  let salva = {};
+  try { salva = linha ? JSON.parse(linha.valor || '{}') : {}; } catch (e) { salva = {}; }
+  const formas = Array.isArray(salva.formas_pagamento) ? salva.formas_pagamento.filter(item => FORMAS_PAGAMENTO_PDV.includes(item)) : FORMAS_PAGAMENTO_PDV;
+  return {
+    fundo_inicial: Number.isFinite(Number(salva.fundo_inicial)) ? Number(salva.fundo_inicial) : 100,
+    formas_pagamento: formas.length ? formas : ['DINHEIRO'],
+    forma_padrao: formas.includes(salva.forma_padrao) ? salva.forma_padrao : (formas[0] || 'DINHEIRO'),
+    habilitar_balanca: salva.habilitar_balanca !== false,
+    rodape_cupom: typeof salva.rodape_cupom === 'string' ? salva.rodape_cupom : 'Obrigado, volte sempre!'
+  };
+}
+app.get('/api/pdv/configuracoes', exigirSessaoUsuario, (req, res) => res.json({ configuracao: lerConfiguracaoPdv() }));
+app.post('/api/pdv/configuracoes', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
+  const payload = req.body || {};
+  const formas = FORMAS_PAGAMENTO_PDV.filter(forma => Array.isArray(payload.formas_pagamento) && payload.formas_pagamento.includes(forma));
+  const configuracao = {
+    fundo_inicial: Math.min(1000000, Math.max(0, Number(payload.fundo_inicial) || 0)),
+    formas_pagamento: formas.length ? formas : ['DINHEIRO'],
+    forma_padrao: formas.includes(payload.forma_padrao) ? payload.forma_padrao : (formas[0] || 'DINHEIRO'),
+    habilitar_balanca: payload.habilitar_balanca === true,
+    rodape_cupom: String(payload.rodape_cupom || '').trim().slice(0, 160)
+  };
+  DB.bot_config = DB.bot_config || [];
+  let linha = DB.bot_config.find(item => item.nome === 'pdv_config');
+  if (!linha) { linha = { id: nextId('bot_config'), nome: 'pdv_config', valor: '' }; DB.bot_config.push(linha); }
+  linha.valor = JSON.stringify(configuracao);
+  saveDB();
+  res.json({ sucesso: true, configuracao });
+});
+app.get('/api/caixa/status-online', exigirSessaoUsuario, (req, res) => {
   const abertos = (DB.caixas || []).filter(c => c.status === 'aberto');
   const saldo = abertos.reduce((s, c) => s + Number(c.saldo_atual || 0), 0);
   const autPend = (DB.autorizacoes || []).filter(a => a.status === 'pendente').length;
   res.json({ caixas_abertos: abertos, saldo_atual: saldo, autorizacoes_pendentes: autPend });
 });
-app.post('/api/caixa/abrir', verificarEstado, (req, res) => {
+app.post('/api/caixa/abrir', exigirSessaoUsuario, verificarEstado, (req, res) => {
   const tesAberta = (DB.tesouraria || []).some(t => t.status === 'aberta' && t.data === hoje());
   if (!tesAberta) return res.json({ erro: 'Tesouraria fechada! Abra a tesouraria primeiro.' });
   const cx = (DB.caixas || [])[0];
@@ -520,14 +660,14 @@ app.post('/api/caixa/abrir', verificarEstado, (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/caixa/fechar', verificarEstado, (req, res) => {
+app.post('/api/caixa/fechar', exigirSessaoUsuario, verificarEstado, (req, res) => {
   const cx = (DB.caixas || []).find(c => c.id == req.body.caixa_id) || (DB.caixas || [])[0];
   cx.status = 'fechado'; cx.fechada_por = req.body.funcionario_id || 1; cx.fechada_em = agora();
   DB.log_caixa.push({ id: nextId('log_caixa'), evento: 'FECHAMENTO_CAIXA', matricula: req.body.matricula || '-', created_at: agora() });
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/caixa/movimento', verificarEstado, (req, res) => {
+app.post('/api/caixa/movimento', exigirSessaoUsuario, verificarEstado, (req, res) => {
   const { tipo, valor, descricao } = req.body;
   const cx = (DB.caixas || []).find(c => c.status === 'aberto');
   if (!cx) return res.json({ erro: 'Nenhum caixa aberto' });
@@ -542,23 +682,27 @@ app.post('/api/caixa/movimento', verificarEstado, (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.get('/api/caixa/movimentos', (req, res) => res.json({ movimentos: (DB.mov_caixa || []).slice(-50).reverse() }));
-app.get('/api/log-caixa', (req, res) => res.json({ log: (DB.log_caixa || []).slice(-100).reverse() }));
+app.get('/api/caixa/movimentos', exigirSessaoUsuario, (req, res) => res.json({ movimentos: (DB.mov_caixa || []).slice(-50).reverse() }));
+app.get('/api/log-caixa', exigirSessaoUsuario, (req, res) => res.json({ log: (DB.log_caixa || []).slice(-100).reverse() }));
 
 // ===== VENDAS =====
-app.post('/api/venda/criar', verificarEstado, (req, res) => {
+app.post('/api/venda/criar', exigirSessaoUsuario, verificarEstado, (req, res) => {
   const { itens, forma_pagamento, comanda_id, cliente_nome } = req.body;
+  const comanda = comanda_id ? (DB.comandas || []).find(item => item.id == comanda_id && item.status === 'ABERTA') : null;
+  if (comanda_id && !comanda) return res.status(409).json({ erro: 'Comanda não encontrada ou já finalizada. Atualize a lista e tente novamente.' });
+  const cx = (DB.caixas || []).find(c => c.status === 'aberto');
+  if (!cx) return res.status(409).json({ erro: 'Abra um caixa antes de finalizar a venda.' });
   const total = (itens || []).reduce((s, i) => s + Number(i.total || 0), 0);
-  const venda = { id: nextId('vendas'), data: agora(), cliente_nome: cliente_nome || 'Balcão', forma_pagamento, origem: comanda_id ? 'comanda' : 'balcao', total, itens, status: 'CONCLUIDA', operador_matricula: req.body.matricula || '-', comanda_id };
+  const venda = { id: nextId('vendas'), data: agora(), cliente_nome: cliente_nome || comanda?.cliente_nome || 'Balcão', forma_pagamento, origem: comanda_id ? 'comanda' : 'balcao', total, itens, status: 'CONCLUIDA', operador_matricula: req.body.matricula || '-', comanda_id };
   DB.vendas.push(venda);
+  if (comanda) { comanda.status = 'FECHADA'; comanda.total = total; comanda.venda_id = venda.id; comanda.fechada_em = venda.data; }
   // Baixa estoque
   (itens || []).forEach(i => {
     const est = (DB.estoque || []).find(e => e.produto_id == i.product_id);
     if (est) est.qty = Math.max(0, Number(est.qty) - Number(i.qty || 1));
   });
   // Crédito no caixa
-  const cx = (DB.caixas || []).find(c => c.status === 'aberto');
-  if (cx) cx.saldo_atual = Number(cx.saldo_atual) + total;
+  cx.saldo_atual = Number(cx.saldo_atual) + total;
   // Fidelidade
   const cli = (DB.clientes || []).find(c => c.nome === cliente_nome);
   if (cli) {
@@ -577,24 +721,28 @@ app.post('/api/venda/estornar', (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.get('/api/venda/cupom', (req, res) => {
+app.get('/api/venda/cupom', exigirSessaoUsuario, (req, res) => {
   const v = (DB.vendas || []).find(x => x.id == req.query.id);
   if (!v) return res.json({ erro: 'Não encontrada' });
+  if (!['admin', 'gerente', 'financeiro'].includes(String(req.funcionario.role || '').toLowerCase()) && v.operador_matricula !== req.funcionario.matricula) return res.status(403).json({ erro: 'Acesso restrito às próprias vendas.' });
   res.json({ venda: v, itens: v.itens || [] });
 });
-app.get('/api/vendas', (req, res) => res.json({ vendas: (DB.vendas || []).slice(-100).reverse() }));
+app.get('/api/vendas', exigirSessaoUsuario, (req, res) => {
+  const todas = (DB.vendas || []).slice(-100).reverse();
+  const vendas = ['admin', 'gerente', 'financeiro'].includes(String(req.funcionario.role || '').toLowerCase()) ? todas : todas.filter(venda => venda.operador_matricula === req.funcionario.matricula);
+  res.json({ vendas });
+});
 
 // ===== PRODUTOS =====
-app.get('/api/produtos', (req, res) => res.json({ produtos: DB.produtos || [] }));
+app.get('/api/produtos', (req, res) => res.json({ produtos: (DB.produtos || []).filter(p => p.status !== 'INATIVO') }));
 app.post('/api/produtos/salvar', (req, res) => {
-  const { id } = req.body;
-  if (id) {
-    const p = (DB.produtos || []).find(x => x.id == id);
-    if (p) Object.assign(p, req.body);
-  } else {
-    DB.produtos.push({ id: nextId('produtos'), ...req.body, status: 'ATIVO' });
-  }
-  saveDB();
+  upsertRecord('produtos', req.body, { status: 'ATIVO' });
+  res.json({ sucesso: true });
+});
+app.post('/api/registros/arquivar', (req, res) => {
+  const colecoes = ['produtos', 'clientes', 'fornecedores', 'funcionarios', 'patrimonio', 'imoveis', 'fichas_tecnicas', 'eventos'];
+  if (!colecoes.includes(req.body.colecao)) return res.status(400).json({ erro: 'Cadastro inválido.' });
+  if (!archiveRecord(req.body.colecao, req.body.id)) return res.status(404).json({ erro: 'Registro não encontrado.' });
   res.json({ sucesso: true });
 });
 
@@ -609,10 +757,13 @@ app.post('/api/producao/receita/salvar', (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/producao/receita/excluir', (req, res) => {
-  DB.receitas = (DB.receitas || []).filter(r => r.id != req.body.id);
-  saveDB();
-  res.json({ sucesso: true });
+app.post('/api/producao/receita/excluir', async (req, res) => {
+  try {
+    if (!await deleteRecord('receitas', req.body.id)) return res.status(404).json({ erro: 'Insumo não encontrado.' });
+    res.json({ sucesso: true });
+  } catch (error) {
+    res.status(500).json({ erro: 'Não foi possível excluir o insumo.' });
+  }
 });
 app.post('/api/producao/simular', (req, res) => {
   const { produto_id, qtd } = req.body;
@@ -644,13 +795,15 @@ app.post('/api/producao/confirmar', (req, res) => {
 });
 
 // ===== CLIENTES + FIDELIDADE =====
-app.get('/api/clientes', (req, res) => res.json({ clientes: (DB.clientes || []).map(c => ({ ...c, pontos_disponiveis: ((DB.fidelidade || []).find(f => f.cliente_id === c.id) || {}).pontos_disponiveis || 0, valor_total_gasto: ((DB.fidelidade || []).find(f => f.cliente_id === c.id) || {}).valor_total_gasto || 0 })) }));
+app.get('/api/clientes', (req, res) => res.json({ clientes: (DB.clientes || []).filter(c => c.ativo !== false).map(c => ({ ...c, pontos_disponiveis: ((DB.fidelidade || []).find(f => f.cliente_id === c.id) || {}).pontos_disponiveis || 0, valor_total_gasto: ((DB.fidelidade || []).find(f => f.cliente_id === c.id) || {}).valor_total_gasto || 0 })) }));
 app.post('/api/clientes/salvar', (req, res) => {
-  const c = { id: nextId('clientes'), ...req.body, ativo: true, data_cadastro: hoje() };
-  DB.clientes.push(c);
-  DB.fidelidade.push({ id: nextId('fidelidade'), cliente_id: c.id, pontos_total: 0, pontos_disponiveis: 0, pontos_resgatados: 0, valor_total_gasto: 0, atualizado_em: agora() });
-  saveDB();
-  res.json({ sucesso: true });
+  const { record, created } = upsertRecord('clientes', req.body, { ativo: true, data_cadastro: hoje() });
+  if (created) {
+    DB.fidelidade = DB.fidelidade || [];
+    DB.fidelidade.push({ id: nextId('fidelidade'), cliente_id: record.id, pontos_total: 0, pontos_disponiveis: 0, pontos_resgatados: 0, valor_total_gasto: 0, atualizado_em: agora() });
+    saveDB();
+  }
+  res.json({ sucesso: true, cliente_id: record.id });
 });
 app.get('/api/fidelidade/:id', (req, res) => {
   const fid = (DB.fidelidade || []).find(f => f.cliente_id == req.params.id);
@@ -664,20 +817,27 @@ app.post('/api/fidelidade/ajustar', (req, res) => {
 });
 
 // ===== FORNECEDORES =====
-app.get('/api/fornecedores', (req, res) => res.json({ fornecedores: DB.fornecedores || [] }));
-app.post('/api/fornecedores/salvar', (req, res) => { DB.fornecedores.push({ id: nextId('fornecedores'), ...req.body, status: 'ATIVO' }); saveDB(); res.json({ sucesso: true }); });
+app.get('/api/fornecedores', (req, res) => res.json({ fornecedores: (DB.fornecedores || []).filter(f => f.status !== 'INATIVO') }));
+app.post('/api/fornecedores/salvar', (req, res) => { upsertRecord('fornecedores', req.body, { status: 'ATIVO' }); res.json({ sucesso: true }); });
 
 // ===== FUNCIONÁRIOS =====
-app.get('/api/funcionarios', (req, res) => res.json({ funcionarios: (DB.funcionarios || []).map(({ senha_hash, ultimas_senhas, ...f }) => ({ ...f, unidade_nome: ((DB.unidades || []).find(u => u.id === f.unidade_id) || {}).nome })) }));
-app.post('/api/funcionarios/salvar', (req, res) => { DB.funcionarios.push({ id: nextId('funcionarios'), ...req.body, status: 'ATIVO', data_admissao: hoje() }); saveDB(); res.json({ sucesso: true }); });
+app.get('/api/funcionarios', (req, res) => res.json({ funcionarios: (DB.funcionarios || []).filter(f => f.status !== 'INATIVO').map(({ senha, senha_hash, ultimas_senhas, ...f }) => ({ ...f, unidade_nome: ((DB.unidades || []).find(u => u.id === f.unidade_id) || {}).nome })) }));
+app.post('/api/funcionarios/salvar', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
+  const payload = { ...req.body };
+  const perfisBase = ['admin', 'gerente', 'operador', 'caixa', 'vendedor', 'atendente', 'financeiro', 'rh'];
+  const perfilValido = perfisBase.includes(payload.role) || lerListaFerramenta('perfis_permissao').some(perfil => perfil.id === payload.role);
+  if (payload.role && !perfilValido) return res.status(400).json({ erro: 'Perfil de acesso inválido.' });
+  if (!payload.senha) delete payload.senha;
+  upsertRecord('funcionarios', payload, { status: 'ATIVO', data_admissao: hoje() });
+  res.json({ sucesso: true });
+});
 
 // ===== PATRIMÔNIO =====
-app.get('/api/patrimonio', (req, res) => res.json({ bens: (DB.patrimonio || []).map(p => ({ ...p, unidade_nome: ((DB.unidades || []).find(u => u.id === p.localizacao_unidade_id) || {}).nome })) }));
+app.get('/api/patrimonio', (req, res) => res.json({ bens: (DB.patrimonio || []).filter(p => p.status !== 'INATIVO').map(p => ({ ...p, unidade_nome: ((DB.unidades || []).find(u => u.id === p.localizacao_unidade_id) || {}).nome })) }));
 app.post('/api/patrimonio/salvar', (req, res) => {
   const codigo = 'PAT-' + new Date().getFullYear() + '-' + String((DB.patrimonio || []).length + 1).padStart(5, '0');
-  DB.patrimonio.push({ id: nextId('patrimonio'), codigo_etiqueta: codigo, ...req.body, status: 'ativo', condicao_atual: req.body.condicao_atual || 'bom', data_ultima_verificacao: hoje() });
-  saveDB();
-  res.json({ sucesso: true, codigo_etiqueta: codigo });
+  const { record, created } = upsertRecord('patrimonio', req.body, { codigo_etiqueta: codigo, status: 'ativo', condicao_atual: req.body.condicao_atual || 'bom', data_ultima_verificacao: hoje() });
+  res.json({ sucesso: true, codigo_etiqueta: record.codigo_etiqueta, criado: created });
 });
 app.post('/api/patrimonio/transferir', (req, res) => {
   const bem = (DB.patrimonio || []).find(p => p.id == req.body.patrimonio_id);
@@ -699,17 +859,16 @@ app.post('/api/patrimonio/checklist-mudanca', (req, res) => {
 });
 
 // ===== IMÓVEIS =====
-app.get('/api/imoveis', (req, res) => res.json({ imoveis: (DB.imoveis || []).map(i => ({ ...i, unidade_nome: ((DB.unidades || []).find(u => u.id === i.unidade_id) || {}).nome })) }));
-app.post('/api/imoveis/salvar', (req, res) => { DB.imoveis.push({ id: nextId('imoveis'), ...req.body, status: 'ativo' }); saveDB(); res.json({ sucesso: true }); });
+app.get('/api/imoveis', (req, res) => res.json({ imoveis: (DB.imoveis || []).filter(i => i.status !== 'INATIVO').map(i => ({ ...i, unidade_nome: ((DB.unidades || []).find(u => u.id === i.unidade_id) || {}).nome })) }));
+app.post('/api/imoveis/salvar', (req, res) => { upsertRecord('imoveis', req.body, { status: 'ativo' }); res.json({ sucesso: true }); });
 
 // ===== FICHAS TÉCNICAS =====
-app.get('/api/fichas-tecnicas', (req, res) => res.json({ fichas: DB.fichas_tecnicas || [] }));
-app.get('/api/fichas-tecnicas/:id', (req, res) => { const f = (DB.fichas_tecnicas || []).find(x => x.id == req.params.id); res.json({ ficha: f || null }); });
+app.get('/api/fichas-tecnicas', (req, res) => res.json({ fichas: (DB.fichas_tecnicas || []).filter(f => f.ativo !== false) }));
+app.get('/api/fichas-tecnicas/:id', (req, res) => { const f = (DB.fichas_tecnicas || []).find(x => x.id == req.params.id && x.ativo !== false); res.json({ ficha: f || null }); });
 app.post('/api/fichas-tecnicas/salvar', (req, res) => {
   const { tempo_producao_min, tempo_embalagem_min, tempo_acondicionamento_min } = req.body;
   const tempo_total = Number(tempo_producao_min || 0) + Number(tempo_embalagem_min || 0) + Number(tempo_acondicionamento_min || 0);
-  DB.fichas_tecnicas.push({ id: nextId('fichas_tecnicas'), ...req.body, tempo_total_min: tempo_total, ativo: true });
-  saveDB();
+  upsertRecord('fichas_tecnicas', { ...req.body, tempo_total_min: tempo_total }, { ativo: true });
   res.json({ sucesso: true });
 });
 
@@ -735,21 +894,30 @@ app.post('/api/ordens-servico/concluir', (req, res) => {
 });
 
 // ===== COMANDAS =====
-app.get('/api/comandas', (req, res) => res.json({ comandas: DB.comandas || [] }));
-app.get('/api/comandas/abertas', (req, res) => res.json({ comandas: (DB.comandas || []).filter(c => c.status === 'ABERTA') }));
-app.post('/api/comandas/criar', (req, res) => {
-  const numero = 'CMD-' + String((DB.comandas || []).length + 1).padStart(4, '0');
-  DB.comandas.push({ id: nextId('comandas'), numero, ...req.body, status: 'ABERTA', total: 0, entrada_at: agora() });
+app.get('/api/comandas', exigirSessaoUsuario, (req, res) => res.json({ comandas: DB.comandas || [] }));
+app.get('/api/comandas/abertas', exigirSessaoUsuario, (req, res) => res.json({ comandas: (DB.comandas || []).filter(c => c.status === 'ABERTA') }));
+app.post('/api/comandas/criar', exigirSessaoUsuario, (req, res) => {
+  DB.comandas = DB.comandas || [];
+  const id = nextId('comandas');
+  const numero = 'CMD-' + String(id).padStart(4, '0');
+  DB.comandas.push({ ...req.body, id, numero, status: 'ABERTA', total: 0, entrada_at: agora() });
   saveDB();
-  res.json({ sucesso: true, numero });
+  res.json({ sucesso: true, id, numero });
 });
-app.post('/api/comandas/fechar', (req, res) => {
+app.post('/api/comandas/fechar', exigirSessaoUsuario, (req, res) => {
   const cmd = (DB.comandas || []).find(c => c.id == req.body.comanda_id);
   if (cmd) { cmd.status = 'FECHADA'; cmd.fechada_em = agora(); }
   saveDB();
   res.json({ sucesso: true });
 });
-app.get('/api/comandas/qr/:id', (req, res) => { const cmd = (DB.comandas || []).find(c => c.id == req.params.id); res.json({ qr: cmd ? 'QR-' + cmd.numero : null }); });
+app.get('/api/comandas/qr/:id', (req, res) => {
+  const cmd = (DB.comandas || []).find(c => c.id == req.params.id);
+  if (!cmd) return res.status(404).send('Comanda não encontrada.');
+  const numeroSeguro = String(cmd.numero).replace(/[&<>"']/g, caractere => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[caractere]));
+  const clienteSeguro = String(cmd.cliente_nome || 'Cliente').replace(/[&<>"']/g, caractere => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[caractere]));
+  const payload = JSON.stringify(`ASSADOS|COMANDA|${cmd.id}|${cmd.numero}`);
+  res.type('html').send(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Comanda ${numeroSeguro}</title><style>body{font-family:Arial,sans-serif;color:#172033;max-width:380px;margin:24px auto;padding:20px;text-align:center}h1{font-size:23px;margin:0 0 6px}p{color:#64748b}#qrcode{display:flex;justify-content:center;margin:20px auto}button{padding:10px 18px;border:0;border-radius:6px;background:#0b315d;color:#fff;font-weight:700}@media print{body{margin:0 auto}button{display:none}}</style></head><body><h1>Assados Nobre</h1><p>Comanda de atendimento</p><h2>${numeroSeguro}</h2><p>${clienteSeguro}</p><div id="qrcode"></div><p>Apresente este código no caixa para finalizar a venda.</p><button onclick="window.print()">Imprimir comanda</button><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>new QRCode(document.getElementById('qrcode'),{text:${payload},width:220,height:220,correctLevel:QRCode.CorrectLevel.M});</script></body></html>`);
+});
 
 // ===== PEDIDOS SITE / IFOOD =====
 app.get('/api/site/pedidos', (req, res) => res.json({ pedidos: DB.pedidos_site || [] }));
@@ -761,8 +929,8 @@ app.post('/api/site/pedido/status', (req, res) => {
 });
 
 // ===== EVENTOS =====
-app.get('/api/eventos', (req, res) => res.json({ eventos: DB.eventos || [] }));
-app.post('/api/eventos/salvar', (req, res) => { DB.eventos.push({ id: nextId('eventos'), ...req.body, status: 'orcamento', created_at: agora() }); saveDB(); res.json({ sucesso: true }); });
+app.get('/api/eventos', (req, res) => res.json({ eventos: (DB.eventos || []).filter(e => e.status !== 'INATIVO') }));
+app.post('/api/eventos/salvar', (req, res) => { upsertRecord('eventos', req.body, { status: 'orcamento', created_at: agora() }); res.json({ sucesso: true }); });
 
 // ===== ESTOQUE / WMS =====
 app.get('/api/wms/estoque', (req, res) => res.json({ estoque: (DB.estoque || []).map(e => ({ ...e, unidade_nome: ((DB.unidades || []).find(u => u.id === e.unidade_id) || {}).nome, valor_total: Number(e.qty || 0) * Number(e.valor_unitario || 0) })) }));
@@ -882,6 +1050,48 @@ app.post('/api/rh/ponto/registrar', (req, res) => {
   saveDB();
   res.json({ sucesso: true, registro: reg });
 });
+app.get('/api/pdv/usuario/ponto', exigirSessaoUsuario, exigirPerfilPdv, (req, res) => {
+  const registros = (DB.ponto || []).filter(item => item.funcionario_id === req.funcionario.id).slice(-60).reverse();
+  res.json({ registros });
+});
+app.post('/api/pdv/usuario/ponto', exigirSessaoUsuario, exigirPerfilPdv, (req, res) => {
+  const campos = { entrada: 'entrada', saida_almoco: 'saida_almoco', retorno_almoco: 'retorno_almoco', saida: 'saida' };
+  const campo = campos[req.body.acao];
+  if (!campo) return res.status(400).json({ erro: 'Ação de ponto inválida.' });
+  const data = hoje();
+  let registro = (DB.ponto || []).find(item => item.funcionario_id === req.funcionario.id && item.data_registro === data);
+  if (req.body.acao === 'entrada') {
+    if (registro?.entrada) return res.status(409).json({ erro: 'A entrada de hoje já foi registrada.' });
+    if (!registro) {
+      DB.ponto = DB.ponto || [];
+      registro = { id: nextId('ponto'), funcionario_id: req.funcionario.id, data_registro: data, created_at: agora() };
+      DB.ponto.push(registro);
+    }
+  } else {
+    if (!registro?.entrada) return res.status(409).json({ erro: 'Registre a entrada antes desta marcação.' });
+    if (registro.bloqueado) return res.status(409).json({ erro: 'Este registro já foi fechado pelo RH.' });
+    if (registro[campo]) return res.status(409).json({ erro: 'Esta marcação já foi registrada.' });
+    if (req.body.acao === 'retorno_almoco' && !registro.saida_almoco) return res.status(409).json({ erro: 'Registre a saída para almoço primeiro.' });
+    if (req.body.acao === 'saida' && registro.saida_almoco && !registro.retorno_almoco) return res.status(409).json({ erro: 'Registre o retorno do almoço antes da saída.' });
+  }
+  registro[campo] = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  registro.situacao = registro.saida ? 'completo' : 'incompleto';
+  if (registro.saida) {
+    const minutos = valor => { const [hora, minuto] = String(valor || '0:0').split(':').map(Number); return hora * 60 + minuto; };
+    const intervalo = registro.saida_almoco && registro.retorno_almoco ? minutos(registro.retorno_almoco) - minutos(registro.saida_almoco) : 0;
+    const horas = Math.max(0, minutos(registro.saida) - minutos(registro.entrada) - intervalo) / 60;
+    const jornada = Number(req.funcionario.jornada_diaria || 8);
+    registro.horas_trabalhadas = Number(horas.toFixed(2));
+    registro.horas_extras = Number(Math.max(0, horas - jornada).toFixed(2));
+    registro.saldo_horas = Number((horas - jornada).toFixed(2));
+  }
+  saveDB();
+  res.json({ sucesso: true, registro });
+});
+app.get('/api/pdv/usuario/consultas', exigirSessaoUsuario, exigirPerfilPdv, (req, res) => {
+  const vendas = (DB.vendas || []).filter(item => item.operador_matricula === req.funcionario.matricula).slice(-60).reverse();
+  res.json({ vendas });
+});
 app.post('/api/rh/ponto/acertar', (req, res) => {
   const reg = (DB.ponto || []).find(p => p.id == req.body.registro_id);
   if (!reg) return res.json({ erro: 'Registro não encontrado' });
@@ -986,8 +1196,15 @@ app.post('/api/bot/config', (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/bot/regras', (req, res) => { DB.bot_regras.push({ id: nextId('bot_regras'), palavras_chave: req.body.palavras_chave, resposta: req.body.resposta }); saveDB(); res.json({ sucesso: true }); });
-app.post('/api/bot/regras/excluir', (req, res) => { DB.bot_regras = (DB.bot_regras || []).filter(r => r.id != req.body.id); saveDB(); res.json({ sucesso: true }); });
+app.post('/api/bot/regras', (req, res) => { const regra = { id: nextId('bot_regras'), palavras_chave: req.body.palavras_chave, resposta: req.body.resposta }; DB.bot_regras.push(regra); saveDB(); res.json({ sucesso: true, regra_id: regra.id }); });
+app.post('/api/bot/regras/excluir', async (req, res) => {
+  try {
+    if (!await deleteRecord('bot_regras', req.body.id)) return res.status(404).json({ erro: 'Regra não encontrada.' });
+    res.json({ sucesso: true });
+  } catch (error) {
+    res.status(500).json({ erro: 'Não foi possível excluir a regra.' });
+  }
+});
 // Endpoint principal do bot — usado pelo WhatsApp (webhook) e pelo site/celular
 function responderBot(mensagem) {
   const msg = (mensagem || '').toLowerCase();
@@ -1133,6 +1350,125 @@ app.get('/api/ifood/status', (req, res) => {
 app.post('/api/ifood/configurar', (req, res) => {
   DB.ifood_config = { ...req.body, conectado: req.body.ativo, configurado_em: agora() };
   saveDB();
+  res.json({ sucesso: true });
+});
+
+function obterIntegracoesPersonalizadas() {
+  const linha = (DB.bot_config || []).find(item => item.nome === 'integracoes_personalizadas');
+  try { return linha ? JSON.parse(linha.valor || '[]') : []; } catch (e) { return []; }
+}
+function salvarIntegracoesPersonalizadas(lista) {
+  DB.bot_config = DB.bot_config || [];
+  let linha = DB.bot_config.find(item => item.nome === 'integracoes_personalizadas');
+  if (!linha) { linha = { id: nextId('bot_config'), nome: 'integracoes_personalizadas', valor: '' }; DB.bot_config.push(linha); }
+  linha.valor = JSON.stringify(lista);
+  saveDB();
+}
+app.get('/api/integracoes/personalizadas', exigirSessaoUsuario, (req, res) => res.json({ integracoes: obterIntegracoesPersonalizadas() }));
+app.post('/api/integracoes/personalizadas', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
+  const nome = String(req.body.nome || '').trim().slice(0, 80);
+  const categoria = String(req.body.categoria || 'Outra').trim().slice(0, 40);
+  const descricao = String(req.body.descricao || '').trim().slice(0, 240);
+  const url = String(req.body.url || '').trim();
+  if (!nome) return res.status(400).json({ erro: 'Informe o nome da integração.' });
+  if (url) {
+    try {
+      const endereco = new URL(url);
+      if (endereco.protocol !== 'https:' || endereco.username || endereco.password) throw new Error('URL inválida');
+    } catch (e) { return res.status(400).json({ erro: 'Use uma URL HTTPS sem usuário, senha ou token na URL.' }); }
+  }
+  const integracao = { id: crypto.randomUUID(), nome, categoria, descricao, url, status: 'manual', criado_em: agora() };
+  const lista = obterIntegracoesPersonalizadas();
+  lista.push(integracao);
+  salvarIntegracoesPersonalizadas(lista);
+  res.json({ sucesso: true, integracao });
+});
+app.post('/api/integracoes/personalizadas/excluir', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
+  const lista = obterIntegracoesPersonalizadas();
+  const atualizada = lista.filter(item => item.id !== req.body.id);
+  if (atualizada.length === lista.length) return res.status(404).json({ erro: 'Integração personalizada não encontrada.' });
+  salvarIntegracoesPersonalizadas(atualizada);
+  res.json({ sucesso: true });
+});
+
+function lerListaFerramenta(nome) {
+  const linha = (DB.bot_config || []).find(item => item.nome === nome);
+  try { return linha ? JSON.parse(linha.valor || '[]') : []; } catch (e) { return []; }
+}
+function salvarListaFerramenta(nome, lista) {
+  DB.bot_config = DB.bot_config || [];
+  let linha = DB.bot_config.find(item => item.nome === nome);
+  if (!linha) { linha = { id: nextId('bot_config'), nome, valor: '' }; DB.bot_config.push(linha); }
+  linha.valor = JSON.stringify(lista);
+  saveDB();
+}
+function listaDoUsuario(nome, matricula) {
+  const lista = lerListaFerramenta(nome);
+  return matricula ? lista.filter(item => item.matricula === matricula) : [];
+}
+const MODULOS_PERFIL = new Set(['dashboard','caixa','pdv-emergencial','configuracao-pdv','produtos','clientes','fornecedores','funcionarios','unidades','permissoes','fichas-tecnicas','ordens-servico','producao','vendas','comandas','pedidos-site','eventos','estoque','compras','devolucoes','contas','tesouraria','notas-fiscais','boletos','ifood','integracoes','metas','autorizacoes','ponto','ferias','holerites','rescisao','documentos-rh','logistica','checklists','chamados','protocolo-entregas','bot-config','gerente','ia-vendas','agenda','post-its','calculadora']);
+app.get('/api/perfis-permissao', exigirSessaoUsuario, (req, res) => res.json({ perfis: lerListaFerramenta('perfis_permissao') }));
+app.post('/api/perfis-permissao', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
+  const nome = String(req.body.nome || '').trim().slice(0, 60);
+  const descricao = String(req.body.descricao || '').trim().slice(0, 180);
+  const modulos = [...new Set((Array.isArray(req.body.modulos) ? req.body.modulos : []).filter(modulo => MODULOS_PERFIL.has(modulo)))];
+  if (!nome || !modulos.length) return res.status(400).json({ erro: 'Informe um nome e ao menos um módulo.' });
+  const perfis = lerListaFerramenta('perfis_permissao');
+  if (perfis.some(perfil => perfil.nome.toLowerCase() === nome.toLowerCase())) return res.status(409).json({ erro: 'Já existe um perfil com esse nome.' });
+  const perfil = { id: crypto.randomUUID(), nome, descricao, modulos, criado_em: agora() };
+  perfis.push(perfil);
+  salvarListaFerramenta('perfis_permissao', perfis);
+  res.json({ sucesso: true, perfil });
+});
+app.post('/api/perfis-permissao/excluir', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
+  const perfis = lerListaFerramenta('perfis_permissao');
+  const perfil = perfis.find(item => item.id === req.body.id);
+  if (!perfil) return res.status(404).json({ erro: 'Perfil não encontrado.' });
+  if ((DB.funcionarios || []).some(funcionario => funcionario.role === perfil.id)) return res.status(409).json({ erro: 'Não é possível excluir um perfil atribuído a funcionários.' });
+  salvarListaFerramenta('perfis_permissao', perfis.filter(item => item.id !== perfil.id));
+  res.json({ sucesso: true });
+});
+app.get('/api/agenda', exigirSessaoUsuario, (req, res) => res.json({ compromissos: listaDoUsuario('agenda_entries', req.funcionario.matricula) }));
+app.post('/api/agenda', exigirSessaoUsuario, (req, res) => {
+  const titulo = String(req.body.titulo || '').trim().slice(0, 100);
+  const dataHora = String(req.body.data_hora || '').trim();
+  const matricula = req.funcionario.matricula;
+  if (!titulo || !matricula || !Number.isFinite(Date.parse(dataHora))) return res.status(400).json({ erro: 'Informe título, data e usuário.' });
+  const compromisso = { id: crypto.randomUUID(), matricula, titulo, data_hora: dataHora, descricao: String(req.body.descricao || '').trim().slice(0, 500), criado_em: agora() };
+  const lista = lerListaFerramenta('agenda_entries');
+  lista.push(compromisso);
+  salvarListaFerramenta('agenda_entries', lista);
+  res.json({ sucesso: true, compromisso });
+});
+app.post('/api/agenda/excluir', exigirSessaoUsuario, (req, res) => {
+  const matricula = req.funcionario.matricula;
+  if (!matricula) return res.status(400).json({ erro: 'Usuário inválido.' });
+  const lista = lerListaFerramenta('agenda_entries');
+  const atualizada = lista.filter(item => !(item.id === req.body.id && item.matricula === matricula));
+  if (atualizada.length === lista.length) return res.status(404).json({ erro: 'Compromisso não encontrado.' });
+  salvarListaFerramenta('agenda_entries', atualizada);
+  res.json({ sucesso: true });
+});
+app.get('/api/post-its', exigirSessaoUsuario, (req, res) => res.json({ notas: listaDoUsuario('postit_notes', req.funcionario.matricula) }));
+app.post('/api/post-its', exigirSessaoUsuario, (req, res) => {
+  const titulo = String(req.body.titulo || '').trim().slice(0, 80);
+  const texto = String(req.body.texto || '').trim().slice(0, 1000);
+  const matricula = req.funcionario.matricula;
+  const cores = ['amarelo', 'azul', 'verde', 'rosa'];
+  if (!titulo || !texto || !matricula) return res.status(400).json({ erro: 'Informe título, anotação e usuário.' });
+  const nota = { id: crypto.randomUUID(), matricula, titulo, texto, cor: cores.includes(req.body.cor) ? req.body.cor : 'amarelo', criado_em: agora() };
+  const lista = lerListaFerramenta('postit_notes');
+  lista.push(nota);
+  salvarListaFerramenta('postit_notes', lista);
+  res.json({ sucesso: true, nota });
+});
+app.post('/api/post-its/excluir', exigirSessaoUsuario, (req, res) => {
+  const matricula = req.funcionario.matricula;
+  if (!matricula) return res.status(400).json({ erro: 'Usuário inválido.' });
+  const lista = lerListaFerramenta('postit_notes');
+  const atualizada = lista.filter(item => !(item.id === req.body.id && item.matricula === matricula));
+  if (atualizada.length === lista.length) return res.status(404).json({ erro: 'Anotação não encontrada.' });
+  salvarListaFerramenta('postit_notes', atualizada);
   res.json({ sucesso: true });
 });
 
@@ -1617,16 +1953,19 @@ app.post('/api/unidades/salvar', (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/unidades/excluir', (req, res) => {
+app.post('/api/unidades/excluir', async (req, res) => {
   const u = (DB.unidades || []).find(x => x.id == req.body.id);
   if (u && u.tipo === 'matriz') return res.json({ erro: 'Não é possível excluir a Matriz!' });
-  DB.unidades = (DB.unidades || []).filter(x => x.id != req.body.id);
-  saveDB();
+  try {
+    if (!await deleteRecord('unidades', req.body.id)) return res.status(404).json({ erro: 'Unidade não encontrada.' });
+  } catch (error) {
+    return res.status(500).json({ erro: 'Não foi possível excluir a unidade.' });
+  }
   res.json({ sucesso: true });
 });
 
 // ===== PERMISSÃO DE FUNCIONÁRIOS — aumentar/alterar nível =====
-app.post('/api/funcionarios/permissao', (req, res) => {
+app.post('/api/funcionarios/permissao', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
   const { funcionario_id, nivel_permissao, senha_adm } = req.body;
   if (!senha_adm) return res.json({ erro: 'Alterar permissão exige senha do administrador' });
   const adm = (DB.funcionarios || []).find(f => verificarSenha(f.senha_hash, senha_adm) && f.role === 'admin');
@@ -1730,10 +2069,22 @@ app.post('/api/estoque/ajuste', (req, res) => {
 });
 
 // ===== LOG DE AUDITORIA =====
-app.get('/api/auditoria/lista', (req, res) => res.json({ logs: (DB.audit_log || []).slice(-200).reverse() }));
-function registrarAuditoria(acao, detalhes, usuario_id) {
-  DB.audit_log = DB.audit_log || [];
-  DB.audit_log.push({ id: nextId('audit'), acao, detalhes, usuario_id, data: agora() });
+function lerLogsAuditoria(){
+  if(Array.isArray(DB.audit_log)&&DB.audit_log.length)return DB.audit_log;
+  const linha=(DB.bot_config||[]).find(item=>item.nome==='audit_log');
+  try{return linha?JSON.parse(linha.valor||'[]'):[];}catch(error){return[];}
+}
+app.get('/api/auditoria/lista', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => res.json({ logs: lerLogsAuditoria().slice(-200).reverse() }));
+function registrarAuditoria(acao, detalhes, usuario_id, matricula) {
+  const logs=lerLogsAuditoria();
+  logs.push({ id: crypto.randomUUID(), acao, detalhes, usuario_id, matricula:matricula||'', data: agora() });
+  const retidos=logs.slice(-1000);
+  DB.audit_log=retidos;
+  DB.bot_config=DB.bot_config||[];
+  let linha=DB.bot_config.find(item=>item.nome==='audit_log');
+  if(!linha){linha={id:nextId('bot_config'),nome:'audit_log',valor:'[]'};DB.bot_config.push(linha);}
+  linha.valor=JSON.stringify(retidos);
+  saveDB();
 }
 
 // ===== MANUTENÇÃO DE FROTA =====
