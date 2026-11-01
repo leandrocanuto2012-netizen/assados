@@ -39,11 +39,6 @@ header.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--h
 .topbar .spacer{flex:1}
 .top-icon{color:#cbd5e1;cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;transition:background .2s}
 .top-icon:hover{background:rgba(255,255,255,.1);color:#fff}
-#pdvUserNav{display:none;align-items:center;gap:6px;overflow-x:auto}
-#pdvUserNav .btn{white-space:nowrap;padding:7px 10px}
-#app.pdv-user-mode .top-icon,#app.pdv-user-mode aside.sidebar,#app.pdv-user-mode #sidebarBackdrop{display:none!important}
-#app.pdv-user-mode main.content{margin-left:0}
-#app.pdv-user-mode #pdvUserNav{display:flex}
 .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;cursor:pointer}
 .status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#fff}
 .status-pill.aberta{background:#16a34a}
@@ -67,10 +62,6 @@ aside.sidebar{position:fixed;top:56px;left:0;bottom:0;width:248px;background:var
 .menu-item.active{background:var(--accent-soft);color:var(--accent-dark);font-weight:700;border-right:3px solid var(--accent)}
 .menu-item svg{width:15px;height:15px}
 main.content{margin-left:248px;margin-top:56px;padding:28px;flex:1;min-width:0}
-#content{min-width:0}
-.support-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
-.support-footer a{color:var(--accent-dark);font-weight:700;text-decoration:none}
-.support-footer a:hover{text-decoration:underline}
 .page-title{font-size:22px;font-weight:700;margin-bottom:4px}
 .page-sub{color:var(--muted);font-size:14px;margin-bottom:20px}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px}
@@ -193,12 +184,6 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
     <div class="top-icon" onclick="toggleSidebar()"><i data-lucide="menu"></i></div>
     <div class="logo"><img class="brand-logo" src="/icons/nobre_premium_moderno.png" alt="" aria-hidden="true"><span>ERP</span></div>
     <div class="spacer"></div>
-    <nav id="pdvUserNav" aria-label="Navegação do PDV">
-      <button class="btn btn-secondary btn-sm" onclick="showView('pdv-usuario')"><i data-lucide="layout-dashboard"></i> Início</button>
-      <button class="btn btn-secondary btn-sm" onclick="showView('caixa')"><i data-lucide="cash-register"></i> PDV</button>
-      <button class="btn btn-secondary btn-sm" onclick="showView('ponto-usuario')"><i data-lucide="clock"></i> Ponto</button>
-      <button class="btn btn-secondary btn-sm" onclick="showView('consultas-usuario')"><i data-lucide="receipt-text"></i> Consultas</button>
-    </nav>
     <div id="statusSistemaTopo" style="margin-right:8px"></div>
     <div class="top-icon" onclick="showView('dashboard')" title="Início"><i data-lucide="layout-grid"></i></div>
     <div class="top-icon" onclick="showView('controle-matriz')" title="Controle Matriz"><i data-lucide="key-round"></i></div>
@@ -213,16 +198,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
         <div class="menu-item active" data-view="dashboard" onclick="showView('dashboard')"><i data-lucide="activity"></i> Visão Geral</div>
         <div class="menu-item" data-view="controle-matriz" onclick="showView('controle-matriz')"><i data-lucide="key-round"></i> Controle Matriz</div>
         <div class="menu-item" data-view="caixa" onclick="showView('caixa')"><i data-lucide="cash-register"></i> Caixa / PDV</div>
-        <div class="menu-item" data-view="configuracao-pdv" onclick="showView('configuracao-pdv')"><i data-lucide="settings-2"></i> Configuração do PDV</div>
         <div class="menu-item" data-view="pdv-emergencial" onclick="showView('pdv-emergencial')"><i data-lucide="alert-triangle"></i> PDV Emergencial</div>
-      </div>
-    </div>
-    <div class="menu-group" data-group="ferramentas">
-      <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="wrench"></i> Ferramentas <i data-lucide="chevron-down" class="chev"></i></div>
-      <div class="menu-items">
-        <div class="menu-item" data-view="calculadora" onclick="showView('calculadora')"><i data-lucide="calculator"></i> Calculadora</div>
-        <div class="menu-item" data-view="agenda" onclick="showView('agenda')"><i data-lucide="calendar-days"></i> Agenda</div>
-        <div class="menu-item" data-view="post-its" onclick="showView('post-its')"><i data-lucide="sticky-note"></i> Post-it eletrônico</div>
       </div>
     </div>
     <div class="menu-group" data-group="cad">
@@ -256,6 +232,15 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
         <div class="menu-item" data-view="eventos" onclick="showView('eventos')"><i data-lucide="party-popper"></i> Eventos / Festas</div>
       </div>
     </div>
+    <div class="menu-group" data-group="loja-equipe">
+      <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="store"></i> Loja e Equipe <i data-lucide="chevron-down" class="chev"></i></div>
+      <div class="menu-items">
+        <div class="menu-item" data-view="site-config" onclick="showView('site-config')"><i data-lucide="panels-top-left"></i> Editar Site da Loja</div>
+        <div class="menu-item" data-view="almoxarifado" onclick="showView('almoxarifado')"><i data-lucide="warehouse"></i> Almoxarifado</div>
+        <div class="menu-item" data-view="endomarketing" onclick="showView('endomarketing')"><i data-lucide="megaphone"></i> Endomarketing</div>
+        <div class="menu-item" data-view="cursos" onclick="showView('cursos')"><i data-lucide="graduation-cap"></i> Cursos / Treinamentos</div>
+      </div>
+    </div>
     <div class="menu-group" data-group="est">
       <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="warehouse"></i> Estoque / Remessas <i data-lucide="chevron-down" class="chev"></i></div>
       <div class="menu-items">
@@ -277,7 +262,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
         <div class="menu-item" data-view="notas-fiscais" onclick="showView('notas-fiscais')"><i data-lucide="file-signature"></i> Notas Fiscais</div>
         <div class="menu-item" data-view="boletos" onclick="showView('boletos')"><i data-lucide="barcode"></i> Boletos / Bancos</div>
         <div class="menu-item" data-view="ifood" onclick="showView('ifood')"><i data-lucide="utensils"></i> Integração iFood</div>
-        <div class="menu-item" data-view="integracoes" onclick="showView('integracoes')"><i data-lucide="plug"></i> Integrações</div>
+        <div class="menu-item" data-view="integracoes" onclick="showView('integracoes')"><i data-lucide="mail"></i> Email / Excel / Word</div>
         <div class="menu-item" data-view="metas" onclick="showView('metas')"><i data-lucide="target"></i> Metas / Objetivos</div>
         <div class="menu-item" data-view="meta-ia" onclick="showView('meta-ia')" style="background:linear-gradient(135deg,#7c3aed22,#4f46e522);border-left:3px solid #7c3aed;position:relative">
           <span style="display:inline-flex;align-items:center;gap:6px">
@@ -330,10 +315,9 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
     </div>
   </aside>
   <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
-  <main class="content"><div id="content"></div><footer class="support-footer"><span>Autoria: LCBankerAdvisory</span><span>Suporte: <a href="https://wa.me/5541984865913" target="_blank" rel="noopener noreferrer">(41) 98486-5913</a></span></footer></main>
+  <main class="content" id="content"></main>
 </div>
 <div id="modalContainer"></div>
-<div id="confirmPasswordContainer"></div>
 <div id="toastContainer"></div>
 <script>
 const API_BASE = (window.location.protocol.startsWith('http')) ? window.location.origin : 'http://localhost:8080';
@@ -344,7 +328,6 @@ const LOGOS_DISPONIVEIS = [
   { valor: 'nobre_icon_carimbo_relevo_clean.png', nome: 'Ícone Carimbo' }
 ];
 let currentUser = null;
-let currentSessionToken = null;
 let currentView = 'dashboard';
 let estadoSistema = { matriz_aberta: false, status_geral: 'fechada', permite_pdv_emergencial: true };
 
@@ -367,142 +350,23 @@ function aplicarLogoSelecionada(arquivo = getLogoSelecionada()){
   if (select) select.value = arquivo;
 }
 
-async function apiGET(path){
-  try{
-    const headers={};if(currentSessionToken)headers.Authorization='Bearer '+currentSessionToken;
-    const response=await fetch(API_BASE+path,{headers});
-    const data=await response.json().catch(()=>({}));
-    if(response.ok&&(!data||Object.keys(data).length===0))return{erro:'O servidor retornou uma consulta vazia.'};
-    return response.ok?data:{...data,erro:data.erro||`Falha na consulta (HTTP ${response.status}).`};
-  }catch(error){return{erro:'Servidor offline ou resposta inválida: '+error.message};}
-}
-function requerConfirmacaoDeSenha(path){
-  const rota=String(path).split('?')[0];
-  if(rota.startsWith('/api/site/'))return false;
-  return /\/(salvar|criar|excluir|arquivar|registrar|configurar|config)$/.test(rota)||['/api/agenda','/api/post-its','/api/pdv/usuario/ponto','/api/perfis-permissao','/api/integracoes/personalizadas','/api/funcionarios/permissao','/api/controle-sistema/mensagem','/api/backup/configuracoes','/api/bot/config','/api/bot/regras','/api/fidelidade/ajustar'].includes(rota);
-}
-function temDadosUtilizaveis(payload){
-  const ignorar=new Set(['matricula','funcionario_id','usuario','senha','senha_adm','senha_usuario','senha_confirmacao']);
-  return Object.entries(payload||{}).some(([chave,valor])=>{
-    if(ignorar.has(chave)||valor===null||valor===undefined)return false;
-    if(typeof valor==='string')return valor.trim().length>0;
-    if(Array.isArray(valor))return valor.length>0;
-    if(typeof valor==='number')return Number.isFinite(valor);
-    if(typeof valor==='boolean')return true;
-    return typeof valor==='object'&&Object.keys(valor).length>0;
-  });
-}
-async function apiPOST(path, data){
-  try{
-    let payload={...(data||{})};
-    const confirmar=requerConfirmacaoDeSenha(path);
-    if(confirmar&&!temDadosUtilizaveis(payload))return{erro:'Preencha os campos obrigatórios antes de enviar.'};
-    if(confirmar&&!payload.senha_confirmacao){
-      const senha=payload.senha_usuario||payload.senha_adm||await pedirSenhaConfirmacaoCrud('Digite sua senha para confirmar o cadastro, edição ou exclusão.');
-      if(!senha||!String(senha).trim())return{erro:'Operação cancelada: senha não informada.'};
-      payload.senha_confirmacao=senha;
-    }
-    const headers={'Content-Type':'application/json'};if(currentSessionToken)headers.Authorization='Bearer '+currentSessionToken;
-    const response=await fetch(API_BASE+path,{method:'POST',headers,body:JSON.stringify(payload)});
-    const result=await response.json().catch(()=>({}));
-    if(!response.ok)return{...result,erro:result.erro||`Falha ao salvar (HTTP ${response.status}).`};
-    if(!result||typeof result!=='object'||Object.keys(result).length===0)return{erro:'O servidor retornou uma resposta vazia ou inválida.'};
-    return result;
-  }catch(error){return{erro:'Não foi possível concluir a operação: '+error.message};}
-}
-function instalarMascarasDeCampos(root=document){
-  root.querySelectorAll('input:not([data-mascara-aplicada])').forEach(input=>{
-    const referencia=(input.id+' '+input.name+' '+input.placeholder).toLowerCase();
-    const mascara=/cpf|cnpj|documento|doc/.test(referencia)?'documento':/telefone|celular|whatsapp|phone|tel/.test(referencia)?'telefone':/\bcep\b/.test(referencia)?'cep':'';
-    if(!mascara)return;
-    input.dataset.mascaraAplicada=mascara;
-    input.inputMode='numeric';
-    input.addEventListener('input',()=>{
-      const digitos=input.value.replace(/\D/g,'');
-      if(mascara==='telefone'){
-        const n=digitos.slice(0,11);input.value=n.length>10?n.replace(/^(\d{2})(\d{5})(\d{4})$/,'($1) $2-$3'):n.length>6?n.replace(/^(\d{2})(\d{4})(\d+)$/,'($1) $2-$3'):n.length>2?n.replace(/^(\d{2})(\d+)/,'($1) $2'):n;
-      }else if(mascara==='cep'){
-        const n=digitos.slice(0,8);input.value=n.length>5?n.replace(/^(\d{5})(\d{1,3})$/,'$1-$2'):n;
-      }else if(digitos.length>11){
-        const n=digitos.slice(0,14);input.value=n.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})$/,'$1.$2.$3/$4-$5').replace(/-$/,'');
-      }else{
-        const n=digitos.slice(0,11);input.value=n.length>9?n.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})$/,'$1.$2.$3-$4'):n.length>6?n.replace(/^(\d{3})(\d{3})(\d+)$/,'$1.$2.$3'):n.length>3?n.replace(/^(\d{3})(\d+)$/,'$1.$2'):n;
-      }
-    });
-  });
-}
-instalarMascarasDeCampos();
-function instalarOlhosDeSenha(root=document){
-  const campos=root.querySelectorAll('input[type="password"]:not([data-olho-senha])');
-  if(!campos.length)return;
-  campos.forEach(input=>{
-    input.dataset.olhoSenha='true';
-    const wrapper=document.createElement('span');
-    wrapper.style.cssText='display:block;position:relative;width:100%';
-    input.parentNode.insertBefore(wrapper,input);
-    wrapper.appendChild(input);
-    input.style.paddingRight='42px';
-    const botao=document.createElement('button');
-    botao.className='password-visibility-toggle';
-    botao.type='button';
-    botao.title='Mostrar senha';
-    botao.setAttribute('aria-label','Mostrar senha');
-    botao.setAttribute('aria-pressed','false');
-    botao.style.cssText='position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;width:30px;height:30px;margin:0;padding:0;border:0;background:transparent;color:#697586;cursor:pointer;display:flex;align-items:center;justify-content:center';
-    botao.innerHTML='<i data-lucide="eye"></i>';
-    botao.onclick=()=>{
-      const mostrar=input.type==='password';
-      input.type=mostrar?'text':'password';
-      botao.title=mostrar?'Ocultar senha':'Mostrar senha';
-      botao.setAttribute('aria-label',botao.title);
-      botao.setAttribute('aria-pressed',String(mostrar));
-      botao.innerHTML=`<i data-lucide="${mostrar?'eye-off':'eye'}"></i>`;
-      lucide.createIcons();
-    };
-    wrapper.appendChild(botao);
-  });
-  lucide.createIcons();
-}
-instalarOlhosDeSenha();
-new MutationObserver(()=>{instalarOlhosDeSenha();instalarMascarasDeCampos();}).observe(document.body,{childList:true,subtree:true});
+async function apiGET(path){ try{ const r = await fetch(API_BASE + path); return await r.json(); }catch(e){ return {erro:'Servidor offline: '+e.message}; } }
+async function apiPOST(path, data){ try{ const r = await fetch(API_BASE + path, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data||{})}); return await r.json(); }catch(e){ return {erro:'Servidor offline: '+e.message}; } }
 function toast(msg, tipo='success'){ const t = document.createElement('div'); t.className = 'toast '+tipo; t.textContent = msg; document.getElementById('toastContainer').appendChild(t); setTimeout(()=>t.remove(), 3000); }
-function pedirSenhaConfirmacaoCrud(mensagem){
-  return new Promise(resolve=>{
-    const root=document.getElementById('confirmPasswordContainer');
-    const overlay=document.createElement('div');
-    overlay.className='modal-overlay';overlay.style.zIndex='350';
-    overlay.innerHTML=`<form class="modal" style="max-width:400px" autocomplete="off"><h3><i data-lucide="shield-check"></i> Confirmar alteração</h3><p class="card-sub" style="margin-bottom:14px">${escaparHtmlIntegracao(mensagem)}</p><div class="form-group"><label>Senha do usuário</label><input id="senhaConfirmacaoCrud" type="password" autocomplete="current-password" required></div><div class="form-actions"><button class="btn btn-secondary" type="button" data-cancelar>Cancelar</button><button class="btn btn-primary" type="submit"><i data-lucide="check"></i> Confirmar</button></div></form>`;
-    const concluir=valor=>{overlay.remove();resolve(valor);};
-    overlay.onclick=event=>{if(event.target===overlay)concluir(null);};
-    const form=overlay.querySelector('form');
-    form.onsubmit=event=>{event.preventDefault();concluir(overlay.querySelector('#senhaConfirmacaoCrud').value);};
-    form.querySelector('[data-cancelar]').onclick=()=>concluir(null);
-    root.replaceChildren(overlay);instalarOlhosDeSenha(overlay);lucide.createIcons();
-    overlay.querySelector('#senhaConfirmacaoCrud').focus();
-  });
-}
 function fmt(v){ return 'R$ ' + (parseFloat(v||0)).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function userPayload(){ return {matricula:currentUser?.matricula||'',funcionario_id:currentUser?.id||null,usuario:{matricula:currentUser?.matricula||''}}; }
-function isPdvUser(user=currentUser){return ['operador','caixa','vendedor','atendente'].includes(String(user?.role||'').toLowerCase());}
+function userPayload(){ return {usuario:{matricula: currentUser ? currentUser.matricula : 'SV-2026-0001'}}; }
+function usuarioParaPersistir(usuario){
+  return {
+    matricula: usuario?.matricula || '',
+    nome: usuario?.nome || '',
+    unidade_tipo: usuario?.unidade_tipo || '',
+    unidade_nome: usuario?.unidade_nome || ''
+  };
+}
 function tabelaSimples(dados, colunas, acoes){
   if(!dados || !dados.length) return `<div class="empty-state"><i data-lucide="inbox"></i><p>Nenhum registro encontrado</p></div>`;
   return `<table class="data-table"><thead><tr>${colunas.map(c=>`<th>${c.titulo}</th>`).join('')}${acoes?'<th>Ações</th>':''}</tr></thead>
     <tbody>${dados.map((d,i)=>`<tr>${colunas.map(c=>`<td>${c.render?c.render(d):(d[c.chave]??'-')}</td>`).join('')}${acoes?`<td>${acoes(d,i)}</td>`:''}</tr>`).join('')}</tbody></table>`;
-}
-function preencherFormulario(valores){
-  Object.entries(valores).forEach(([id,valor])=>{ const campo=document.getElementById(id); if(campo) campo.value=valor??''; });
-}
-function botoesCadastro(colecao,id,botaoEditar){
-  return `${botaoEditar}<button class="btn btn-sm btn-danger" title="Arquivar cadastro" onclick="arquivarCadastro('${colecao}',${id})"><i data-lucide="archive"></i></button>`;
-}
-async function arquivarCadastro(colecao,id){
-  const nomes={produtos:'produto',clientes:'cliente',fornecedores:'fornecedor',funcionarios:'funcionário',patrimonio:'bem patrimonial',imoveis:'imóvel',fichas_tecnicas:'ficha técnica',eventos:'evento'};
-  if(!confirm(`Arquivar este ${nomes[colecao]||'cadastro'}? Ele deixará de aparecer nas listas, mas será mantido no histórico.`)) return;
-  const r=await apiPOST('/api/registros/arquivar',{colecao,id});
-  if(!r.sucesso){ toast(r.erro||'Não foi possível arquivar.','error'); return; }
-  toast('Cadastro arquivado.');
-  const renderizar={produtos:renderProdutos,clientes:renderClientes,fornecedores:renderFornecedores,funcionarios:renderFuncionarios,patrimonio:renderPatrimonio,imoveis:renderImoveis,fichas_tecnicas:renderFichasTecnicas,eventos:renderEventos}[colecao];
-  if(renderizar) await renderizar();
 }
 async function carregarEstadoSistema(){
   const r = await apiGET('/api/controle-sistema/estado');
@@ -538,32 +402,35 @@ async function fazerLogin(){
   const senha = document.getElementById('loginSenha').value;
   const r = await apiPOST('/api/login', {matricula:mat, senha});
   if(r.sucesso){
-    currentUser = r.funcionario || r.usuario;
-    currentSessionToken = r.token;
-    const perfisResposta=await apiGET('/api/perfis-permissao');
-    window._perfisPermissao=perfisResposta.perfis||[];
-    const perfisBase=['admin','gerente','financeiro','rh','operador','caixa','vendedor','atendente'];
-    if(!perfisBase.includes(String(currentUser.role||'').toLowerCase())&&!perfilPersonalizadoDoUsuario()){
-      await apiPOST('/api/logout',{});currentSessionToken=null;currentUser=null;
-      document.getElementById('loginError').textContent='Perfil sem configuração. Solicite ao administrador que atribua um perfil válido.';
-      return;
-    }
-    document.getElementById('loginScreen').classList.add('hidden');
-    const app=document.getElementById('app');
-    app.classList.remove('hidden');
-    app.classList.toggle('pdv-user-mode',isPdvUser());
-    aplicarMenuPerfil();
-    document.querySelector('.user-avatar').textContent = (currentUser.nome||'AD').substring(0,2).toUpperCase();
-    atualizarListaDeLogos();
-    aplicarLogoSelecionada();
-    await carregarEstadoSistema();
-    showView(isPdvUser()?'pdv-usuario':'dashboard');
-    lucide.createIcons();
+    currentUser = usuarioParaPersistir(r.funcionario || r.usuario);
+    try { localStorage.setItem('erp_user', JSON.stringify(currentUser)); } catch(e) {}
+    await iniciarSessao();
   } else {
     document.getElementById('loginError').textContent = r.erro || 'Erro ao entrar';
   }
 }
-async function fazerLogout(){ if(currentSessionToken) await apiPOST('/api/logout',{}); currentSessionToken=null; localStorage.removeItem('erp_user'); location.reload(); }
+async function iniciarSessao(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.querySelector('.user-avatar').textContent = (currentUser.nome||'AD').substring(0,2).toUpperCase();
+  atualizarListaDeLogos();
+  aplicarLogoSelecionada();
+  await carregarEstadoSistema();
+  showView('dashboard');
+  lucide.createIcons();
+}
+async function restaurarSessao(){
+  try {
+    const salvo = JSON.parse(localStorage.getItem('erp_user') || 'null');
+    if (salvo?.matricula) {
+      currentUser = usuarioParaPersistir(salvo);
+      await iniciarSessao();
+    }
+  } catch(e) {
+    localStorage.removeItem('erp_user');
+  }
+}
+function fazerLogout(){ localStorage.removeItem('erp_user'); location.reload(); }
 function toggleGroup(el){ el.parentElement.classList.toggle('collapsed'); }
 function toggleSidebar(forceOpen){
   const sidebar = document.getElementById('sidebar');
@@ -577,21 +444,17 @@ function toggleSidebar(forceOpen){
   sidebar.classList.toggle('hidden', forceOpen === undefined ? !sidebar.classList.contains('hidden') : !forceOpen);
 }
 function showView(view){
-  if(isPdvUser()&&!['pdv-usuario','caixa','ponto-usuario','consultas-usuario'].includes(view)) view='pdv-usuario';
-  const perfil=perfilPersonalizadoDoUsuario();
-  if(perfil&&!perfil.modulos.includes(view)) view=perfil.modulos.find(modulo=>document.querySelector(`.menu-item[data-view="${modulo}"]`))||'dashboard';
   currentView = view;
   if(window.matchMedia('(max-width: 760px)').matches) toggleSidebar(false);
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.toggle('active', m.dataset.view===view));
   const renderers = {'dashboard_comparativo': renderDashboardComparativo,
-  'tesouraria_unidade': renderTesourariaUnidade, dashboard: renderDashboardERP, 'controle-matriz': renderControleMatriz, caixa: renderCaixa, 'configuracao-pdv': renderConfiguracaoPdv,
-    calculadora: renderCalculadora, agenda: renderAgenda, 'post-its': renderPostIts,
-    'pdv-usuario': renderPdvUsuario, 'ponto-usuario': renderPontoUsuario, 'consultas-usuario': renderConsultasUsuario,
+  'tesouraria_unidade': renderTesourariaUnidade, dashboard: renderDashboardERP, 'controle-matriz': renderControleMatriz, caixa: renderCaixa,
     'pdv-emergencial': renderPdvEmergencial, produtos: renderProdutos, clientes: renderClientes,
     fornecedores: renderFornecedores, funcionarios: renderFuncionarios, patrimonio: renderPatrimonio, unidades: renderUnidades, permissoes: renderPermissoes,
     imoveis: renderImoveis, 'fichas-tecnicas': renderFichasTecnicas, 'ordens-servico': renderOrdensServico,
     producao: renderProducao, vendas: renderVendas, comandas: renderComandas,
     'pedidos-site': renderPedidosSite, eventos: renderEventos, estoque: renderEstoque, compras: renderCompras, devolucoes: renderDevolucoes, 'fluxo-caixa': renderFluxoCaixa, conciliacao: renderConciliacao, auditoria: renderAuditoria,
+    'site-config': renderEditorSite, almoxarifado: renderAlmoxarifado, endomarketing: renderEndomarketing, cursos: renderCursos,
     movimentos: renderMovimentos, remessas: renderRemessas, contas: renderContas,
     tesouraria: renderTesouraria, 'notas-fiscais': renderNotasFiscais, autorizacoes: renderAutorizacoes,
     ponto: renderPonto, ferias: renderFerias, holerites: renderHolerites, rescisao: renderRescisao,
@@ -600,178 +463,8 @@ function showView(view){
     crm: renderCRM, boletos: renderBoletos, ifood: renderIfood, integracoes: renderIntegracoes, metas: renderMetas, 'meta-ia': renderMetaIA,'funcionarios_completo': renderFuncionariosCompleto,
   'folha_pagamento': renderFolhaPagamento, 'treinamentos_viagens': renderTreinamentosViagens, 'crm_leads': renderCrmLeads, 'suporte_tecnico': renderSuporteTecnico, 'lgpd_aceite': renderLgpdAceite
   };
-  if(perfil&&view==='dashboard') renderDashboardPerfil();
-  else (renderers[view] || renderDashboard)();
+  (renderers[view] || renderDashboard)();
   lucide.createIcons();
-}
-function perfilPersonalizadoDoUsuario(){return (window._perfisPermissao||[]).find(perfil=>perfil.id===currentUser?.role)||null;}
-function aplicarMenuPerfil(){
-  const perfil=perfilPersonalizadoDoUsuario();
-  document.querySelectorAll('.menu-item').forEach(item=>item.classList.toggle('hidden',Boolean(perfil&&!perfil.modulos.includes(item.dataset.view))));
-  document.querySelectorAll('.menu-group').forEach(group=>group.classList.toggle('hidden',Boolean(perfil&&!group.querySelector('.menu-item:not(.hidden)'))));
-}
-function renderDashboardPerfil(){
-  const perfil=perfilPersonalizadoDoUsuario();
-  const icones={caixa:'cash-register',ponto:'clock',vendas:'receipt',estoque:'boxes',clientes:'users',produtos:'ice-cream-cone',comandas:'clipboard-list',agenda:'calendar-days','post-its':'sticky-note',calculadora:'calculator'};
-  const modulos=(perfil?.modulos||[]).filter(modulo=>modulo!=='dashboard');
-  document.getElementById('content').innerHTML=`<h1 class="page-title">Olá, ${escaparHtmlIntegracao((currentUser?.nome||'').split(' ')[0])}!</h1><p class="page-sub">Acessos disponíveis para o perfil ${escaparHtmlIntegracao(perfil?.nome)}.</p><div class="app-grid">${modulos.map(modulo=>{const dados=MODULOS_PERMISSAO_UI.find(item=>item[0]===modulo);return dados?`<div class="app-tile" onclick="showView('${modulo}')"><div class="app-tile-icon" style="background:#0d9488"><i data-lucide="${icones[modulo]||'layout-grid'}"></i></div><div><div class="app-tile-name">${dados[1]}</div></div></div>`:''}).join('')}</div>`;
-}
-function renderPdvUsuario(){
-  const c=document.getElementById('content');
-  c.innerHTML=`<h1 class="page-title">Olá, ${escaparHtmlIntegracao((currentUser?.nome||'').split(' ')[0])}!</h1><p class="page-sub">Área de trabalho do caixa e da equipe de vendas.</p>
-    <div class="app-grid">
-      <button class="app-tile" type="button" onclick="showView('caixa')"><span class="app-tile-icon" style="background:#0d9488"><i data-lucide="cash-register"></i></span><span><span class="app-tile-name">Abrir PDV</span><span class="app-tile-desc">Iniciar uma venda ou operar o caixa</span></span></button>
-      <button class="app-tile" type="button" onclick="showView('ponto-usuario')"><span class="app-tile-icon" style="background:#2563eb"><i data-lucide="clock"></i></span><span><span class="app-tile-name">Meu ponto</span><span class="app-tile-desc">Registrar jornada e consultar marcações</span></span></button>
-      <button class="app-tile" type="button" onclick="showView('consultas-usuario')"><span class="app-tile-icon" style="background:#b45309"><i data-lucide="receipt-text"></i></span><span><span class="app-tile-name">Minhas consultas</span><span class="app-tile-desc">Ver vendas registradas no seu usuário</span></span></button>
-    </div>
-    <div class="grid-2" style="margin-top:16px"><div class="card"><div class="card-title"><i data-lucide="user-round"></i> Meu acesso</div><p style="margin-top:10px"><b>${escaparHtmlIntegracao(currentUser?.nome)}</b></p><p class="card-sub">Matrícula ${escaparHtmlIntegracao(currentUser?.matricula)} · Perfil ${escaparHtmlIntegracao(currentUser?.role)}</p></div><div class="card"><div class="card-title"><i data-lucide="circle-help"></i> Acesso ao caixa</div><p class="card-sub" style="margin-top:10px">Se a tesouraria ou o caixa estiver fechado, solicite a liberação ao gerente ou administrador.</p></div></div>`;
-  lucide.createIcons();
-}
-function dataHojeLocal(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);}
-async function renderPontoUsuario(){
-  const c=document.getElementById('content');
-  c.innerHTML=`<h1 class="page-title">Meu ponto</h1><p class="page-sub">Marque entrada, intervalo e saída. Os horários são registrados pelo servidor.</p><div id="pontoPdvConteudo"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando marcações...</p></div></div>`;
-  lucide.createIcons();
-  const r=await apiGET('/api/pdv/usuario/ponto');
-  const box=document.getElementById('pontoPdvConteudo');if(!box)return;
-  if(r.erro){box.innerHTML=`<div class="alert-item critico"><i data-lucide="circle-alert"></i><span>${escaparHtmlIntegracao(r.erro)}</span></div>`;lucide.createIcons();return;}
-  const hoje=dataHojeLocal(),reg=(r.registros||[]).find(item=>item.data_registro===hoje);
-  const acoes=[];
-  if(!reg?.entrada) acoes.push(['entrada','Registrar entrada']);
-  else if(!reg.saida){
-    if(reg.saida_almoco&&!reg.retorno_almoco) acoes.push(['retorno_almoco','Registrar retorno do intervalo']);
-    else {
-      if(!reg.saida_almoco) acoes.push(['saida_almoco','Iniciar intervalo']);
-      acoes.push(['saida','Registrar saída']);
-    }
-  }
-  const campos=[['entrada','Entrada'],['saida_almoco','Saída para intervalo'],['retorno_almoco','Retorno do intervalo'],['saida','Saída']];
-  box.innerHTML=`<div class="card"><div class="card-header"><div><div class="card-title"><i data-lucide="calendar-check"></i> Jornada de hoje</div><div class="card-sub">${new Date(hoje+'T12:00:00').toLocaleDateString('pt-BR')}</div></div><span class="badge ${reg?.saida?'ok':reg?.entrada?'warn':'info'}">${reg?.saida?'Concluída':reg?.entrada?'Em andamento':'Não iniciada'}</span></div>
-      <div class="kpi-grid">${campos.map(([key,label])=>`<div class="kpi-card"><div><div class="kpi-label">${label}</div><div class="kpi-value">${reg?.[key]||'--:--'}</div></div></div>`).join('')}</div>
-      <div class="form-actions" style="justify-content:flex-start">${acoes.map(([acao,label])=>`<button class="btn btn-primary" onclick="registrarPontoPdv('${acao}')"><i data-lucide="clock-3"></i> ${label}</button>`).join('')||'<span class="badge ok">Todas as marcações de hoje foram concluídas</span>'}</div>
-    </div><div class="card"><div class="card-title"><i data-lucide="history"></i> Histórico recente</div><div style="overflow-x:auto;margin-top:12px">${tabelaSimples(r.registros||[],[{chave:'data_registro',titulo:'Data',render:d=>new Date(d.data_registro+'T12:00:00').toLocaleDateString('pt-BR')},{chave:'entrada',titulo:'Entrada'},{chave:'saida_almoco',titulo:'Intervalo'},{chave:'retorno_almoco',titulo:'Retorno'},{chave:'saida',titulo:'Saída'},{chave:'horas_trabalhadas',titulo:'Horas'}])}</div></div>`;
-  lucide.createIcons();
-}
-async function registrarPontoPdv(acao){
-  const r=await apiPOST('/api/pdv/usuario/ponto',{acao});
-  if(!r.sucesso){toast(r.erro||'Não foi possível registrar o ponto.','error');return;}
-  toast('Ponto registrado às '+r.registro[acao]+'.');
-  await renderPontoUsuario();
-}
-async function renderConsultasUsuario(){
-  const c=document.getElementById('content');
-  c.innerHTML=`<h1 class="page-title">Minhas consultas</h1><p class="page-sub">Vendas registradas com sua matrícula.</p><div class="card" id="consultasPdv"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando vendas...</p></div></div>`;
-  lucide.createIcons();
-  const r=await apiGET('/api/pdv/usuario/consultas');
-  const el=document.getElementById('consultasPdv');if(!el)return;
-  if(r.erro){el.innerHTML=`<div class="alert-item critico"><i data-lucide="circle-alert"></i><span>${escaparHtmlIntegracao(r.erro)}</span></div>`;lucide.createIcons();return;}
-  const total=(r.vendas||[]).reduce((s,v)=>s+Number(v.total||0),0);
-  el.innerHTML=`<div class="card-header"><div><div class="card-title"><i data-lucide="receipt"></i> Histórico de vendas</div><div class="card-sub">${r.vendas?.length||0} registro(s) · total ${fmt(total)}</div></div></div><div style="overflow-x:auto">${tabelaSimples(r.vendas||[],[{chave:'id',titulo:'Venda'},{chave:'data',titulo:'Data',render:d=>new Date(d.data).toLocaleString('pt-BR')},{chave:'cliente_nome',titulo:'Cliente'},{chave:'forma_pagamento',titulo:'Pagamento'},{chave:'total',titulo:'Total',render:d=>fmt(d.total)},{chave:'status',titulo:'Status'}],d=>`<button class="btn btn-sm btn-secondary" onclick="imprimirCupom(${Number(d.id)})"><i data-lucide="printer"></i> Cupom</button>`)}</div>`;
-  lucide.createIcons();
-}
-let calculadoraAtual='0',calculadoraAnterior=null,calculadoraOperador=null,calculadoraSubstituir=false;
-function renderCalculadora(){
-  document.getElementById('content').innerHTML=`<h1 class="page-title">Calculadora</h1><p class="page-sub">Cálculos rápidos para o caixa e a operação.</p>
-    <div class="card" style="max-width:420px">
-      <div id="calculadoraDisplay" role="status" aria-live="polite" style="padding:18px 14px;margin-bottom:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;text-align:right;font-size:30px;font-weight:700;overflow:hidden">${calculadoraAtual}</div>
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
-        <button class="btn btn-secondary" onclick="pressionarCalculadora('clear')">C</button><button class="btn btn-secondary" onclick="pressionarCalculadora('sign')">+/-</button><button class="btn btn-secondary" onclick="pressionarCalculadora('%')">%</button><button class="btn btn-primary" onclick="pressionarCalculadora('/')">÷</button>
-        <button class="btn btn-secondary" onclick="pressionarCalculadora('7')">7</button><button class="btn btn-secondary" onclick="pressionarCalculadora('8')">8</button><button class="btn btn-secondary" onclick="pressionarCalculadora('9')">9</button><button class="btn btn-primary" onclick="pressionarCalculadora('*')">×</button>
-        <button class="btn btn-secondary" onclick="pressionarCalculadora('4')">4</button><button class="btn btn-secondary" onclick="pressionarCalculadora('5')">5</button><button class="btn btn-secondary" onclick="pressionarCalculadora('6')">6</button><button class="btn btn-primary" onclick="pressionarCalculadora('-')">−</button>
-        <button class="btn btn-secondary" onclick="pressionarCalculadora('1')">1</button><button class="btn btn-secondary" onclick="pressionarCalculadora('2')">2</button><button class="btn btn-secondary" onclick="pressionarCalculadora('3')">3</button><button class="btn btn-primary" onclick="pressionarCalculadora('+')">+</button>
-        <button class="btn btn-secondary" style="grid-column:span 2" onclick="pressionarCalculadora('0')">0</button><button class="btn btn-secondary" onclick="pressionarCalculadora('.')">,</button><button class="btn btn-primary" onclick="pressionarCalculadora('=')">=</button>
-      </div>
-    </div>`;
-  lucide.createIcons();
-}
-function pressionarCalculadora(tecla){
-  const display=document.getElementById('calculadoraDisplay');
-  if(!display)return;
-  if(tecla==='clear'){calculadoraAtual='0';calculadoraAnterior=null;calculadoraOperador=null;calculadoraSubstituir=false;}
-  else if(tecla==='sign'){calculadoraAtual=String(Number(calculadoraAtual)*-1);}
-  else if(tecla==='%'){calculadoraAtual=String(Number(calculadoraAtual)/100);}
-  else if(tecla==='.'){
-    if(calculadoraSubstituir){calculadoraAtual='0';calculadoraSubstituir=false;}
-    if(!calculadoraAtual.includes('.'))calculadoraAtual+='.';
-  }else if('0123456789'.includes(tecla)){
-    if(calculadoraSubstituir||calculadoraAtual==='0'){calculadoraAtual=tecla;calculadoraSubstituir=false;}
-    else if(calculadoraAtual.length<14)calculadoraAtual+=tecla;
-  }else if(['+','-','*','/'].includes(tecla)){
-    if(calculadoraOperador&&!calculadoraSubstituir) calcularResultado();
-    calculadoraAnterior=Number(calculadoraAtual);calculadoraOperador=tecla;calculadoraSubstituir=true;
-  }else if(tecla==='=') calcularResultado();
-  display.textContent=calculadoraAtual.replace('.',',');
-}
-function calcularResultado(){
-  if(calculadoraOperador===null||calculadoraAnterior===null)return;
-  const b=Number(calculadoraAtual);let resultado;
-  if(calculadoraOperador==='+')resultado=calculadoraAnterior+b;
-  if(calculadoraOperador==='-')resultado=calculadoraAnterior-b;
-  if(calculadoraOperador==='*')resultado=calculadoraAnterior*b;
-  if(calculadoraOperador==='/')resultado=b===0?NaN:calculadoraAnterior/b;
-  if(!Number.isFinite(resultado)){toast('Não é possível dividir por zero.','error');calculadoraAtual='0';}
-  else calculadoraAtual=String(Number(resultado.toPrecision(10)));
-  calculadoraAnterior=null;calculadoraOperador=null;calculadoraSubstituir=true;
-}
-function dataHoraLocalAtual(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);}
-async function renderAgenda(){
-  document.getElementById('content').innerHTML=`<h1 class="page-title">Agenda</h1><p class="page-sub">Organize compromissos e lembretes vinculados ao seu usuário.</p>
-    <div class="card"><div class="card-title"><i data-lucide="calendar-plus"></i> Novo compromisso</div>
-      <div class="form-grid" style="margin-top:14px"><div class="form-group"><label>Título *</label><input id="agendaTitulo" maxlength="100"></div><div class="form-group"><label>Data e horário *</label><input id="agendaData" type="datetime-local"></div><div class="form-group" style="grid-column:1/-1"><label>Detalhes</label><textarea id="agendaDescricao" rows="3" maxlength="500"></textarea></div></div>
-      <div class="form-actions"><button class="btn btn-primary" onclick="salvarCompromissoAgenda()"><i data-lucide="plus"></i> Adicionar</button></div>
-    </div><div id="agendaLista"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando agenda...</p></div></div>`;
-  document.getElementById('agendaData').value=dataHoraLocalAtual();
-  lucide.createIcons();
-  await atualizarAgenda();
-}
-async function atualizarAgenda(){
-  const el=document.getElementById('agendaLista');if(!el)return;
-  const usuario=encodeURIComponent(currentUser?.matricula||'');
-  const r=await apiGET('/api/agenda?usuario='+usuario);
-  const compromissos=(r.compromissos||[]).sort((a,b)=>a.data_hora.localeCompare(b.data_hora));
-  el.innerHTML=compromissos.length?`<div class="app-grid">${compromissos.map(item=>`<div class="app-tile"><div class="app-tile-icon" style="background:#0d9488"><i data-lucide="calendar-clock"></i></div><div style="min-width:0;flex:1"><div class="app-tile-name">${escaparHtmlIntegracao(item.titulo)}</div><div class="app-tile-desc">${new Date(item.data_hora).toLocaleString('pt-BR')}</div>${item.descricao?`<div style="white-space:pre-wrap;font-size:12px;color:var(--muted);margin-top:6px">${escaparHtmlIntegracao(item.descricao)}</div>`:''}<button class="btn btn-sm btn-danger" style="margin-top:8px" onclick="excluirCompromissoAgenda('${item.id}')"><i data-lucide="trash-2"></i> Remover</button></div></div>`).join('')}</div>`:'<div class="empty-state"><i data-lucide="calendar-check"></i><p>Nenhum compromisso cadastrado.</p></div>';
-  lucide.createIcons();
-}
-async function salvarCompromissoAgenda(){
-  const titulo=document.getElementById('agendaTitulo').value.trim(),data_hora=document.getElementById('agendaData').value,descricao=document.getElementById('agendaDescricao').value;
-  const r=await apiPOST('/api/agenda',{...userPayload(),titulo,data_hora,descricao});
-  if(!r.sucesso){toast(r.erro||'Não foi possível salvar.','error');return;}
-  document.getElementById('agendaTitulo').value='';document.getElementById('agendaDescricao').value='';toast('Compromisso adicionado.');await atualizarAgenda();
-}
-async function excluirCompromissoAgenda(id){
-  if(!confirm('Remover este compromisso?'))return;
-  const r=await apiPOST('/api/agenda/excluir',{...userPayload(),id});
-  if(!r.sucesso){toast(r.erro||'Não foi possível remover.','error');return;}
-  toast('Compromisso removido.');await atualizarAgenda();
-}
-async function renderPostIts(){
-  document.getElementById('content').innerHTML=`<h1 class="page-title">Post-it eletrônico</h1><p class="page-sub">Anotações rápidas salvas na sua conta.</p>
-    <div class="card"><div class="card-title"><i data-lucide="sticky-note"></i> Nova anotação</div>
-      <div class="form-grid" style="margin-top:14px"><div class="form-group"><label>Título *</label><input id="postitTitulo" maxlength="80"></div><div class="form-group"><label>Cor</label><select id="postitCor"><option value="amarelo">Amarelo</option><option value="azul">Azul</option><option value="verde">Verde</option><option value="rosa">Rosa</option></select></div><div class="form-group" style="grid-column:1/-1"><label>Anotação *</label><textarea id="postitTexto" rows="3" maxlength="1000"></textarea></div></div>
-      <div class="form-actions"><button class="btn btn-primary" onclick="salvarPostIt()"><i data-lucide="plus"></i> Criar anotação</button></div>
-    </div><div id="postitsLista"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando anotações...</p></div></div>`;
-  lucide.createIcons();await atualizarPostIts();
-}
-async function atualizarPostIts(){
-  const el=document.getElementById('postitsLista');if(!el)return;
-  const usuario=encodeURIComponent(currentUser?.matricula||'');
-  const r=await apiGET('/api/post-its?usuario='+usuario);
-  const cores={amarelo:'#fef3c7',azul:'#dbeafe',verde:'#dcfce7',rosa:'#fce7f3'};
-  const notas=(r.notas||[]).slice().reverse();
-  el.innerHTML=notas.length?`<div class="app-grid">${notas.map(nota=>`<article style="padding:16px;border:1px solid var(--border);border-radius:8px;background:${cores[nota.cor]||cores.amarelo};min-height:145px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><h2 style="font-size:15px;overflow-wrap:anywhere">${escaparHtmlIntegracao(nota.titulo)}</h2><button class="btn btn-sm btn-secondary" title="Remover anotação" onclick="excluirPostIt('${nota.id}')"><i data-lucide="trash-2"></i></button></div><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:8px">${escaparHtmlIntegracao(nota.texto)}</p><small style="display:block;color:var(--muted);margin-top:12px">${new Date(nota.criado_em).toLocaleString('pt-BR')}</small></article>`).join('')}</div>`:'<div class="empty-state"><i data-lucide="sticky-note"></i><p>Nenhuma anotação cadastrada.</p></div>';
-  lucide.createIcons();
-}
-async function salvarPostIt(){
-  const titulo=document.getElementById('postitTitulo').value.trim(),texto=document.getElementById('postitTexto').value,cor=document.getElementById('postitCor').value;
-  const r=await apiPOST('/api/post-its',{...userPayload(),titulo,texto,cor});
-  if(!r.sucesso){toast(r.erro||'Não foi possível salvar.','error');return;}
-  document.getElementById('postitTitulo').value='';document.getElementById('postitTexto').value='';toast('Anotação salva.');await atualizarPostIts();
-}
-async function excluirPostIt(id){
-  if(!confirm('Remover esta anotação?'))return;
-  const r=await apiPOST('/api/post-its/excluir',{...userPayload(),id});
-  if(!r.sucesso){toast(r.erro||'Não foi possível remover.','error');return;}
-  toast('Anotação removida.');await atualizarPostIts();
 }
 function atualizarDadosComparativo() {
   alert('🔄 Dados atualizados com sucesso!');
@@ -1035,17 +728,15 @@ function pedirSenhaAdm(titulo, extraHtml=''){
     setTimeout(()=>inp.focus(), 50);
   });
 }
-function abrirJanelaImpressao(titulo, corpoHtml, largura, formato='termico'){
+function abrirJanelaImpressao(titulo, corpoHtml, largura){
   const w = window.open('', '_blank', 'width='+(largura||380)+',height=640');
   if(!w){ toast('Libere pop-ups para imprimir','error'); return; }
-  const relatorio=formato==='relatorio';
-  const estilos=relatorio
-    ? '@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:11px;color:#1f2937;margin:0}.relatorio{max-width:182mm;margin:0 auto}.relatorio-cabecalho{border-bottom:3px solid #0b315d;padding-bottom:12px;margin-bottom:18px}.relatorio-marca{font-size:12px;font-weight:700;letter-spacing:1px;color:#a8790b}.relatorio-cabecalho h1{font-size:22px;margin:8px 0 4px;color:#0b315d}.relatorio-meta{color:#64748b;font-size:10px;margin:0}.relatorio-footer{border-top:1px solid #d5dbe3;margin-top:18px;padding-top:8px;text-align:center;color:#64748b;font-size:9px}h2{font-size:15px;margin:12px 0 8px}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:10px}thead{display:table-header-group}th{background:#edf2f7;color:#23364d;text-align:left;font-weight:700}td,th{padding:7px 8px;border-bottom:1px solid #dce2e9}tbody tr:nth-child(even){background:#f8fafc}tr{break-inside:avoid}td.r,th.r{text-align:right}.c{text-align:center}.l{border-top:1px solid #d5dbe3;margin:10px 0}.resumo-relatorio{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0}.resumo-relatorio b{color:#0b315d}.no-print{margin:18px 0;text-align:center}@media print{.no-print{display:none!important}.relatorio{max-width:none}}'
-    : '@page{size:80mm auto;margin:3mm}body{font-family:"Courier New",monospace;font-size:12px;width:74mm;margin:0 auto;color:#000}h2{text-align:center;margin:4px 0}.c{text-align:center}.l{border-top:1px dashed #000;margin:6px 0}table{width:100%;border-collapse:collapse}td,th{padding:2px 0;text-align:left}td.r,th.r{text-align:right}.no-print{text-align:center;margin-top:12px}@media print{.no-print{display:none!important}}';
-  const cabecalho=relatorio?`<header class="relatorio-cabecalho"><div class="relatorio-marca">ASSADOS NOBRE · ERP</div><h1>${escaparHtmlIntegracao(titulo)}</h1><p class="relatorio-meta">Emitido em ${new Date().toLocaleString('pt-BR')}</p></header>`:'';
-  const rodape=relatorio?'<footer class="relatorio-footer">Documento gerado pelo Assados Nobre ERP</footer>':'';
-  w.document.write('<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escaparHtmlIntegracao(titulo)+'</title><style>'+estilos+'</style></head><body class="'+(relatorio?'relatorio':'termico')+'">'+(relatorio?'<div class="relatorio">':'')+cabecalho+corpoHtml+rodape+(relatorio?'</div>':'')+
-    '<p class="no-print"><button onclick="window.print()">Imprimir</button></p></body></html>');
+  w.document.write('<html><head><meta charset="utf-8"><title>'+titulo+'</title><style>'+
+    'body{font-family:"Courier New",monospace;font-size:12px;margin:8px;color:#000}'+
+    'h2{text-align:center;margin:4px 0}.c{text-align:center}.l{border-top:1px dashed #000;margin:6px 0}'+
+    'table{width:100%;border-collapse:collapse}td,th{padding:2px 0;text-align:left}td.r,th.r{text-align:right}'+
+    '@media print{button{display:none}}</style></head><body>'+corpoHtml+
+    '<p class="c"><button onclick="window.print()">Imprimir</button></p></body></html>');
   w.document.close(); w.focus(); setTimeout(()=>w.print(), 400);
 }
 // ===== DASHBOARD =====
@@ -1054,10 +745,9 @@ async function renderDashboardERP(){
   const c = document.getElementById('content');
   const hora = new Date().getHours();
   const saud = hora<12?'Bom dia':hora<18?'Boa tarde':'Boa noite';
-  const mensagemAviso=String(estadoSistema.mensagem_aviso||(estadoSistema.matriz_aberta?'Sistema operando normalmente':'Matriz fechada — aguarde reabertura')).replace(/[&<>"']/g,caractere=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[caractere]));
   const statusBanner = estadoSistema.matriz_aberta
-    ? `<div class="alert-item" style="background:#dcfce7;border-color:#bbf7d0;margin-bottom:16px"><i data-lucide="check-circle-2" style="color:#15803d"></i><span><b>SISTEMA ABERTO</b> — ${mensagemAviso}</span></div>`
-    : `<div class="alert-item alerta" style="margin-bottom:16px"><i data-lucide="alert-triangle"></i><span><b>MATRIZ FECHADA</b> — ${mensagemAviso} Apenas PDV Emergencial e Ponto disponíveis para filiais.</span></div>`;
+    ? `<div class="alert-item" style="background:#dcfce7;border-color:#bbf7d0;margin-bottom:16px"><i data-lucide="check-circle-2" style="color:#15803d"></i><span style="font-weight:700">SISTEMA ABERTO — Matriz liberou todas as unidades.</span></div>`
+    : `<div class="alert-item alerta" style="margin-bottom:16px"><i data-lucide="alert-triangle"></i><span style="font-weight:700">MATRIZ FECHADA — Apenas PDV Emergencial e Ponto disponíveis para filiais.</span></div>`;
   atualizarListaDeLogos();
   aplicarLogoSelecionada();
   c.innerHTML = `<h1 class="page-title">${saud}, ${(currentUser?.nome||'Gerente').split(' ')[0]}!</h1>
@@ -1265,55 +955,11 @@ async function salvarMsgAviso(){
   const r = await apiPOST('/api/controle-sistema/mensagem', {...userPayload(), mensagem_aviso:msg});
   if(r.sucesso) toast('Mensagem salva!'); else toast(r.erro||'Erro','error');
 }
-// ===== CONFIGURACAO DO PDV =====
-async function renderConfiguracaoPdv(){
-  const c=document.getElementById('content');
-  const r=await apiGET('/api/pdv/configuracoes');
-  const cfg=r.configuracao||{fundo_inicial:100,formas_pagamento:['DINHEIRO','PIX','CARTAO','BOLETO','IFOOD'],forma_padrao:'DINHEIRO',habilitar_balanca:true,rodape_cupom:'Obrigado, volte sempre!'};
-  const formas=[['DINHEIRO','Dinheiro'],['PIX','PIX'],['CARTAO','Cartão'],['BOLETO','Boleto'],['IFOOD','iFood']];
-  c.innerHTML=`<h1 class="page-title">Configuração do PDV</h1><p class="page-sub">Preferências aplicadas ao caixa, às formas de pagamento e ao cupom.</p>
-    <div class="grid-2">
-      <div class="card"><div class="card-title"><i data-lucide="sliders-horizontal"></i> Operação do caixa</div>
-        <div class="form-grid" style="margin-top:14px">
-          <div class="form-group"><label>Fundo inicial padrão (R$)</label><input id="pdvFundoInicial" type="number" min="0" max="1000000" step="0.01"></div>
-          <div class="form-group"><label>Pagamento padrão</label><select id="pdvFormaPadrao">${formas.map(([id,nome])=>`<option value="${id}">${nome}</option>`).join('')}</select></div>
-        </div>
-        <div class="form-group" style="margin-top:14px"><label>Formas de pagamento disponíveis</label>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">${formas.map(([id,nome])=>`<label style="display:flex;align-items:center;gap:6px"><input type="checkbox" name="pdvFormaPagamento" value="${id}">${nome}</label>`).join('')}</div>
-        </div>
-        <label style="display:flex;align-items:center;gap:8px;margin-top:14px"><input id="pdvBalanca" type="checkbox"> Habilitar campo de peso/balança</label>
-        <div class="form-group" style="margin-top:14px"><label>Rodapé do cupom</label><input id="pdvRodape" maxlength="160"></div>
-        <div class="form-actions"><button class="btn btn-primary" onclick="salvarConfiguracaoPdv()"><i data-lucide="save"></i> Salvar configurações</button></div>
-      </div>
-      <div class="card"><div class="card-title"><i data-lucide="printer"></i> Periféricos</div>
-        <p class="card-sub" style="margin:8px 0 14px">O navegador não controla impressoras, gavetas, balanças ou leitores diretamente. O campo de peso pode ser usado manualmente; conexão automática requer um agente local compatível.</p>
-        <div class="alert-item atencao"><i data-lucide="info"></i><span>As preferências desta tela ficam salvas no backend e são usadas pelo caixa após abrir a tela novamente.</span></div>
-        <button class="btn btn-secondary" onclick="showView('integracoes')"><i data-lucide="plug"></i> Ver integrações</button>
-      </div>
-    </div>`;
-  document.getElementById('pdvFundoInicial').value=cfg.fundo_inicial;
-  document.getElementById('pdvFormaPadrao').value=cfg.forma_padrao;
-  document.getElementById('pdvBalanca').checked=cfg.habilitar_balanca;
-  document.getElementById('pdvRodape').value=cfg.rodape_cupom;
-  document.querySelectorAll('input[name="pdvFormaPagamento"]').forEach(el=>{el.checked=cfg.formas_pagamento.includes(el.value);});
-  lucide.createIcons();
-}
-async function salvarConfiguracaoPdv(){
-  const formas=[...document.querySelectorAll('input[name="pdvFormaPagamento"]:checked')].map(el=>el.value);
-  if(!formas.length){toast('Selecione ao menos uma forma de pagamento.','error');return;}
-  const r=await apiPOST('/api/pdv/configuracoes',{fundo_inicial:document.getElementById('pdvFundoInicial').value,forma_padrao:document.getElementById('pdvFormaPadrao').value,formas_pagamento:formas,habilitar_balanca:document.getElementById('pdvBalanca').checked,rodape_cupom:document.getElementById('pdvRodape').value});
-  if(r.sucesso) toast('Configurações do PDV salvas.');
-  else toast(r.erro||'Não foi possível salvar.','error');
-}
 // ===== CAIXA / PDV =====
 async function renderCaixa(){
   const acesso = acessoLiberado('caixa');
   const c = document.getElementById('content');
   if(!acesso.liberado){ c.innerHTML = `<h1 class="page-title">Caixa / PDV</h1><p class="page-sub">Abra o caixa, registre vendas e movimentos.</p>${telaBloqueio('Caixa / PDV')}`; lucide.createIcons(); return; }
-  const configResposta=await apiGET('/api/pdv/configuracoes');
-  const configPdv=configResposta.configuracao||{fundo_inicial:100,formas_pagamento:['DINHEIRO','PIX','CARTAO','BOLETO','IFOOD'],forma_padrao:'DINHEIRO',habilitar_balanca:true};
-  const rotulosPagamento={DINHEIRO:'DINHEIRO',PIX:'PIX',CARTAO:'CARTAO',BOLETO:'BOLETO',IFOOD:'IFOOD'};
-  const formasPagamento=(configPdv.formas_pagamento||['DINHEIRO']).filter(forma=>rotulosPagamento[forma]);
   const st = await apiGET('/api/caixa/status-online');
   const aberto = (st.caixas_abertos||[]).length > 0;
   c.innerHTML = `<h1 class="page-title">Caixa / PDV</h1><p class="page-sub">Abra o caixa, registre vendas e movimentos. ${acesso.modo==='emergencial'?'<span class="badge warn">MODO EMERGENCIAL</span>':''}</p>
@@ -1328,15 +974,15 @@ async function renderCaixa(){
         <div class="form-grid" style="margin-top:14px">
           <div class="form-group" style="grid-column:1/-1">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="chkComanda" checked onchange="alternarModoVenda('comanda')"> Venda por comanda (QR / nº)</label>
-            <div style="display:flex;gap:6px;margin-top:6px"><select id="vComanda" style="flex:1"><option value="">Carregando comandas...</option></select><button class="btn btn-sm btn-secondary" type="button" title="Atualizar comandas abertas" onclick="carregarComandasAbertas()"><i data-lucide="refresh-cw"></i></button></div>
+            <select id="vComanda" style="margin-top:6px"><option value="">Carregando comandas...</option></select>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:10px"><input type="checkbox" id="chkBalcao" onchange="alternarModoVenda('balcao')"> Cliente balcão (sem comanda) <span class="badge info">pede senha ADM</span></label>
             <input id="vCliente" placeholder="Balcão" style="display:none;margin-top:6px">
           </div>
-          <div class="form-group"><label>Forma Pagamento</label><select id="vPagto">${formasPagamento.map(forma=>`<option value="${forma}" ${forma===configPdv.forma_padrao?'selected':''}>${rotulosPagamento[forma]}</option>`).join('')}</select></div>
+          <div class="form-group"><label>Forma Pagamento</label><select id="vPagto"><option>DINHEIRO</option><option>PIX</option><option>CARTAO</option><option>BOLETO</option><option>IFOOD</option></select></div>
           <div class="form-group"><label>Produto</label><select id="vProduto"></select></div>
           <div class="form-group"><label>Quantidade</label><input id="vQty" type="number" value="1" min="0.1" step="0.1"></div>
           <div class="form-group"><label>Valor Unitário</label><input id="vPreco" type="number" step="0.01"></div>
-          <div class="form-group"><label>Peso (kg) — balança</label><input id="vPeso" type="number" step="0.001" placeholder="0.000" ${configPdv.habilitar_balanca?'':'disabled'}></div>
+          <div class="form-group"><label>Peso (kg) — balança</label><input id="vPeso" type="number" step="0.001" placeholder="0.000"></div>
         </div>
         <div class="form-actions"><button class="btn btn-primary" onclick="adicionarItemVenda()"><i data-lucide="plus"></i> Adicionar Item</button></div>
         <div style="margin-top:14px"><table class="data-table"><thead><tr><th>Produto</th><th>Qtd/Peso</th><th>Unit.</th><th>Total</th></tr></thead><tbody id="itensVenda"><tr><td colspan="4" style="text-align:center;color:var(--muted)">Nenhum item</td></tr></tbody></table></div>
@@ -1345,7 +991,7 @@ async function renderCaixa(){
           <button class="btn btn-primary" onclick="finalizarVenda()"><i data-lucide="check"></i> Finalizar Venda</button>
         </div>`:
         `<div class="form-grid" style="margin-top:14px">
-          <div class="form-group"><label>Fundo Inicial (R$)</label><input id="fundoInicial" type="number" step="0.01" value="${configPdv.fundo_inicial}"></div>
+          <div class="form-group"><label>Fundo Inicial (R$)</label><input id="fundoInicial" type="number" step="0.01" value="100"></div>
         </div>
         <div class="form-actions"><button class="btn btn-primary" onclick="abrirCaixa()"><i data-lucide="unlock"></i> Abrir Caixa</button></div>`}
       </div>
@@ -1410,14 +1056,11 @@ function alternarModoVenda(modo){
 }
 async function carregarComandasAbertas(){
   const sel = document.getElementById('vComanda'); if(!sel) return;
-  const selecionada=window._comandaPendentePdv||sel.value;
   const r = await apiGET('/api/comandas/abertas');
   const lista = r.comandas || [];
   sel.innerHTML = lista.length
     ? '<option value="">Selecione o nº da comanda</option>' + lista.map(c=>`<option value="${c.id}">${c.numero} - ${c.cliente_nome||'sem nome'} (${fmt(c.total)})</option>`).join('')
     : '<option value="">Nenhuma comanda aberta</option>';
-  if(lista.some(c=>String(c.id)===String(selecionada))) sel.value=String(selecionada);
-  window._comandaPendentePdv=null;
 }
 async function finalizarVenda(){
   if(!itensVendaTemp.length){ toast('Adicione itens à venda','error'); return; }
@@ -1441,7 +1084,7 @@ async function finalizarVenda(){
     forma_pagamento:document.getElementById('vPagto').value, itens:itensVendaTemp, caixa_id});
   if(r.sucesso){
     toast('Venda #'+r.venda_id+' finalizada! Total '+fmt(r.total));
-    itensVendaTemp=[]; window._comandaPendentePdv=null; renderCaixa();
+    itensVendaTemp=[]; renderCaixa();
     if(confirm('Emitir cupom fiscal da venda #'+r.venda_id+'?')) imprimirCupom(r.venda_id);
   } else toast(r.erro||'Erro ao finalizar','error');
 }
@@ -1457,8 +1100,6 @@ async function estornarVenda(id){
 async function imprimirCupom(id){
   const r = await apiGET('/api/venda/cupom?id='+id);
   if(r.erro){ toast(r.erro,'error'); return; }
-  const configPdv=(await apiGET('/api/pdv/configuracoes')).configuracao||{};
-  const rodape=String(configPdv.rodape_cupom||'Obrigado, volte sempre!').replace(/[&<>"']/g,caractere=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[caractere]));
   const v = r.venda, itens = r.itens||[];
   const linhas = itens.map(i=>`<tr><td>${i.produto_nome||''}</td><td class="r">${parseFloat(i.qty)}x ${fmt(i.unit_price)}</td><td class="r">${fmt(i.total)}</td></tr>`).join('');
   abrirJanelaImpressao('Cupom #'+id, `<h2>ASSADOS</h2><p class="c">CUPOM DE VENDA</p><div class="l"></div>
@@ -1469,12 +1110,13 @@ async function imprimirCupom(id){
     <table><tr><th>Item</th><th class="r">Qtd x Unit</th><th class="r">Total</th></tr>${linhas}</table><div class="l"></div>
     <table><tr><td><b>TOTAL</b></td><td class="r"><b>${fmt(v.total)}</b></td></tr>
     <tr><td>Pagamento</td><td class="r">${v.forma_pagamento||'-'}</td></tr></table><div class="l"></div>
-    <p class="c">${rodape}</p>`);
+    <p class="c">Obrigado, volte sempre!</p>`);
 }
 async function imprimirLog(){
   const r = await apiGET('/api/log-caixa');
-  const linhas = (r.log||[]).map(l=>`<tr><td>${escaparHtmlIntegracao(new Date(l.created_at).toLocaleString('pt-BR'))}</td><td>${escaparHtmlIntegracao(l.evento)}</td><td>${escaparHtmlIntegracao(l.matricula||'-')}</td><td>${escaparHtmlIntegracao(l.autorizado_por||'-')}</td></tr>`).join('') || '<tr><td colspan="4">Sem registros</td></tr>';
-  abrirJanelaImpressao('Relatório de operações do caixa', `<table><thead><tr><th>Data e hora</th><th>Evento</th><th>Operador</th><th>Autorizado por</th></tr></thead><tbody>${linhas}</tbody></table>`, 900, 'relatorio');
+  const linhas = (r.log||[]).map(l=>`<tr><td>${new Date(l.created_at).toLocaleString('pt-BR')}</td><td>${l.evento}</td><td>${l.matricula||'-'}</td><td>${l.autorizado_por||'-'}</td></tr>`).join('') || '<tr><td colspan="4">Sem registros</td></tr>';
+  abrirJanelaImpressao('Log do Caixa', `<h2>LOG DE OPERAÇÕES DO CAIXA</h2><p class="c">Emitido em ${new Date().toLocaleString('pt-BR')}</p><div class="l"></div>
+    <table><tr><th>Data/Hora</th><th>Evento</th><th>Operador</th><th>Autorizou</th></tr>${linhas}</table>`, 720);
 }
 async function abrirCaixa(){
   // Validar tesouraria aberta primeiro
@@ -1527,8 +1169,8 @@ async function renderProdutos(){
     <div id="abaProducao" class="hidden"></div>`;
   lucide.createIcons();
   const r = await apiGET('/api/produtos');
-  window._produtosLista = (r.produtos || []).filter(p=>p.status!=='INATIVO');
-  document.getElementById('produtosTable').innerHTML = tabelaSimples(window._produtosLista, [
+  window._produtosLista = r.produtos || [];
+  document.getElementById('produtosTable').innerHTML = tabelaSimples(r.produtos, [
     {chave:'sku',titulo:'SKU'}, {chave:'nome',titulo:'Nome'},
     {chave:'categoria',titulo:'Categoria',render:d=>`<span class="badge cyan">${d.categoria||'-'}</span>`},
     {chave:'sabor',titulo:'Sabor'},
@@ -1536,7 +1178,7 @@ async function renderProdutos(){
     {chave:'preco_por_kg',titulo:'Preço/kg',render:d=>d.preco_por_kg?fmt(d.preco_por_kg):'-'},
     {chave:'producao_propria',titulo:'Produção',render:d=>d.producao_propria?'<span class="badge ok">Própria</span>':'<span class="badge info">Terceiro</span>'},
     {chave:'status',titulo:'Status',render:d=>`<span class="badge ${d.status==='ATIVO'?'ok':'danger'}">${d.status||'-'}</span>`}
-  ], d=>botoesCadastro('produtos',d.id,`<button class="btn btn-sm btn-secondary" title="Editar" onclick="modalProduto(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i data-lucide="pencil"></i></button>`));
+  ], d=>`<button class="btn btn-sm btn-secondary" onclick="modalProduto(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i data-lucide="pencil"></i></button>`);
   lucide.createIcons();
 }
 function tabProdutos(aba, el){
@@ -1636,19 +1278,20 @@ function modalProduto(p){
   document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()">
     <div class="modal"><h3><i data-lucide="ice-cream-cone"></i> ${p.id?'Editar':'Novo'} Produto</h3>
       <div class="form-grid">
-        <div class="form-group"><label>Nome *</label><input id="pNome"></div>
-        <div class="form-group"><label>SKU</label><input id="pSku"></div>
+        <div class="form-group"><label>Nome *</label><input id="pNome" value="${p.nome||''}"></div>
+        <div class="form-group"><label>SKU</label><input id="pSku" value="${p.sku||''}"></div>
         <div class="form-group"><label>Categoria</label><select id="pCat"><option>Sorvetes</option><option>Picolés</option><option>Açaí</option><option>Buffet</option><option>Bebidas</option><option>Complementos</option><option>Insumos</option></select></div>
-        <div class="form-group"><label>Sabor</label><input id="pSabor" placeholder="Ex: Morango, Chocolate"></div>
-        <div class="form-group"><label>Preço Venda</label><input id="pPreco" type="number" step="0.01"></div>
-        <div class="form-group"><label>Preço por kg (balança)</label><input id="pPrecoKg" type="number" step="0.01"></div>
-        <div class="form-group"><label>Custo</label><input id="pCusto" type="number" step="0.01"></div>
-        <div class="form-group"><label>Estoque Mínimo</label><input id="pMin" type="number" step="0.1"></div>
+        <div class="form-group"><label>Sabor</label><input id="pSabor" value="${p.sabor||''}" placeholder="Ex: Morango, Chocolate"></div>
+        <div class="form-group"><label>Preço Venda</label><input id="pPreco" type="number" step="0.01" value="${p.preco_venda||0}"></div>
+        <div class="form-group"><label>Preço por kg (balança)</label><input id="pPrecoKg" type="number" step="0.01" value="${p.preco_por_kg||0}"></div>
+        <div class="form-group"><label>Custo</label><input id="pCusto" type="number" step="0.01" value="${p.custo||0}"></div>
+        <div class="form-group"><label>Estoque Mínimo</label><input id="pMin" type="number" step="0.1" value="${p.estoque_minimo||20}"></div>
         <div class="form-group"><label>Produção Própria?</label><select id="pProdProp"><option value="true">Sim</option><option value="false">Não</option></select></div>
       </div>
       <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarProduto(${p.id??'null'})"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
-  preencherFormulario({pNome:p.nome,pSku:p.sku,pCat:p.categoria||'Sorvetes',pSabor:p.sabor,pPreco:p.preco_venda||0,pPrecoKg:p.preco_por_kg||0,pCusto:p.custo||0,pMin:p.estoque_minimo??20,pProdProp:String(p.producao_propria!==false)});
+      <button class="btn btn-primary" onclick="salvarProduto(${p.id||'null'})"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
+  if(p.categoria) document.getElementById('pCat').value = p.categoria;
+  if(p.producao_propria!==undefined) document.getElementById('pProdProp').value = String(p.producao_propria);
   lucide.createIcons();
 }
 async function salvarProduto(id){
@@ -1674,12 +1317,12 @@ async function renderClientes(){
     {chave:'telefone',titulo:'Telefone'}, {chave:'email',titulo:'Email'},
     {chave:'fidelidade',titulo:'Pontos',render:d=>`<span class="badge cyan">${d.pontos_disponiveis||0} pts</span>`},
     {chave:'valor_total_gasto',titulo:'Total Gasto',render:d=>fmt(d.valor_total_gasto)}
-  ], d=>`${botoesCadastro('clientes',d.id,`<button class="btn btn-sm btn-secondary" title="Editar" onclick="modalCliente(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i data-lucide="pencil"></i></button>`)} <button class="btn btn-sm btn-secondary" onclick="modalFidelidade(${d.id},'${d.nome.replace(/'/g,"\\'")}')"><i data-lucide="star"></i> Fidelidade</button>`);
+  ], d=>`<button class="btn btn-sm btn-secondary" onclick="modalFidelidade(${d.id},'${d.nome.replace(/'/g,"\\'")}')"><i data-lucide="star"></i> Fidelidade</button>`);
   lucide.createIcons();
 }
-function modalCliente(cliente={}){
+function modalCliente(){
   document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()">
-    <div class="modal"><h3><i data-lucide="user-plus"></i> ${cliente.id?'Editar':'Novo'} Cliente</h3>
+    <div class="modal"><h3><i data-lucide="user-plus"></i> Novo Cliente</h3>
       <div class="form-grid">
         <div class="form-group"><label>Nome *</label><input id="cNome"></div>
         <div class="form-group"><label>CPF/CNPJ</label><input id="cDoc"></div>
@@ -1690,13 +1333,11 @@ function modalCliente(cliente={}){
         <div class="form-group"><label>Limite de Crédito (R$)</label><input id="cLimite" type="number" step="0.01" value="0"></div>
       </div>
       <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarCliente(${cliente.id??'null'})"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
-  preencherFormulario({cNome:cliente.nome,cDoc:cliente.cpf_cnpj,cTel:cliente.telefone,cEmail:cliente.email,cEnd:cliente.endereco,cFat:cliente.faturado?'Sim (a prazo)':'Não',cLimite:cliente.limite_credito||0});
+      <button class="btn btn-primary" onclick="salvarCliente()"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
   lucide.createIcons();
 }
-async function salvarCliente(id){
+async function salvarCliente(){
   const r = await apiPOST('/api/clientes/salvar', {...userPayload(),
-    id,
     nome:document.getElementById('cNome').value, cpf_cnpj:document.getElementById('cDoc').value,
     telefone:document.getElementById('cTel').value, email:document.getElementById('cEmail').value,
     endereco:document.getElementById('cEnd').value,
@@ -1951,12 +1592,12 @@ async function renderFornecedores(){
     {chave:'categoria',titulo:'Categoria',render:d=>`<span class="badge info">${d.categoria_fornecimento||'-'}</span>`},
     {chave:'telefone',titulo:'Telefone'}, {chave:'email',titulo:'Email'},
     {chave:'status',titulo:'Status',render:d=>`<span class="badge ok">${d.status||'ATIVO'}</span>`}
-  ], d=>botoesCadastro('fornecedores',d.id,`<button class="btn btn-sm btn-secondary" title="Editar" onclick="modalFornecedor(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i data-lucide="pencil"></i></button>`));
+  ]);
   lucide.createIcons();
 }
-function modalFornecedor(fornecedor={}){
+function modalFornecedor(){
   document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()">
-    <div class="modal"><h3><i data-lucide="truck"></i> ${fornecedor.id?'Editar':'Novo'} Fornecedor</h3>
+    <div class="modal"><h3><i data-lucide="truck"></i> Novo Fornecedor</h3>
       <div class="form-grid">
         <div class="form-group"><label>Nome *</label><input id="fNome"></div>
         <div class="form-group"><label>CNPJ</label><input id="fCnpj"></div>
@@ -1966,13 +1607,11 @@ function modalFornecedor(fornecedor={}){
         <div class="form-group" style="grid-column:1/-1"><label>Endereço</label><input id="fEnd"></div>
       </div>
       <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarFornecedor(${fornecedor.id??'null'})"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
-  preencherFormulario({fNome:fornecedor.nome,fCnpj:fornecedor.cnpj,fTel:fornecedor.telefone,fEmail:fornecedor.email,fCat:fornecedor.categoria_fornecimento||'Insumos',fEnd:fornecedor.endereco});
+      <button class="btn btn-primary" onclick="salvarFornecedor()"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
   lucide.createIcons();
 }
-async function salvarFornecedor(id){
+async function salvarFornecedor(){
   const r = await apiPOST('/api/fornecedores/salvar', {...userPayload(),
-    id,
     nome:document.getElementById('fNome').value, cnpj:document.getElementById('fCnpj').value,
     telefone:document.getElementById('fTel').value, email:document.getElementById('fEmail').value,
     categoria_fornecimento:document.getElementById('fCat').value, endereco:document.getElementById('fEnd').value});
@@ -1993,38 +1632,29 @@ async function renderFuncionarios(){
     {chave:'role',titulo:'Perfil',render:d=>`<span class="badge ${d.role==='admin'?'warn':'info'}">${d.role||'-'}</span>`},
     {chave:'salario',titulo:'Salário',render:d=>fmt(d.salario)},
     {chave:'status',titulo:'Status',render:d=>`<span class="badge ${d.status==='ATIVO'?'ok':'danger'}">${d.status||'-'}</span>`}
-  ], d=>botoesCadastro('funcionarios',d.id,`<button class="btn btn-sm btn-secondary" title="Editar" onclick="modalFuncionario(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i data-lucide="pencil"></i></button>`));
+  ]);
   lucide.createIcons();
 }
-async function modalFuncionario(funcionario={}){
+function modalFuncionario(){
   document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()">
-    <div class="modal"><h3><i data-lucide="user-cog"></i> ${funcionario.id?'Editar':'Novo'} Funcionário</h3>
+    <div class="modal"><h3><i data-lucide="user-cog"></i> Novo Funcionário</h3>
       <div class="form-grid">
         <div class="form-group"><label>Matrícula *</label><input id="fuMat" placeholder="SV-2026-0006"></div>
         <div class="form-group"><label>Nome *</label><input id="fuNome"></div>
         <div class="form-group"><label>CPF</label><input id="fuCpf"></div>
         <div class="form-group"><label>Cargo</label><input id="fuCargo" placeholder="Atendente, Produtor, Entregador..."></div>
         <div class="form-group"><label>Unidade</label><select id="fuUnid"><option value="1">Matriz</option><option value="2">Filial</option></select></div>
-        <div class="form-group"><label>Perfil</label><select id="fuRole"><option>operador</option><option>caixa</option><option>vendedor</option><option>atendente</option><option>gerente</option><option>admin</option><option>financeiro</option><option>rh</option></select></div>
+        <div class="form-group"><label>Perfil</label><select id="fuRole"><option>operador</option><option>gerente</option><option>admin</option><option>financeiro</option><option>rh</option></select></div>
         <div class="form-group"><label>Jornada diária (hrs)</label><input id="fuJornada" type="number" step="0.5" value="8"></div>
         <div class="form-group"><label>Salário</label><input id="fuSal" type="number" step="0.01" value="1500"></div>
-        <div class="form-group"><label>Senha inicial</label><input id="fuSenha" type="password" autocomplete="new-password"></div>
+        <div class="form-group"><label>Senha inicial</label><input id="fuSenha" value="123"></div>
       </div>
       <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarFuncionario(${funcionario.id??'null'})"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
-  preencherFormulario({fuMat:funcionario.matricula,fuNome:funcionario.nome,fuCpf:funcionario.cpf,fuCargo:funcionario.cargo,fuUnid:funcionario.unidade_id||1,fuRole:funcionario.role||'operador',fuJornada:funcionario.jornada_diaria||8,fuSal:funcionario.salario||1500,fuSenha:funcionario.id?'':'123'});
-  const resposta=await apiGET('/api/perfis-permissao');
-  if(resposta.perfis){
-    window._perfisPermissao=resposta.perfis;
-    const seletor=document.getElementById('fuRole');
-    resposta.perfis.forEach(perfil=>{if(![...seletor.options].some(opcao=>opcao.value===perfil.id))seletor.add(new Option(perfil.nome,perfil.id));});
-    seletor.value=funcionario.role||'operador';
-  }
+      <button class="btn btn-primary" onclick="salvarFuncionario()"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
   lucide.createIcons();
 }
-async function salvarFuncionario(id){
+async function salvarFuncionario(){
   const r = await apiPOST('/api/funcionarios/salvar', {...userPayload(),
-    id,
     matricula:document.getElementById('fuMat').value, nome:document.getElementById('fuNome').value,
     cpf:document.getElementById('fuCpf').value, cargo:document.getElementById('fuCargo').value,
     unidade_id:document.getElementById('fuUnid').value, role:document.getElementById('fuRole').value,
@@ -2051,12 +1681,12 @@ async function renderPatrimonio(){
     {chave:'unidade_nome',titulo:'Localização'},
     {chave:'condicao_atual',titulo:'Condição',render:d=>`<span class="badge ${d.condicao_atual==='bom'||d.condicao_atual==='novo'?'ok':d.condicao_atual==='regular'?'warn':'danger'}">${d.condicao_atual||'-'}</span>`},
     {chave:'status',titulo:'Status',render:d=>`<span class="badge ${d.status==='ativo'?'ok':'warn'}">${d.status||'-'}</span>`}
-  ], d=>`${botoesCadastro('patrimonio',d.id,`<button class="btn btn-sm btn-secondary" title="Editar" onclick="modalPatrimonio(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i data-lucide="pencil"></i></button>`)} <button class="btn btn-sm btn-secondary" onclick="transferirBem(${d.id})"><i data-lucide="arrow-left-right"></i> Transferir</button>`);
+  ], d=>`<button class="btn btn-sm btn-secondary" onclick="transferirBem(${d.id})"><i data-lucide="arrow-left-right"></i> Transferir</button>`);
   lucide.createIcons();
 }
-function modalPatrimonio(bem={}){
+function modalPatrimonio(){
   document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()">
-    <div class="modal"><h3><i data-lucide="armchair"></i> ${bem.id?'Editar':'Novo'} Bem Patrimonial</h3>
+    <div class="modal"><h3><i data-lucide="armchair"></i> Novo Bem Patrimonial</h3>
       <div class="form-grid">
         <div class="form-group"><label>Descrição *</label><input id="paDesc" placeholder="Ex: Freezer vertical 220V"></div>
         <div class="form-group"><label>Categoria</label><select id="paCat"><option>Mobiliário</option><option>Equipamento Refrigeração</option><option>Equipamento Cozinha</option><option>Iluminação</option><option>Informática</option><option>Utensílios</option><option>Estrutura Predial</option></select></div>
@@ -2068,18 +1698,16 @@ function modalPatrimonio(bem={}){
         <div class="form-group"><label>Condição</label><select id="paCond"><option>novo</option><option>bom</option><option>regular</option><option>danificado</option></select></div>
       </div>
       <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarPatrimonio(${bem.id??'null'})"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
-  preencherFormulario({paDesc:bem.descricao,paCat:bem.categoria||'Mobiliário',paMarca:bem.marca,paModelo:bem.modelo,paSerie:bem.numero_serie,paValor:bem.valor_aquisicao,paUnid:bem.localizacao_unidade_id||1,paCond:bem.condicao_atual||'novo'});
+      <button class="btn btn-primary" onclick="salvarPatrimonio()"><i data-lucide="save"></i> Salvar (gera etiqueta)</button></div></div></div>`;
   lucide.createIcons();
 }
-async function salvarPatrimonio(id){
+async function salvarPatrimonio(){
   const r = await apiPOST('/api/patrimonio/salvar', {...userPayload(),
-    id,
     descricao:document.getElementById('paDesc').value, categoria:document.getElementById('paCat').value,
     marca:document.getElementById('paMarca').value, modelo:document.getElementById('paModelo').value,
     numero_serie:document.getElementById('paSerie').value, valor_aquisicao:document.getElementById('paValor').value,
     localizacao_unidade_id:document.getElementById('paUnid').value, condicao_atual:document.getElementById('paCond').value});
-  if(r.sucesso){ toast(id?'Bem atualizado!':'Bem cadastrado! Etiqueta: '+r.codigo_etiqueta); document.querySelector('.modal-overlay').remove(); renderPatrimonio(); }
+  if(r.sucesso){ toast('Bem cadastrado! Etiqueta: '+r.codigo_etiqueta); document.querySelector('.modal-overlay').remove(); renderPatrimonio(); }
   else toast(r.erro||'Erro','error');
 }
 async function transferirBem(id){
@@ -2112,12 +1740,12 @@ async function renderImoveis(){
       const dias = Math.ceil((new Date(d.data_vencimento_contrato)-new Date())/86400000);
       return `${new Date(d.data_vencimento_contrato).toLocaleDateString('pt-BR')} <span class="badge ${dias<60?'danger':dias<90?'warn':'ok'}">${dias} dias</span>`;
     }}
-  ], d=>botoesCadastro('imoveis',d.id,`<button class="btn btn-sm btn-secondary" title="Editar" onclick="modalImovel(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i data-lucide="pencil"></i></button>`));
+  ]);
   lucide.createIcons();
 }
-function modalImovel(imovel={}){
+function modalImovel(){
   document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()">
-    <div class="modal"><h3><i data-lucide="building-2"></i> ${imovel.id?'Editar':'Novo'} Imóvel</h3>
+    <div class="modal"><h3><i data-lucide="building-2"></i> Novo Imóvel</h3>
       <div class="form-grid">
         <div class="form-group"><label>Unidade</label><select id="imUnid"><option value="1">Matriz</option><option value="2">Filial</option></select></div>
         <div class="form-group"><label>Tipo de Uso</label><select id="imUso"><option>matriz</option><option>filial</option><option>deposito</option></select></div>
@@ -2130,13 +1758,11 @@ function modalImovel(imovel={}){
         <div class="form-group"><label>Aluguel Mensal (R$)</label><input id="imValor" type="number" step="0.01"></div>
       </div>
       <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarImovel(${imovel.id??'null'})"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
-  preencherFormulario({imUnid:imovel.unidade_id||1,imUso:imovel.tipo_uso||'matriz',imEnd:imovel.endereco,imProp:imovel.proprietario,imCont:imovel.contato_proprietario,imContrato:imovel.contrato_numero,imIni:imovel.data_inicio_contrato,imVenc:imovel.data_vencimento_contrato,imValor:imovel.valor_aluguel_mensal});
+      <button class="btn btn-primary" onclick="salvarImovel()"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
   lucide.createIcons();
 }
-async function salvarImovel(id){
+async function salvarImovel(){
   const r = await apiPOST('/api/imoveis/salvar', {...userPayload(),
-    id,
     unidade_id:document.getElementById('imUnid').value, tipo_uso:document.getElementById('imUso').value,
     endereco:document.getElementById('imEnd').value, proprietario:document.getElementById('imProp').value,
     contato_proprietario:document.getElementById('imCont').value, contrato_numero:document.getElementById('imContrato').value,
@@ -2200,12 +1826,12 @@ async function renderFichasTecnicas(){
     {chave:'tempo_embalagem_min',titulo:'Embalar',render:d=>d.tempo_embalagem_min+'min'},
     {chave:'tempo_acondicionamento_min',titulo:'Caixas',render:d=>d.tempo_acondicionamento_min+'min'},
     {chave:'tempo_total_min',titulo:'Total',render:d=>`<span class="badge cyan">${d.tempo_total_min}min</span>`}
-  ], d=>`${botoesCadastro('fichas_tecnicas',d.id,`<button class="btn btn-sm btn-secondary" title="Editar" onclick="modalFichaTecnica(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i data-lucide="pencil"></i></button>`)} <button class="btn btn-sm btn-secondary" onclick="verFichaTecnica(${d.id})"><i data-lucide="eye"></i> Ver</button> <button class="btn btn-sm btn-primary" onclick="criarOSdaFicha(${d.id})"><i data-lucide="clipboard-check"></i> OS</button>`);
+  ], d=>`<button class="btn btn-sm btn-secondary" onclick="verFichaTecnica(${d.id})"><i data-lucide="eye"></i> Ver</button> <button class="btn btn-sm btn-primary" onclick="criarOSdaFicha(${d.id})"><i data-lucide="clipboard-check"></i> OS</button>`);
   lucide.createIcons();
 }
-function modalFichaTecnica(ficha={}){
+function modalFichaTecnica(){
   document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()">
-    <div class="modal"><h3><i data-lucide="file-recipe"></i> ${ficha.id?'Editar':'Nova'} Ficha Técnica</h3>
+    <div class="modal"><h3><i data-lucide="file-recipe"></i> Nova Ficha Técnica</h3>
       <div class="form-grid">
         <div class="form-group" style="grid-column:1/-1"><label>Nome do Sabor/Produto *</label><input id="ftNome"></div>
         <div class="form-group"><label>Rendimento/lote</label><input id="ftRend" type="number" value="50"></div>
@@ -2217,16 +1843,14 @@ function modalFichaTecnica(ficha={}){
         <div class="form-group" style="grid-column:1/-1"><label>Dicas</label><textarea id="ftDicas" rows="2"></textarea></div>
       </div>
       <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarFichaTecnica(${ficha.id??'null'})"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
-  preencherFormulario({ftNome:ficha.nome_sabor,ftRend:ficha.rendimento_por_lote??50,ftProd:ficha.tempo_producao_min??45,ftEmb:ficha.tempo_embalagem_min??20,ftAcond:ficha.tempo_acondicionamento_min??15,ftInsumos:JSON.stringify(ficha.insumos||[],null,2),ftPassos:JSON.stringify(ficha.passos||[],null,2),ftDicas:ficha.dicas});
+      <button class="btn btn-primary" onclick="salvarFichaTecnica()"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
   lucide.createIcons();
 }
-async function salvarFichaTecnica(id){
+async function salvarFichaTecnica(){
   let insumos, passos;
   try{ insumos = JSON.parse(document.getElementById('ftInsumos').value); passos = JSON.parse(document.getElementById('ftPassos').value); }
   catch(e){ toast('JSON inválido','error'); return; }
   const r = await apiPOST('/api/fichas-tecnicas/salvar', {...userPayload(),
-    id,
     nome_sabor:document.getElementById('ftNome').value, rendimento_por_lote:document.getElementById('ftRend').value,
     tempo_producao_min:document.getElementById('ftProd').value, tempo_embalagem_min:document.getElementById('ftEmb').value,
     tempo_acondicionamento_min:document.getElementById('ftAcond').value, insumos, passos, dicas:document.getElementById('ftDicas').value});
@@ -2299,7 +1923,6 @@ async function concluirOS(id){ const t = prompt('Tempo real gasto (min):', '60')
 async function renderVendas(){
   const c = document.getElementById('content');
   c.innerHTML = `<h1 class="page-title">Vendas</h1><p class="page-sub">Histórico de vendas.</p>
-    <div class="card"><button class="btn btn-secondary" onclick="imprimirRelatorioVendas()"><i data-lucide="printer"></i> Imprimir relatório de vendas</button></div>
     <div class="card" id="vendasTable"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando...</p></div></div>`;
   lucide.createIcons();
   const r = await apiGET('/api/vendas');
@@ -2312,18 +1935,10 @@ async function renderVendas(){
   ], d=>`<button class="btn btn-sm btn-secondary" onclick="imprimirCupom(${d.id})">Cupom</button> `+(d.status==='ESTORNADA'?'':`<button class="btn btn-sm btn-danger" onclick="estornarVenda(${d.id})">Estornar</button>`));
   lucide.createIcons();
 }
-async function imprimirRelatorioVendas(){
-  const r=await apiGET('/api/vendas');
-  if(r.erro){toast(r.erro,'error');return;}
-  const vendas=r.vendas||[],total=vendas.reduce((s,v)=>s+Number(v.total||0),0);
-  const linhas=vendas.map(v=>`<tr><td>#${Number(v.id)}</td><td>${escaparHtmlIntegracao(new Date(v.data).toLocaleString('pt-BR'))}</td><td>${escaparHtmlIntegracao(v.cliente_nome||'Balcão')}</td><td>${escaparHtmlIntegracao(v.forma_pagamento||'-')}</td><td>${escaparHtmlIntegracao(v.status||'-')}</td><td class="r">${fmt(v.total)}</td></tr>`).join('')||'<tr><td colspan="6">Nenhuma venda encontrada</td></tr>';
-  const corpo=`<div class="resumo-relatorio"><span>Registros: <b>${vendas.length}</b></span><span>Valor total: <b>${fmt(total)}</b></span></div><table><thead><tr><th>Venda</th><th>Data e hora</th><th>Cliente</th><th>Pagamento</th><th>Status</th><th class="r">Total</th></tr></thead><tbody>${linhas}</tbody></table>`;
-  abrirJanelaImpressao('Relatório de vendas',corpo,900,'relatorio');
-}
 // ===== COMANDAS =====
 async function renderComandas(){
   const c = document.getElementById('content');
-  c.innerHTML = `<h1 class="page-title">Comandas</h1><p class="page-sub">Crie a comanda, imprima o QR e envie-a ao PDV para concluir a venda.</p>
+  c.innerHTML = `<h1 class="page-title">Comandas</h1><p class="page-sub">Comandas individuais ou de grupo com QR.</p>
     <div class="card" style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="criarComanda('individual')"><i data-lucide="plus"></i> Individual</button>
       <button class="btn btn-secondary" onclick="criarComanda('grupo')"><i data-lucide="users"></i> Grupo</button></div>
@@ -2334,34 +1949,95 @@ async function renderComandas(){
     {chave:'numero',titulo:'Número/QR'}, {chave:'tipo',titulo:'Tipo',render:d=>`<span class="badge ${d.tipo==='grupo'?'warn':'info'}">${d.tipo||'individual'}</span>`},
     {chave:'cliente_nome',titulo:'Cliente'}, {chave:'mesa',titulo:'Mesa'}, {chave:'total',titulo:'Total',render:d=>fmt(d.total)},
     {chave:'status',titulo:'Status',render:d=>`<span class="badge ${d.status==='ABERTA'?'warn':'ok'}">${d.status||'-'}</span>`}
-  ], d=>d.status==='ABERTA'?`<button class="btn btn-sm btn-secondary" onclick="imprimirQR(${d.id})"><i data-lucide="printer"></i> Imprimir</button> <button class="btn btn-sm btn-primary" onclick="enviarComandaParaPdv(${d.id})"><i data-lucide="send"></i> Enviar ao PDV</button>`:'');
+  ], d=>d.status==='ABERTA'?`<button class="btn btn-sm btn-primary" onclick="fecharComanda(${d.id})"><i data-lucide="check"></i> Fechar</button> <button class="btn btn-sm btn-secondary" onclick="imprimirQR(${d.id})"><i data-lucide="qr-code"></i> QR</button>`:'');
   lucide.createIcons();
 }
-async function criarComanda(tipo){ const n = prompt('Nome do cliente (opcional):')||''; const r = await apiPOST('/api/comandas/criar', {...userPayload(), cliente_nome:n, tipo}); if(r.sucesso){ toast('Comanda '+r.numero+' criada. Imprima e envie ao PDV.'); renderComandas(); } else toast(r.erro||'Erro','error'); }
+async function criarComanda(tipo){ const n = prompt('Nome do cliente (opcional):')||''; const r = await apiPOST('/api/comandas/criar', {...userPayload(), cliente_nome:n, tipo}); if(r.sucesso){ toast('Comanda '+r.numero+' criada!'); renderComandas(); } else toast(r.erro||'Erro','error'); }
 async function fecharComanda(id){ const s = await confirmarComSenha('Fechar comanda #'+id, 'Baixar estoque e lançar no caixa'); if(!s){ toast('Cancelado','error'); return; } const r = await apiPOST('/api/comandas/fechar', {...userPayload(), comanda_id:id, senha_usuario:s}); if(r.sucesso){ toast('Fechada! Estoque baixado.'); renderComandas(); } else toast(r.erro||'Erro','error'); }
-function enviarComandaParaPdv(id){ window._comandaPendentePdv=id; showView('caixa'); }
-function imprimirQR(id){ window.open('/api/comandas/qr/'+id, '_blank','width=440,height=620'); }
+function imprimirQR(id){ window.open('/api/comandas/qr/'+id, '_blank'); }
 // ===== PEDIDOS / IFOOD =====
 async function renderPedidosSite(){
   const c = document.getElementById('content');
   c.innerHTML = `<h1 class="page-title">Pedidos / iFood</h1><p class="page-sub">Pedidos online — NF automática.</p>
     <div class="card" id="pedTable"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando...</p></div></div>`;
   lucide.createIcons();
-  const r = await apiGET('/api/site/pedidos');
+  const senha = await confirmarComSenha('Consultar pedidos da loja', 'Os dados de clientes são restritos à administração.');
+  if(!senha){ document.getElementById('pedTable').innerHTML='<div class="empty-state">Consulta cancelada.</div>'; return; }
+  const r = await apiPOST('/api/site/pedidos/listar', {...userPayload(), senha_usuario:senha});
+  if(r.erro){ document.getElementById('pedTable').innerHTML=`<div class="empty-state">${r.erro}</div>`; return; }
   document.getElementById('pedTable').innerHTML = tabelaSimples(r.pedidos, [
     {chave:'id',titulo:'#'}, {chave:'origem',titulo:'Origem',render:d=>`<span class="badge ${d.origem==='ifood'?'warn':'cyan'}">${d.origem||'site'}</span>`},
-    {chave:'cliente_nome',titulo:'Cliente'}, {chave:'total',titulo:'Total',render:d=>fmt(d.total)},
+    {chave:'cliente_nome',titulo:'Cliente'}, {chave:'cliente_id',titulo:'Cliente ERP'}, {chave:'tipo_entrega',titulo:'Recebimento'},
+    {chave:'entrega_id',titulo:'Entrega'}, {chave:'venda_id',titulo:'Venda'}, {chave:'total',titulo:'Total',render:d=>fmt(d.total)},
     {chave:'nf_emitida',titulo:'NF',render:d=>d.nf_emitida?'<span class="badge ok">Emitida</span>':'<span class="badge warn">Pendente</span>'},
     {chave:'status',titulo:'Status',render:d=>`<span class="badge ${d.status==='ENTREGUE'?'ok':d.status==='CANCELADO'?'danger':'warn'}">${d.status||'-'}</span>`}
-  ], d=>`<select onchange="mudarStatusPedido(${d.id}, this.value)" style="padding:4px 8px;border-radius:5px;border:1px solid var(--border);font-size:12px">
+  ], d=>`<select ${['ENTREGUE','CANCELADO'].includes(d.status)?'disabled':''} onchange="mudarStatusPedido(${d.id}, this.value)" style="padding:4px 8px;border-radius:5px;border:1px solid var(--border);font-size:12px">
     <option ${d.status==='SOLICITADO'?'selected':''}>SOLICITADO</option><option ${d.status==='CONFIRMADO'?'selected':''}>CONFIRMADO</option>
     <option ${d.status==='EM_ENTREGA'?'selected':''}>EM_ENTREGA</option><option ${d.status==='ENTREGUE'?'selected':''}>ENTREGUE</option>
     <option ${d.status==='CANCELADO'?'selected':''}>CANCELADO</option></select>
     ${!d.nf_emitida?`<button class="btn btn-sm btn-primary" style="margin-left:4px" onclick="emitirNFpedido(${d.id})"><i data-lucide="file-signature"></i> NF</button>`:''}`);
   lucide.createIcons();
 }
-async function mudarStatusPedido(id, status){ const r = await apiPOST('/api/site/pedido/status', {...userPayload(), pedido_id:id, status}); if(r.sucesso) toast('Atualizado!'); else toast(r.erro||'Erro','error'); }
+async function mudarStatusPedido(id, status){ const senha=await confirmarComSenha('Alterar status do pedido #'+id,'Novo status: '+status); if(!senha)return; const r = await apiPOST('/api/site/pedido/status', {...userPayload(), senha_usuario:senha, pedido_id:id, status}); if(r.sucesso) toast(r.venda_id?'Venda #'+r.venda_id+' lançada no caixa e tesouraria!':'Atualizado!'); else toast(r.erro||'Erro','error'); }
 async function emitirNFpedido(id){ const r = await apiPOST('/api/nf/emitir', {...userPayload(), pedido_id:id}); if(r.sucesso){ toast('NF '+r.numero+' emitida!'); renderPedidosSite(); } else toast(r.erro||'Erro','error'); }
+// ===== SITE DA LOJA =====
+let siteConfigDraft = {};
+async function renderEditorSite(){
+  const c=document.getElementById('content');
+  c.innerHTML=`<h1 class="page-title">Editar Site da Loja</h1><p class="page-sub">Personalize a loja online sem alterar código. Pedidos do site aparecem em Vendas → Pedidos / iFood.</p>
+  <div class="card"><div class="form-grid">
+    <div class="form-group"><label>Nome da loja</label><input id="siteNome"></div><div class="form-group"><label>Título da página</label><input id="siteTitulo"></div>
+    <div class="form-group" style="grid-column:1/-1"><label>Descrição da vitrine</label><textarea id="siteDescricao" rows="2"></textarea></div>
+    <div class="form-group"><label>Cor principal</label><input id="siteCor" type="color"></div><div class="form-group"><label>Cor de fundo</label><input id="siteFundo" type="color"></div>
+    <div class="form-group"><label>Animação do site</label><select id="siteAnimacao"><option value="suave">Suave</option><option value="brilho">Brilho</option><option value="nenhuma">Sem animação</option></select></div>
+    <div class="form-group"><label>Logo (PNG/JPG/WebP, até 4 MB)</label><input id="siteLogoFile" type="file" accept="image/png,image/jpeg,image/webp" onchange="carregarImagemSite(event,'logo')"></div>
+    <div class="form-group"><label>Imagem de destaque (até 4 MB)</label><input id="siteHeroFile" type="file" accept="image/png,image/jpeg,image/webp" onchange="carregarImagemSite(event,'imagemDestaque')"></div>
+    <div class="form-group"><label>Promoção relâmpago ativa</label><select id="sitePromoAtiva"><option value="false">Não</option><option value="true">Sim</option></select></div>
+    <div class="form-group"><label>Título da promoção</label><input id="sitePromoTitulo"></div><div class="form-group"><label>Texto da promoção</label><input id="sitePromoTexto"></div>
+    <div class="form-group"><label>Cupom ativo</label><select id="siteCupomAtivo"><option value="false">Não</option><option value="true">Sim</option></select></div>
+    <div class="form-group"><label>Código do cupom</label><input id="siteCupomCodigo"></div><div class="form-group"><label>Desconto (%)</label><input id="siteCupomDesconto" type="number" min="0" max="80"></div>
+    <div class="form-group"><label>Taxa de entrega (R$)</label><input id="siteTaxaEntrega" type="number" min="0" step="0.01"></div>
+    <div class="form-group"><label>Instagram (URL)</label><input id="siteInstagram" placeholder="https://instagram.com/..."></div><div class="form-group"><label>Facebook (URL)</label><input id="siteFacebook" placeholder="https://facebook.com/..."></div>
+    <div class="form-group"><label>WhatsApp (código do país + número)</label><input id="siteWhatsapp" placeholder="5541999999999"></div>
+  </div><div style="display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap"><button class="btn btn-primary" onclick="salvarEditorSite()"><i data-lucide="save"></i> Salvar alterações</button><a class="btn btn-secondary" href="/site.html" target="_blank" rel="noopener">Abrir loja</a><span id="siteSaveMsg" class="page-sub"></span></div></div>`;
+  const r=await apiGET('/api/site/config');siteConfigDraft=r.config||{};
+  const fields={siteNome:'nomeLoja',siteTitulo:'titulo',siteDescricao:'descricao',siteCor:'corPrincipal',siteFundo:'corFundo',siteAnimacao:'animacao',sitePromoAtiva:'promocaoAtiva',sitePromoTitulo:'promocaoTitulo',sitePromoTexto:'promocaoTexto',siteCupomAtivo:'cupomAtivo',siteCupomCodigo:'cupomCodigo',siteCupomDesconto:'cupomDesconto',siteTaxaEntrega:'taxaEntrega',siteInstagram:'instagram',siteFacebook:'facebook',siteWhatsapp:'whatsapp'};
+  Object.entries(fields).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=String(siteConfigDraft[key]??'')});lucide.createIcons();
+}
+function carregarImagemSite(e,key){const file=e.target.files?.[0];if(!file)return;if(file.size>4*1024*1024){toast('Cada imagem deve ter até 4 MB.','error');e.target.value='';return}const reader=new FileReader();reader.onload=()=>{siteConfigDraft[key]=reader.result;toast('Imagem pronta para salvar.')};reader.onerror=()=>toast('Não foi possível ler a imagem.','error');reader.readAsDataURL(file)}
+async function salvarEditorSite(){
+  const senha=await confirmarComSenha('Salvar o site da loja','As alterações serão exibidas aos clientes.');if(!senha)return;
+  const fields={nomeLoja:'siteNome',titulo:'siteTitulo',descricao:'siteDescricao',corPrincipal:'siteCor',corFundo:'siteFundo',animacao:'siteAnimacao',promocaoAtiva:'sitePromoAtiva',promocaoTitulo:'sitePromoTitulo',promocaoTexto:'sitePromoTexto',cupomAtivo:'siteCupomAtivo',cupomCodigo:'siteCupomCodigo',cupomDesconto:'siteCupomDesconto',taxaEntrega:'siteTaxaEntrega',instagram:'siteInstagram',facebook:'siteFacebook',whatsapp:'siteWhatsapp'};
+  Object.entries(fields).forEach(([key,id])=>siteConfigDraft[key]=document.getElementById(id).value);
+  siteConfigDraft.promocaoAtiva=siteConfigDraft.promocaoAtiva==='true';siteConfigDraft.cupomAtivo=siteConfigDraft.cupomAtivo==='true';
+  const r=await apiPOST('/api/site/config',{...userPayload(),senha_usuario:senha,config:siteConfigDraft});
+  document.getElementById('siteSaveMsg').textContent=r.sucesso?'Site atualizado.':(r.erro||'Falha ao salvar.');if(r.sucesso)siteConfigDraft=r.config;
+}
+// ===== ALMOXARIFADO =====
+async function renderAlmoxarifado(){
+  const c=document.getElementById('content');c.innerHTML=`<h1 class="page-title">Almoxarifado</h1><p class="page-sub">Materiais, quantidades e alertas inteligentes de reposição.</p><div id="almoxAlert"></div>
+  <div class="card"><h3>Cadastrar material</h3><div class="form-grid"><div class="form-group"><label>Nome do material</label><input id="almNome"></div><div class="form-group"><label>Código (opcional)</label><input id="almCodigo"></div><div class="form-group"><label>Categoria</label><input id="almCategoria"></div><div class="form-group"><label>Unidade (un, cx, kg...)</label><input id="almUnidade" value="un"></div><div class="form-group"><label>Quantidade atual</label><input id="almQuantidade" type="number" min="0" step="0.01"></div><div class="form-group"><label>Estoque mínimo para alerta</label><input id="almMinimo" type="number" min="0" step="0.01"></div></div><button class="btn btn-primary" style="margin-top:12px" onclick="salvarMaterialAlmox()">Salvar material</button></div>
+  <div class="card"><h3>Estoque de materiais</h3><div id="almoxTable"></div></div>`;await carregarAlmoxarifado();lucide.createIcons();
+}
+async function carregarAlmoxarifado(){const senha=await confirmarComSenha('Consultar almoxarifado','Apenas a administração da matriz pode acessar.');if(!senha)return;const r=await apiPOST('/api/almoxarifado/listar',{...userPayload(),senha_usuario:senha});const a=document.getElementById('almoxAlert');if(!a)return;if(r.erro){a.textContent=r.erro;return}a.innerHTML=`<div class="alert-item ${r.alertas?.length?'alerta':'sucesso'}"><i data-lucide="${r.alertas?.length?'triangle-alert':'circle-check'}"></i><span><b>Assistente de estoque:</b> ${r.mensagem_ia||'Estoque atualizado.'}</span></div>`;document.getElementById('almoxTable').innerHTML=tabelaSimples(r.itens||[],[{chave:'nome',titulo:'Material'},{chave:'codigo',titulo:'Código'},{chave:'categoria',titulo:'Categoria'},{chave:'quantidade',titulo:'Saldo'},{chave:'quantidade_minima',titulo:'Mínimo'},{chave:'unidade',titulo:'Unidade'},{chave:'quantidade',titulo:'Alerta',render:d=>Number(d.quantidade)<=Number(d.quantidade_minima)?'<span class="badge danger">REPOR</span>':'<span class="badge ok">OK</span>'}],d=>`<button class="btn btn-sm btn-secondary" onclick="movimentarMaterial(${d.id},'entrada')">Entrada</button> <button class="btn btn-sm btn-secondary" onclick="movimentarMaterial(${d.id},'saida')">Saída</button>`);lucide.createIcons()}
+async function salvarMaterialAlmox(){const nome=document.getElementById('almNome').value.trim();const quantidade=Number(document.getElementById('almQuantidade').value);const quantidade_minima=Number(document.getElementById('almMinimo').value);if(!nome||!Number.isFinite(quantidade)||!Number.isFinite(quantidade_minima)){toast('Preencha nome, quantidade e mínimo.','error');return}const senha=await confirmarComSenha('Cadastrar material no almoxarifado','Confirme sua senha.');if(!senha)return;const r=await apiPOST('/api/almoxarifado/salvar',{...userPayload(),senha_usuario:senha,nome,codigo:document.getElementById('almCodigo').value,categoria:document.getElementById('almCategoria').value,unidade:document.getElementById('almUnidade').value,quantidade,quantidade_minima});if(r.sucesso){toast('Material salvo.');renderAlmoxarifado()}else toast(r.erro||'Erro ao salvar.','error')}
+async function movimentarMaterial(id,tipo){const quantidade=Number(prompt(`Quantidade para ${tipo==='entrada'?'entrada':'saída'}:`));if(!Number.isFinite(quantidade)||quantidade<=0)return;const senha=await confirmarComSenha('Registrar '+tipo+' de material','Quantidade: '+quantidade);if(!senha)return;const r=await apiPOST('/api/almoxarifado/movimentar',{...userPayload(),senha_usuario:senha,item_id:id,tipo,quantidade});if(r.sucesso){toast('Estoque atualizado.');carregarAlmoxarifado()}else toast(r.erro||'Erro ao movimentar.','error')}
+// ===== ENDOMARKETING =====
+async function renderEndomarketing(){
+  const c=document.getElementById('content');c.innerHTML=`<h1 class="page-title">Endomarketing</h1><p class="page-sub">Publique informativos e convocações para cursos e treinamentos.</p>
+  <div class="card"><h3>Novo comunicado</h3><div class="form-grid"><div class="form-group"><label>Tipo</label><select id="endoTipo"><option value="informativo">Informativo</option><option value="comunicado">Comunicado</option><option value="convocacao_curso">Convocação para curso</option></select></div><div class="form-group"><label>Público</label><input id="endoPublico" value="todos" placeholder="Todos, unidade ou equipe"></div><div class="form-group"><label>Título</label><input id="endoTitulo"></div><div class="form-group"><label>Data / prazo</label><input id="endoData" type="date"></div><div class="form-group" style="grid-column:1/-1"><label>Mensagem</label><textarea id="endoMensagem" rows="4"></textarea></div></div><button class="btn btn-primary" style="margin-top:12px" onclick="publicarEndomarketing()">Publicar comunicado</button></div><div class="card"><h3>Publicações</h3><div id="endoTable"></div></div>`;await carregarEndomarketing();lucide.createIcons();
+}
+async function carregarEndomarketing(){const senha=await confirmarComSenha('Consultar comunicados internos','Confirme sua senha de funcionário.');if(!senha)return;const r=await apiPOST('/api/endomarketing/listar',{...userPayload(),senha_usuario:senha});const box=document.getElementById('endoTable');if(box)box.innerHTML=r.erro?r.erro:tabelaSimples(r.comunicados||[],[{chave:'titulo',titulo:'Título'},{chave:'tipo',titulo:'Tipo',render:d=>d.tipo==='convocacao_curso'?'Convocação de curso':d.tipo},{chave:'publico',titulo:'Público'},{chave:'data_evento',titulo:'Data'},{chave:'mensagem',titulo:'Mensagem'},{chave:'criado_em',titulo:'Publicado',render:d=>new Date(d.criado_em).toLocaleString('pt-BR')}]);lucide.createIcons()}
+async function publicarEndomarketing(){const titulo=document.getElementById('endoTitulo').value.trim();const mensagem=document.getElementById('endoMensagem').value.trim();if(!titulo||!mensagem){toast('Preencha título e mensagem.','error');return}const senha=await confirmarComSenha('Publicar comunicado','A publicação ficará disponível para a equipe.');if(!senha)return;const r=await apiPOST('/api/endomarketing',{...userPayload(),senha_usuario:senha,titulo,mensagem,tipo:document.getElementById('endoTipo').value,publico:document.getElementById('endoPublico').value,data_evento:document.getElementById('endoData').value});if(r.sucesso){toast('Comunicado publicado.');renderEndomarketing()}else toast(r.erro||'Falha ao publicar.','error')}
+// ===== CURSOS E TREINAMENTOS =====
+async function renderCursos(){
+  const c=document.getElementById('content');c.innerHTML=`<h1 class="page-title">Cursos / Treinamentos</h1><p class="page-sub">Materiais de apoio e avaliações da equipe.</p>
+  <div class="card"><h3>Novo curso (administração)</h3><div class="form-grid"><div class="form-group"><label>Título</label><input id="cursoTitulo"></div><div class="form-group"><label>Data</label><input id="cursoData" type="date"></div><div class="form-group" style="grid-column:1/-1"><label>Descrição</label><textarea id="cursoDescricao" rows="2"></textarea></div><div class="form-group"><label>Cartilha PDF (até 4 MB)</label><input id="cursoPdf" type="file" accept="application/pdf"></div><div class="form-group"><label>Vídeo MP4/WebM (até 4 MB)</label><input id="cursoVideo" type="file" accept="video/mp4,video/webm"></div><div class="form-group"><label>Link HTTPS da cartilha (opcional)</label><input id="cursoPdfUrl" type="url"></div><div class="form-group"><label>Link HTTPS do vídeo (opcional)</label><input id="cursoVideoUrl" type="url"></div><div class="form-group" style="grid-column:1/-1"><label>Perguntas da avaliação (uma por linha)</label><textarea id="cursoPerguntas" rows="3"></textarea><label>Respostas corretas (mesma ordem, uma por linha)</label><textarea id="cursoRespostas" rows="3"></textarea></div></div><button class="btn btn-primary" style="margin-top:12px" onclick="salvarCurso()">Publicar curso</button></div><div class="card"><h3>Cursos disponíveis</h3><div id="cursosLista"></div></div>`;await carregarCursos();lucide.createIcons();
+}
+function lerArquivoCurso(input){return new Promise((resolve,reject)=>{const file=input.files?.[0];if(!file)return resolve(null);if(file.size>4*1024*1024)return reject(new Error('Cada arquivo deve ter até 4 MB.'));const reader=new FileReader();reader.onload=()=>resolve({nome:file.name,dados:reader.result});reader.onerror=()=>reject(new Error('Falha ao ler o arquivo.'));reader.readAsDataURL(file)})}
+async function salvarCurso(){try{const perguntas=document.getElementById('cursoPerguntas').value.split('\n').map(x=>x.trim()).filter(Boolean);const respostas=document.getElementById('cursoRespostas').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!document.getElementById('cursoTitulo').value.trim()||perguntas.length===0||perguntas.length!==respostas.length){toast('Informe título, perguntas e respostas corretas correspondentes.','error');return}const [pdf,video]=await Promise.all([lerArquivoCurso(document.getElementById('cursoPdf')),lerArquivoCurso(document.getElementById('cursoVideo'))]);const senha=await confirmarComSenha('Publicar treinamento','A equipe poderá abrir os materiais e responder à avaliação.');if(!senha)return;const r=await apiPOST('/api/treinamentos',{...userPayload(),senha_usuario:senha,titulo:document.getElementById('cursoTitulo').value,descricao:document.getElementById('cursoDescricao').value,data_inicio:document.getElementById('cursoData').value,material_nome:pdf?.nome||'',material_dados:pdf?.dados||document.getElementById('cursoPdfUrl').value,video_nome:video?.nome||'',video_dados:video?.dados||document.getElementById('cursoVideoUrl').value,avaliacao:perguntas.map((pergunta,i)=>({pergunta,resposta:respostas[i]}))});if(r.sucesso){toast('Treinamento publicado.');renderCursos()}else toast(r.erro||'Erro ao publicar.','error')}catch(e){toast(e.message,'error')}}
+async function carregarCursos(){const senha=await confirmarComSenha('Acessar cursos e treinamentos','Confirme sua senha de funcionário.');if(!senha)return;const r=await apiPOST('/api/treinamentos/listar',{...userPayload(),senha_usuario:senha});const box=document.getElementById('cursosLista');if(!box)return;if(r.erro){box.textContent=r.erro;return}const cursos=r.dados||[];box.innerHTML=cursos.length?cursos.map(t=>`<div class="card" style="margin:12px 0"><h3>${String(t.titulo||'').replace(/[<>]/g,'')}</h3><p>${String(t.descricao||'').replace(/[<>]/g,'')}</p><div style="display:flex;gap:12px;flex-wrap:wrap">${t.material_dados?`<a href="${t.material_dados}" target="_blank" rel="noopener" download="${encodeURIComponent(t.material_nome||'cartilha.pdf')}">Abrir cartilha</a>`:''}${t.video_dados?`<a href="${t.video_dados}" target="_blank" rel="noopener">Assistir vídeo</a>`:''}</div><div style="margin-top:12px"><b>Avaliação</b>${(t.avaliacao||[]).map((q,i)=>`<div class="form-group" style="margin-top:8px"><label>${i+1}. ${String(q.pergunta||'').replace(/[<>]/g,'')}</label><input id="curso-${t.id}-resp-${i}" maxlength="200"></div>`).join('')}<button class="btn btn-sm btn-primary" style="margin-top:10px" onclick="enviarAvaliacao(${t.id},${(t.avaliacao||[]).length})">Enviar avaliação</button></div></div>`).join(''):'<div class="empty-state">Nenhum treinamento publicado.</div>'}
+async function enviarAvaliacao(id,total){const respostas=Array.from({length:total},(_,i)=>document.getElementById(`curso-${id}-resp-${i}`).value);if(respostas.some(x=>!x.trim())){toast('Responda todas as perguntas.','error');return}const senha=await confirmarComSenha('Enviar avaliação','A nota será registrada no seu cadastro.');if(!senha)return;const r=await apiPOST('/api/treinamentos/avaliar',{...userPayload(),senha_usuario:senha,treinamento_id:id,respostas});if(r.sucesso)toast(`Nota: ${r.nota}% · ${r.aprovado?'Aprovado':'Não atingiu 70%'}`);else toast(r.erro||'Não foi possível registrar.','error')}
 // ===== EVENTOS =====
 async function renderEventos(){
   const c = document.getElementById('content');
@@ -2376,12 +2052,12 @@ async function renderEventos(){
     {chave:'local',titulo:'Local'}, {chave:'qtd_pessoas',titulo:'Pessoas'},
     {chave:'valor_contrato',titulo:'Valor',render:d=>fmt(d.valor_contrato)},
     {chave:'status',titulo:'Status',render:d=>`<span class="badge ${d.status==='confirmado'?'ok':'warn'}">${d.status||'-'}</span>`}
-  ], d=>`${botoesCadastro('eventos',d.id,`<button class="btn btn-sm btn-secondary" title="Editar" onclick="modalEvento(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i data-lucide="pencil"></i></button>`)} <button class="btn btn-sm btn-secondary" onclick="checklistEvento(${d.id})"><i data-lucide="list-checks"></i> Checklist</button>`);
+  ], d=>`<button class="btn btn-sm btn-secondary" onclick="checklistEvento(${d.id})"><i data-lucide="list-checks"></i> Checklist</button>`);
   lucide.createIcons();
 }
-function modalEvento(evento={}){
+function modalEvento(){
   document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()">
-    <div class="modal"><h3><i data-lucide="party-popper"></i> ${evento.id?'Editar':'Novo'} Evento</h3>
+    <div class="modal"><h3><i data-lucide="party-popper"></i> Novo Evento</h3>
       <div class="form-grid">
         <div class="form-group"><label>Cliente *</label><input id="evCliente"></div>
         <div class="form-group"><label>Tipo</label><select id="evTipo"><option>festa</option><option>empresa</option><option>corporativo</option><option>fim_de_ano</option></select></div>
@@ -2392,12 +2068,11 @@ function modalEvento(evento={}){
         <div class="form-group" style="grid-column:1/-1"><label>Cardápio/Sabores</label><textarea id="evCardapio" rows="2"></textarea></div>
       </div>
       <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarEvento(${evento.id??'null'})"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
-  preencherFormulario({evCliente:evento.nome_cliente,evTipo:evento.tipo||'festa',evData:evento.data_evento,evLocal:evento.local,evPessoas:evento.qtd_pessoas||50,evValor:evento.valor_contrato,evCardapio:evento.cardapio});
+      <button class="btn btn-primary" onclick="salvarEvento()"><i data-lucide="save"></i> Salvar</button></div></div></div>`;
   lucide.createIcons();
 }
-async function salvarEvento(id){
-  const r = await apiPOST('/api/eventos/salvar', {...userPayload(), id, nome_cliente:document.getElementById('evCliente').value, tipo:document.getElementById('evTipo').value, data_evento:document.getElementById('evData').value, local:document.getElementById('evLocal').value, qtd_pessoas:document.getElementById('evPessoas').value, valor_contrato:document.getElementById('evValor').value, cardapio:document.getElementById('evCardapio').value});
+async function salvarEvento(){
+  const r = await apiPOST('/api/eventos/salvar', {...userPayload(), nome_cliente:document.getElementById('evCliente').value, tipo:document.getElementById('evTipo').value, data_evento:document.getElementById('evData').value, local:document.getElementById('evLocal').value, qtd_pessoas:document.getElementById('evPessoas').value, valor_contrato:document.getElementById('evValor').value, cardapio:document.getElementById('evCardapio').value});
   if(r.sucesso){ toast('Evento salvo!'); document.querySelector('.modal-overlay').remove(); renderEventos(); } else toast(r.erro||'Erro','error');
 }
 async function checklistEvento(id){ window.open('/api/checklists/imprimir/evento/'+id, '_blank'); }
@@ -2805,7 +2480,7 @@ async function renderLogistica(){
     {chave:'tipo',titulo:'Tipo'}, {chave:'produto_nome',titulo:'Produto/Pedido'}, {chave:'qty',titulo:'Qtd'},
     {chave:'destino',titulo:'Destino'}, {chave:'motorista',titulo:'Entregador'}, {chave:'placa',titulo:'Placa'},
     {chave:'status',titulo:'Status',render:d=>`<span class="badge ${d.status==='CONCLUIDO'?'ok':'warn'}">${d.status||'-'}</span>`}
-  ], d=>d.status!=='CONCLUIDO'?`<button class="btn btn-sm btn-primary" onclick="concluirLog(${d.id})"><i data-lucide="check"></i> Concluir</button>`:'');
+  ], d=>!['CONCLUIDO','CANCELADO'].includes(d.status)?`<button class="btn btn-sm btn-primary" onclick="concluirLog(${d.id})"><i data-lucide="check"></i> Concluir</button>`:'');
   const f = await apiGET('/api/frota');
   document.getElementById('frotaTable').innerHTML = tabelaSimples(f.frota, [
     {chave:'entregador_nome',titulo:'Entregador'}, {chave:'veiculo_modelo',titulo:'Veículo'},
@@ -2915,8 +2590,8 @@ function renderBotRegras(){
     <button class="btn btn-sm btn-danger" onclick="delBotRegra(${i})"><i data-lucide="trash-2"></i></button></div>`).join('');
   lucide.createIcons();
 }
-async function addBotRegra(){ const kw = prompt('Palavras-chave (|):'); if(!kw) return; const resp = prompt('Resposta:'); if(!resp) return; const r = await apiPOST('/api/bot/regras', {...userPayload(), palavras_chave:kw, resposta:resp}); if(!r.sucesso){ toast(r.erro||'Não foi possível salvar a regra.','error'); return; } window._botRegras.push({id:r.regra_id,nome:kw,valor:resp}); renderBotRegras(); toast('Regra salva!'); }
-async function delBotRegra(i){ const regra = window._botRegras[i]; if(!regra || !confirm('Excluir esta regra?')) return; if(!regra.id){ toast('Regra sem identificador. Atualize a tela e tente novamente.','error'); return; } const r = await apiPOST('/api/bot/regras/excluir', {...userPayload(), id:regra.id}); if(!r.sucesso){ toast(r.erro||'Não foi possível excluir a regra.','error'); return; } window._botRegras.splice(i,1); renderBotRegras(); toast('Regra excluída.'); }
+function addBotRegra(){ const kw = prompt('Palavras-chave (|):'); if(!kw) return; const resp = prompt('Resposta:'); if(!resp) return; window._botRegras.push({nome:kw,valor:resp}); renderBotRegras(); apiPOST('/api/bot/regras', {...userPayload(), palavras_chave:kw, resposta:resp}); }
+function delBotRegra(i){ const r = window._botRegras[i]; if(r.id) apiPOST('/api/bot/regras/excluir', {...userPayload(), id:r.id}); window._botRegras.splice(i,1); renderBotRegras(); }
 async function salvarBotConfig(){ const dados = {...userPayload()}; ['nome_bot','saudacao','horario_atendimento','endereco'].forEach(k=>{ const el = document.getElementById('bot_'+k); if(el) dados[k]=el.value; }); const r = await apiPOST('/api/bot/config', dados); if(r.sucesso) toast('Salvo!'); else toast(r.erro||'Erro','error'); }
 async function testarBot(){ const input = document.getElementById('botTestInput'); const msg = input.value; if(!msg) return; const box = document.getElementById('botTestMsgs'); box.innerHTML += `<div class="chat-msg user">${msg}</div>`; input.value=''; box.scrollTop = box.scrollHeight; const r = await apiPOST('/api/bot/responder', {mensagem:msg}); box.innerHTML += `<div class="chat-msg bot">${r.resposta||r.erro||'...'}</div>`; box.scrollTop = box.scrollHeight; }
 // ===== GERENTE =====
@@ -3155,25 +2830,7 @@ async function salvarIfood(){
 // ===== INTEGRAÇÕES: EMAIL / EXCEL / WORD =====
 async function renderIntegracoes(){
   const c = document.getElementById('content');
-  c.innerHTML = `<h1 class="page-title">Integrações</h1><p class="page-sub">Acompanhe serviços conectados e cadastre integrações próprias.</p>
-    <div class="grid-3">
-      <div class="kpi-card"><div class="kpi-icon" style="background:#dbeafe"><i data-lucide="database" style="color:#2563eb"></i></div><div><div class="kpi-label">Banco</div><div class="kpi-value" id="integracaoBancoStatus" style="font-size:15px">Verificando...</div><div class="kpi-sub" id="integracaoBancoDetalhe"></div></div></div>
-      <div class="kpi-card"><div class="kpi-icon" style="background:#fee2e2"><i data-lucide="utensils" style="color:#dc2626"></i></div><div><div class="kpi-label">iFood</div><div class="kpi-value" id="integracaoIfoodStatus" style="font-size:15px">Verificando...</div><div class="kpi-sub"><button class="btn btn-sm btn-secondary" onclick="showView('ifood')">Configurar</button></div></div></div>
-      <div class="kpi-card"><div class="kpi-icon" style="background:#dcfce7"><i data-lucide="mail" style="color:#15803d"></i></div><div><div class="kpi-label">E-mail SMTP</div><div class="kpi-value" id="integracaoEmailStatus" style="font-size:15px">Verificando...</div><div class="kpi-sub">Credenciais configuradas no servidor</div></div></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i data-lucide="plug-zap"></i> Outra integração</div>
-      <p class="card-sub" style="margin-bottom:12px">Cadastre serviços que não aparecem nas opções atuais.</p>
-      <div class="form-grid">
-        <div class="form-group"><label>Nome *</label><input id="customIntNome" maxlength="80" placeholder="Ex.: sistema de entrega local"></div>
-        <div class="form-group"><label>Categoria</label><select id="customIntCategoria"><option>Outra</option><option>Comunicação</option><option>Pedidos</option><option>Pagamentos</option><option>Fiscal</option><option>Banco</option><option>Entrega</option><option>Governo</option></select></div>
-        <div class="form-group"><label>URL HTTPS (opcional)</label><input id="customIntUrl" type="url" placeholder="https://servico.exemplo.com"></div>
-        <div class="form-group"><label>Descrição</label><input id="customIntDescricao" maxlength="240" placeholder="Para que serve esta integração"></div>
-      </div>
-      <div class="alert-item atencao" style="margin-top:12px"><i data-lucide="shield-check"></i><span>Este cadastro organiza integrações próprias, mas não testa nem conecta serviços automaticamente. Não coloque tokens ou senhas nesta tela.</span></div>
-      <div class="form-actions"><button class="btn btn-primary" onclick="salvarIntegracaoPersonalizada()"><i data-lucide="plus"></i> Adicionar</button></div>
-      <div id="integracoesPersonalizadasLista" style="margin-top:16px"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando...</p></div></div>
-    </div>
+  c.innerHTML = `<h1 class="page-title">Integrações: Email / Excel / Word</h1><p class="page-sub">Envie e-mails (Outlook/Gmail), exporte relatórios para Excel e gere documentos Word.</p>
     <div class="card">
       <div class="card-title"><i data-lucide="mail"></i> Enviar E-mail (Outlook / Gmail)</div>
       <p style="font-size:13px;color:var(--muted);margin:8px 0">Status: <span id="emailStatus">Verificando...</span></p>
@@ -3218,40 +2875,10 @@ async function renderIntegracoes(){
       </div>
     </div>`;
   lucide.createIcons();
-  const [banco,ifood,email]=await Promise.all([apiGET('/api/health'),apiGET('/api/ifood/status'),apiGET('/api/email/status')]);
-  document.getElementById('integracaoBancoStatus').textContent=banco.tipo==='supabase'?(banco.status==='ok'?'Supabase conectado':'Supabase degradado'):'Modo local';
-  document.getElementById('integracaoBancoDetalhe').textContent=banco.tipo==='supabase'?`${banco.tabelas_carregadas||0}/${banco.total_tabelas||0} tabelas carregadas`:'Dados armazenados em data.json';
-  document.getElementById('integracaoIfoodStatus').textContent=ifood.conectado?'Conectado':'Desconectado';
-  document.getElementById('integracaoEmailStatus').textContent=email.configurado?'Configurado':'Não configurado';
-  document.getElementById('emailStatus').innerHTML=email.configurado?'<span class="badge ok">CONECTADO — '+email.usuario+'</span>':'<span class="badge warn">NÃO CONFIGURADO — defina as variáveis SMTP no Render</span>';
-  await atualizarIntegracoesPersonalizadas();
-}
-function escaparHtmlIntegracao(valor){return String(valor||'').replace(/[&<>"']/g,caractere=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[caractere]));}
-async function atualizarIntegracoesPersonalizadas(){
-  const el=document.getElementById('integracoesPersonalizadasLista');
-  if(!el)return;
-  const r=await apiGET('/api/integracoes/personalizadas');
-  const lista=r.integracoes||[];
-  el.innerHTML=lista.length?`<div class="card-title" style="margin-bottom:10px">Integrações cadastradas (${lista.length})</div><div class="app-grid">${lista.map(item=>`<div class="app-tile"><div class="app-tile-icon" style="background:#0d9488"><i data-lucide="plug"></i></div><div style="min-width:0;flex:1"><div class="app-tile-name">${escaparHtmlIntegracao(item.nome)}</div><div class="app-tile-desc">${escaparHtmlIntegracao(item.categoria)} · Cadastro manual</div>${item.descricao?`<div class="app-tile-desc">${escaparHtmlIntegracao(item.descricao)}</div>`:''}${item.url?`<a href="${escaparHtmlIntegracao(item.url)}" target="_blank" rel="noopener noreferrer" class="app-tile-desc">Abrir documentação/serviço</a>`:''}<button class="btn btn-sm btn-danger" style="margin-top:8px" onclick="excluirIntegracaoPersonalizada('${item.id}')"><i data-lucide="trash-2"></i> Remover</button></div></div>`).join('')}</div>`:'<div class="empty-state"><i data-lucide="plug"></i><p>Nenhuma integração própria cadastrada.</p></div>';
-  lucide.createIcons();
-}
-async function salvarIntegracaoPersonalizada(){
-  const nome=document.getElementById('customIntNome').value.trim();
-  if(!nome){toast('Informe o nome da integração.','error');return;}
-  const r=await apiPOST('/api/integracoes/personalizadas',{nome,categoria:document.getElementById('customIntCategoria').value,descricao:document.getElementById('customIntDescricao').value,url:document.getElementById('customIntUrl').value.trim()});
-  if(!r.sucesso){toast(r.erro||'Não foi possível adicionar a integração.','error');return;}
-  document.getElementById('customIntNome').value='';
-  document.getElementById('customIntDescricao').value='';
-  document.getElementById('customIntUrl').value='';
-  toast('Integração cadastrada.');
-  await atualizarIntegracoesPersonalizadas();
-}
-async function excluirIntegracaoPersonalizada(id){
-  if(!confirm('Remover esta integração personalizada?'))return;
-  const r=await apiPOST('/api/integracoes/personalizadas/excluir',{id});
-  if(!r.sucesso){toast(r.erro||'Não foi possível remover.','error');return;}
-  toast('Integração removida.');
-  await atualizarIntegracoesPersonalizadas();
+  try {
+    const r = await apiGET('/api/email/status');
+    document.getElementById('emailStatus').innerHTML = r.configurado ? '<span class="badge ok">CONECTADO — '+r.usuario+'</span>' : '<span class="badge warn">NÃO CONFIGURADO — defina as variáveis SMTP no Render</span>';
+  } catch(e) { document.getElementById('emailStatus').innerHTML = '<span class="badge warn">Indisponível</span>'; }
 }
 async function enviarEmail(){
   const para = document.getElementById('emailPara').value;
@@ -3631,15 +3258,6 @@ const NIVEIS_PERMISSAO = [
   { id: 5, nome: 'Gerente', cor: '#ea580c' },
   { id: 6, nome: 'Admin Total', cor: '#dc2626' }
 ];
-const MODULOS_PERMISSAO_UI = [
-  ['dashboard','Visão geral'],['caixa','Caixa / PDV'],['pdv-emergencial','PDV emergencial'],['configuracao-pdv','Configuração do PDV'],
-  ['produtos','Produtos'],['clientes','Clientes'],['fornecedores','Fornecedores'],['funcionarios','Funcionários'],['unidades','Unidades'],['permissoes','Permissões'],
-  ['fichas-tecnicas','Fichas técnicas'],['ordens-servico','Ordens de serviço'],['producao','Produção'],['vendas','Vendas'],['comandas','Comandas'],['pedidos-site','Pedidos online'],
-  ['eventos','Eventos'],['estoque','Estoque'],['compras','Compras'],['devolucoes','Devoluções'],['contas','Contas'],['tesouraria','Tesouraria'],['notas-fiscais','Notas fiscais'],
-  ['boletos','Boletos'],['ifood','iFood'],['integracoes','Integrações'],['metas','Metas'],['autorizacoes','Autorizações'],['ponto','Ponto'],['ferias','Férias'],
-  ['holerites','Holerites'],['rescisao','Rescisão'],['documentos-rh','Documentos RH'],['logistica','Logística'],['checklists','Checklists'],['chamados','Chamados'],
-  ['protocolo-entregas','Protocolo de entregas'],['bot-config','Configuração do bot'],['gerente','Gerência'],['ia-vendas','IA de vendas'],['agenda','Agenda'],['post-its','Post-it eletrônico'],['calculadora','Calculadora']
-];
 async function renderUnidades(){
   const c = document.getElementById('content');
   c.innerHTML = `<h1 class="page-title">Unidades (Matriz / Filial)</h1><p class="page-sub">Cadastre, edite e exclua unidades. Cada unidade tem seu nível de permissão.</p>
@@ -3705,12 +3323,6 @@ async function excluirUnidade(id, nome){
 async function renderPermissoes(){
   const c = document.getElementById('content');
   c.innerHTML = `<h1 class="page-title">Permissões de Acesso</h1><p class="page-sub">Aumente ou altere o nível de permissão de cada funcionário. Exige senha do administrador.</p>
-    <div class="card"><div class="card-title"><i data-lucide="shield-plus"></i> Criar perfil de acesso</div>
-      <div class="form-grid" style="margin-top:14px"><div class="form-group"><label>Nome do perfil *</label><input id="perfilPermissaoNome" maxlength="60" placeholder="Ex.: Estoquista"></div><div class="form-group"><label>Descrição</label><input id="perfilPermissaoDescricao" maxlength="180" placeholder="Responsabilidades deste perfil"></div></div>
-      <div class="form-group" style="margin-top:14px"><label>Módulos liberados</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px">${MODULOS_PERMISSAO_UI.map(([id,nome])=>`<label style="display:flex;align-items:center;gap:7px;font-size:12px"><input type="checkbox" name="moduloPerfilPermissao" value="${id}">${nome}</label>`).join('')}</div></div>
-      <div class="form-actions"><button class="btn btn-primary" onclick="salvarPerfilPermissao()"><i data-lucide="save"></i> Criar perfil</button></div>
-      <div id="perfisPermissaoLista" style="margin-top:16px"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando perfis...</p></div></div>
-    </div>
     <div class="card" style="margin-bottom:16px"><div class="card-title"><i data-lucide="info"></i> Níveis de Permissão</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
         ${NIVEIS_PERMISSAO.map(n=>`<span class="badge" style="background:${n.cor}22;color:${n.cor};padding:6px 10px">${n.id} — ${n.nome}</span>`).join('')}
@@ -3718,7 +3330,6 @@ async function renderPermissoes(){
     </div>
     <div class="card" id="permissoesLista"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando funcionários...</p></div></div>`;
   lucide.createIcons();
-  await atualizarListaPerfisPermissao();
   try {
     const r = await apiGET('/api/funcionarios');
     const f = r.funcionarios || [];
@@ -3741,29 +3352,6 @@ async function renderPermissoes(){
     }).join('') || '<div class="empty-state"><i data-lucide="users"></i><p>Nenhum funcionário cadastrado.</p></div>';
     lucide.createIcons();
   } catch(e) { document.getElementById('permissoesLista').innerHTML = '<p style="color:var(--muted)">Erro ao carregar.</p>'; }
-}
-async function atualizarListaPerfisPermissao(){
-  const el=document.getElementById('perfisPermissaoLista');if(!el)return;
-  const r=await apiGET('/api/perfis-permissao');
-  if(r.erro){el.innerHTML=`<div class="alert-item critico"><i data-lucide="circle-alert"></i><span>${escaparHtmlIntegracao(r.erro)}</span></div>`;lucide.createIcons();return;}
-  window._perfisPermissao=r.perfis||[];
-  el.innerHTML=window._perfisPermissao.length?window._perfisPermissao.map(perfil=>`<div class="alert-item" style="align-items:flex-start"><i data-lucide="shield-check"></i><div style="flex:1"><b>${escaparHtmlIntegracao(perfil.nome)}</b>${perfil.descricao?`<div class="card-sub">${escaparHtmlIntegracao(perfil.descricao)}</div>`:''}<div class="card-sub" style="margin-top:5px">${perfil.modulos.map(id=>MODULOS_PERMISSAO_UI.find(modulo=>modulo[0]===id)?.[1]||id).map(escaparHtmlIntegracao).join(' · ')}</div></div><button class="btn btn-sm btn-danger" title="Excluir perfil" onclick="excluirPerfilPermissao('${perfil.id}')"><i data-lucide="trash-2"></i></button></div>`).join(''):'<div class="empty-state"><i data-lucide="shield"></i><p>Nenhum perfil personalizado.</p></div>';
-  lucide.createIcons();
-}
-async function salvarPerfilPermissao(){
-  const nome=document.getElementById('perfilPermissaoNome').value.trim();
-  const modulos=[...document.querySelectorAll('input[name="moduloPerfilPermissao"]:checked')].map(input=>input.value);
-  const r=await apiPOST('/api/perfis-permissao',{nome,descricao:document.getElementById('perfilPermissaoDescricao').value,modulos});
-  if(!r.sucesso){toast(r.erro||'Não foi possível criar o perfil.','error');return;}
-  document.getElementById('perfilPermissaoNome').value='';document.getElementById('perfilPermissaoDescricao').value='';
-  document.querySelectorAll('input[name="moduloPerfilPermissao"]').forEach(input=>{input.checked=false;});
-  toast('Perfil criado.');await atualizarListaPerfisPermissao();
-}
-async function excluirPerfilPermissao(id){
-  if(!confirm('Excluir este perfil de acesso?'))return;
-  const r=await apiPOST('/api/perfis-permissao/excluir',{id});
-  if(!r.sucesso){toast(r.erro||'Não foi possível excluir o perfil.','error');return;}
-  toast('Perfil excluído.');await atualizarListaPerfisPermissao();
 }
 async function alterarPermissaoFunc(id, nome){
   const novoNivel = document.getElementById('nivelFunc'+id).value;
@@ -4610,8 +4198,9 @@ function modalNovaViagem() { alert('Nova viagem'); }
 function modalAbrirChamadoSuporte() { alert('Abrir chamado de suporte'); }
 function reenviarTermoLgpd(id) { alert(`Termo reenviado por SMS para o usuário ${id}`); }
 
-// ===== INIT: sempre inicia na tela de login =====
+// ===== INIT =====
 lucide.createIcons();
+restaurarSessao();
 </script>
 </body>
 </html>
