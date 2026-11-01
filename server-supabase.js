@@ -37,14 +37,12 @@ const BACKUP_INTERVAL_HOURS = Math.min(720, Math.max(1, Number(process.env.BACKU
 const BACKUP_RETENTION = Math.min(90, Math.max(1, Number(process.env.BACKUP_RETENTION || 7)));
 const LOGIN_MAX_ATTEMPTS = 5;
 const LOGIN_LOCK_HOURS = 24;
-const USER_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
-const USER_SESSIONS = new Map();
 
 const supabase = USAR_SUPABASE ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 
 app.use(cors());
-app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.json({ limit: '12mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Rotas amigáveis (sem .html)
@@ -56,7 +54,7 @@ app.get('/loja', (req, res) => res.redirect('/site.html'));
 
 // ===== STORE — Supabase (se configurado) ou arquivo local =====
 let DB = {};
-const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','pedidos_site','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log','login_security','support_tickets','backup_settings','backup_runs'];
+const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','pedidos_site','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log','login_security','support_tickets','backup_settings','backup_runs','almoxarifado','endomarketing','treinamentos','avaliacoes_treinamento'];
 let STATUS_BANCO = { tipo: USAR_SUPABASE ? 'supabase' : 'local', conectado: !USAR_SUPABASE, tabelas_com_erro: [] };
 let backupTimer = null;
 
@@ -91,22 +89,18 @@ async function loadDB() {
 }
 
 let salvando = false;
-let salvarNovamente = false;
 function saveDB() {
   if (!USAR_SUPABASE) { fs.writeFileSync(DATA_FILE, JSON.stringify(DB, null, 2)); return; }
-  if (salvando) { salvarNovamente = true; return; }
+  if (salvando) return;
   salvando = true;
   (async () => {
-    do {
-      salvarNovamente = false;
-      try {
-        for (const tabela of TABELAS) {
-          const dados = DB[tabela] || [];
-          if (dados.length) await supabase.from(tabela).upsert(dados, { onConflict: 'id' });
-        }
-        if (DB.controle_sistema) await supabase.from('controle_sistema').upsert(DB.controle_sistema, { onConflict: 'id' });
-      } catch(e) { console.error('Erro ao salvar no Supabase:', e.message); }
-    } while (salvarNovamente);
+    try {
+      for (const tabela of TABELAS) {
+        const dados = DB[tabela] || [];
+        if (dados.length) await supabase.from(tabela).upsert(dados, { onConflict: 'id' });
+      }
+      if (DB.controle_sistema) await supabase.from('controle_sistema').upsert(DB.controle_sistema, { onConflict: 'id' });
+    } catch(e) { console.error('Erro ao salvar no Supabase:', e.message); }
     salvando = false;
   })();
 }
@@ -208,39 +202,6 @@ function setBackupSettings(payload = {}) {
   return DB.backup_settings[0];
 }
 function nextId(col) { DB[col] = DB[col] || []; return (DB[col].reduce((m, r) => Math.max(m, r.id || 0), 0)) + 1; }
-function upsertRecord(col, payload, defaults = {}) {
-  DB[col] = DB[col] || [];
-  const existing = payload.id ? DB[col].find(record => record.id == payload.id) : null;
-  if (existing) {
-    Object.assign(existing, payload, { id: existing.id });
-    saveDB();
-    return { record: existing, created: false };
-  }
-  const record = { ...defaults, ...payload, id: nextId(col) };
-  DB[col].push(record);
-  saveDB();
-  return { record, created: true };
-}
-function archiveRecord(col, id) {
-  const record = (DB[col] || []).find(item => item.id == id);
-  if (!record) return false;
-  record.status = 'INATIVO';
-  record.ativo = false;
-  saveDB();
-  return true;
-}
-async function deleteRecord(col, id) {
-  const rows = DB[col] || [];
-  const record = rows.find(item => item.id == id);
-  if (!record) return false;
-  if (USAR_SUPABASE) {
-    const { error } = await supabase.from(col).delete().eq('id', record.id);
-    if (error) throw error;
-  }
-  DB[col] = rows.filter(item => item.id != id);
-  saveDB();
-  return true;
-}
 function hashSenha(senha) {
   const salt = crypto.randomBytes(16);
   const derived = crypto.scryptSync(String(senha), salt, 64);
@@ -260,6 +221,16 @@ function verificarSenha(hash, senha) {
   const expected = Buffer.from(hash);
   const actual = Buffer.from(senha);
   return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+}
+function funcionarioERP(body){
+  const matricula = String(body?.usuario?.matricula || '');
+  const senha = String(body?.senha_usuario || '');
+  const funcionario = (DB.funcionarios || []).find(x => x.matricula === matricula && x.status !== 'INATIVO');
+  return funcionario && verificarSenha(funcionario.senha_hash, senha) ? funcionario : null;
+}
+function adminERP(body){
+  const funcionario = funcionarioERP(body);
+  return funcionario && (funcionario.role === 'admin' || funcionario.unidade_tipo === 'matriz') ? funcionario : null;
 }
 function segredoValido(recebido, esperado) {
   if (!esperado || !recebido) return false;
@@ -311,6 +282,7 @@ function seed() {
     { id: 6, palavras_chave: 'ifood|delivery|entrega|entregador', resposta: 'Estamos no iFood! Ou se preferir, fazemos entrega própria — informe seu endereço.' }
   ];
   DB.ia_pedidos = [];
+  DB.almoxarifado = []; DB.endomarketing = []; DB.treinamentos = []; DB.avaliacoes_treinamento = [];
   saveDB();
 }
 
@@ -443,77 +415,8 @@ async function loginSeguro(req, res) {
     if (error) { console.error('Falha ao proteger senha legada:', error.message); return res.status(503).json({ sucesso: false, erro: 'Não foi possível atualizar a proteção da senha. Tente novamente.' }); }
   }
   const { senha_hash, ...usuario } = f;
-  const token = crypto.randomBytes(32).toString('hex');
-  USER_SESSIONS.set(token, { funcionario_id: f.id, expires_at: Date.now() + USER_SESSION_TTL_MS });
-  for (const [sessionToken, sessao] of USER_SESSIONS) if (sessao.expires_at <= Date.now()) USER_SESSIONS.delete(sessionToken);
-  res.json({ sucesso: true, token, usuario, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
+  res.json({ sucesso: true, token: 'tok-' + f.id, usuario, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
 }
-function exigirSessaoUsuario(req, res, next) {
-  const token = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  const sessao = USER_SESSIONS.get(token);
-  if (!sessao || sessao.expires_at <= Date.now()) {
-    USER_SESSIONS.delete(token);
-    return res.status(401).json({ erro: 'Sessão expirada. Entre novamente.' });
-  }
-  const funcionario = (DB.funcionarios || []).find(item => item.id === sessao.funcionario_id && item.status !== 'INATIVO');
-  if (!funcionario) return res.status(401).json({ erro: 'Funcionário não está ativo.' });
-  req.funcionario = funcionario;
-  next();
-}
-function exigirPerfilPdv(req, res, next) {
-  if (!['operador', 'caixa', 'vendedor', 'atendente'].includes(String(req.funcionario?.role || '').toLowerCase())) {
-    return res.status(403).json({ erro: 'Acesso disponível somente para perfis de caixa e vendas.' });
-  }
-  next();
-}
-function exigirPerfilAdministrativo(req, res, next) {
-  if (!['admin', 'gerente'].includes(String(req.funcionario?.role || '').toLowerCase())) {
-    return res.status(403).json({ erro: 'Acesso restrito à administração.' });
-  }
-  next();
-}
-function exigirConfirmacaoCrud(req, res, next) {
-  if (req.method !== 'POST' || req.path.startsWith('/api/site/')) return next();
-  const confirmar = /\/(salvar|criar|excluir|arquivar|registrar|configurar|config)$/.test(req.path) || [
-    '/api/agenda', '/api/post-its', '/api/pdv/usuario/ponto', '/api/perfis-permissao', '/api/integracoes/personalizadas',
-    '/api/funcionarios/permissao', '/api/controle-sistema/mensagem', '/api/backup/configuracoes', '/api/bot/config',
-    '/api/bot/regras', '/api/fidelidade/ajustar'
-  ].includes(req.path);
-  if (!confirmar) return next();
-  const token = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  const sessao = USER_SESSIONS.get(token);
-  if (!sessao || sessao.expires_at <= Date.now()) return res.status(401).json({ erro: 'Sessão expirada. Entre novamente.' });
-  const funcionario = (DB.funcionarios || []).find(item => item.id === sessao.funcionario_id && item.status !== 'INATIVO');
-  if (!funcionario) return res.status(401).json({ erro: 'Funcionário não está ativo.' });
-  const ignorarCampos = new Set(['matricula','funcionario_id','usuario','senha','senha_adm','senha_usuario','senha_confirmacao']);
-  const dadosUteis = Object.entries(req.body || {}).some(([chave,valor]) => {
-    if (ignorarCampos.has(chave) || valor === null || valor === undefined) return false;
-    if (typeof valor === 'string') return valor.trim().length > 0;
-    if (Array.isArray(valor)) return valor.length > 0;
-    if (typeof valor === 'number') return Number.isFinite(valor);
-    if (typeof valor === 'boolean') return true;
-    return typeof valor === 'object' && Object.keys(valor).length > 0;
-  });
-  if (!dadosUteis) return res.status(400).json({ erro: 'A solicitação está vazia. Preencha os campos obrigatórios.' });
-  const senha = String(req.body?.senha_confirmacao || req.body?.senha_usuario || req.body?.senha_adm || '');
-  if (!senha || !verificarSenha(funcionario.senha_hash, senha)) return res.status(401).json({ erro: 'Senha do usuário incorreta ou não informada.', codigo: 'CONFIRMACAO_SENHA' });
-  let mutacaoConfirmada = false;
-  const enviarJson = res.json.bind(res);
-  res.json = corpo => { if (corpo?.sucesso === true) mutacaoConfirmada = true; return enviarJson(corpo); };
-  res.once('finish', () => {
-    if (mutacaoConfirmada && res.statusCode >= 200 && res.statusCode < 300) {
-      const referencia = req.body?.id || req.body?.funcionario_id || req.body?.comanda_id || req.body?.registro_id || '';
-      registrarAuditoria('ALTERACAO_CONFIRMADA', `${req.method} ${req.path}${referencia ? ' · referência ' + referencia : ''}`, funcionario.id, funcionario.matricula);
-    }
-  });
-  next();
-}
-app.post('/api/logout', (req, res) => {
-  const token = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  if (token) USER_SESSIONS.delete(token);
-  res.json({ sucesso: true });
-});
-app.use(exigirConfirmacaoCrud);
 
 // ===== DASHBOARD =====
 app.get('/api/dashboard/resumo', (req, res) => {
@@ -612,45 +515,13 @@ app.post('/api/pdv-emergencial/sincronizar', (req, res) => {
 app.get('/api/unidades', (req, res) => res.json({ unidades: DB.unidades || [] }));
 
 // ===== CAIXA / PDV =====
-const FORMAS_PAGAMENTO_PDV = ['DINHEIRO', 'PIX', 'CARTAO', 'BOLETO', 'IFOOD'];
-function lerConfiguracaoPdv() {
-  const linha = (DB.bot_config || []).find(item => item.nome === 'pdv_config');
-  let salva = {};
-  try { salva = linha ? JSON.parse(linha.valor || '{}') : {}; } catch (e) { salva = {}; }
-  const formas = Array.isArray(salva.formas_pagamento) ? salva.formas_pagamento.filter(item => FORMAS_PAGAMENTO_PDV.includes(item)) : FORMAS_PAGAMENTO_PDV;
-  return {
-    fundo_inicial: Number.isFinite(Number(salva.fundo_inicial)) ? Number(salva.fundo_inicial) : 100,
-    formas_pagamento: formas.length ? formas : ['DINHEIRO'],
-    forma_padrao: formas.includes(salva.forma_padrao) ? salva.forma_padrao : (formas[0] || 'DINHEIRO'),
-    habilitar_balanca: salva.habilitar_balanca !== false,
-    rodape_cupom: typeof salva.rodape_cupom === 'string' ? salva.rodape_cupom : 'Obrigado, volte sempre!'
-  };
-}
-app.get('/api/pdv/configuracoes', exigirSessaoUsuario, (req, res) => res.json({ configuracao: lerConfiguracaoPdv() }));
-app.post('/api/pdv/configuracoes', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
-  const payload = req.body || {};
-  const formas = FORMAS_PAGAMENTO_PDV.filter(forma => Array.isArray(payload.formas_pagamento) && payload.formas_pagamento.includes(forma));
-  const configuracao = {
-    fundo_inicial: Math.min(1000000, Math.max(0, Number(payload.fundo_inicial) || 0)),
-    formas_pagamento: formas.length ? formas : ['DINHEIRO'],
-    forma_padrao: formas.includes(payload.forma_padrao) ? payload.forma_padrao : (formas[0] || 'DINHEIRO'),
-    habilitar_balanca: payload.habilitar_balanca === true,
-    rodape_cupom: String(payload.rodape_cupom || '').trim().slice(0, 160)
-  };
-  DB.bot_config = DB.bot_config || [];
-  let linha = DB.bot_config.find(item => item.nome === 'pdv_config');
-  if (!linha) { linha = { id: nextId('bot_config'), nome: 'pdv_config', valor: '' }; DB.bot_config.push(linha); }
-  linha.valor = JSON.stringify(configuracao);
-  saveDB();
-  res.json({ sucesso: true, configuracao });
-});
-app.get('/api/caixa/status-online', exigirSessaoUsuario, (req, res) => {
+app.get('/api/caixa/status-online', (req, res) => {
   const abertos = (DB.caixas || []).filter(c => c.status === 'aberto');
   const saldo = abertos.reduce((s, c) => s + Number(c.saldo_atual || 0), 0);
   const autPend = (DB.autorizacoes || []).filter(a => a.status === 'pendente').length;
   res.json({ caixas_abertos: abertos, saldo_atual: saldo, autorizacoes_pendentes: autPend });
 });
-app.post('/api/caixa/abrir', exigirSessaoUsuario, verificarEstado, (req, res) => {
+app.post('/api/caixa/abrir', verificarEstado, (req, res) => {
   const tesAberta = (DB.tesouraria || []).some(t => t.status === 'aberta' && t.data === hoje());
   if (!tesAberta) return res.json({ erro: 'Tesouraria fechada! Abra a tesouraria primeiro.' });
   const cx = (DB.caixas || [])[0];
@@ -660,14 +531,14 @@ app.post('/api/caixa/abrir', exigirSessaoUsuario, verificarEstado, (req, res) =>
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/caixa/fechar', exigirSessaoUsuario, verificarEstado, (req, res) => {
+app.post('/api/caixa/fechar', verificarEstado, (req, res) => {
   const cx = (DB.caixas || []).find(c => c.id == req.body.caixa_id) || (DB.caixas || [])[0];
   cx.status = 'fechado'; cx.fechada_por = req.body.funcionario_id || 1; cx.fechada_em = agora();
   DB.log_caixa.push({ id: nextId('log_caixa'), evento: 'FECHAMENTO_CAIXA', matricula: req.body.matricula || '-', created_at: agora() });
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/caixa/movimento', exigirSessaoUsuario, verificarEstado, (req, res) => {
+app.post('/api/caixa/movimento', verificarEstado, (req, res) => {
   const { tipo, valor, descricao } = req.body;
   const cx = (DB.caixas || []).find(c => c.status === 'aberto');
   if (!cx) return res.json({ erro: 'Nenhum caixa aberto' });
@@ -682,27 +553,23 @@ app.post('/api/caixa/movimento', exigirSessaoUsuario, verificarEstado, (req, res
   saveDB();
   res.json({ sucesso: true });
 });
-app.get('/api/caixa/movimentos', exigirSessaoUsuario, (req, res) => res.json({ movimentos: (DB.mov_caixa || []).slice(-50).reverse() }));
-app.get('/api/log-caixa', exigirSessaoUsuario, (req, res) => res.json({ log: (DB.log_caixa || []).slice(-100).reverse() }));
+app.get('/api/caixa/movimentos', (req, res) => res.json({ movimentos: (DB.mov_caixa || []).slice(-50).reverse() }));
+app.get('/api/log-caixa', (req, res) => res.json({ log: (DB.log_caixa || []).slice(-100).reverse() }));
 
 // ===== VENDAS =====
-app.post('/api/venda/criar', exigirSessaoUsuario, verificarEstado, (req, res) => {
+app.post('/api/venda/criar', verificarEstado, (req, res) => {
   const { itens, forma_pagamento, comanda_id, cliente_nome } = req.body;
-  const comanda = comanda_id ? (DB.comandas || []).find(item => item.id == comanda_id && item.status === 'ABERTA') : null;
-  if (comanda_id && !comanda) return res.status(409).json({ erro: 'Comanda não encontrada ou já finalizada. Atualize a lista e tente novamente.' });
-  const cx = (DB.caixas || []).find(c => c.status === 'aberto');
-  if (!cx) return res.status(409).json({ erro: 'Abra um caixa antes de finalizar a venda.' });
   const total = (itens || []).reduce((s, i) => s + Number(i.total || 0), 0);
-  const venda = { id: nextId('vendas'), data: agora(), cliente_nome: cliente_nome || comanda?.cliente_nome || 'Balcão', forma_pagamento, origem: comanda_id ? 'comanda' : 'balcao', total, itens, status: 'CONCLUIDA', operador_matricula: req.body.matricula || '-', comanda_id };
+  const venda = { id: nextId('vendas'), data: agora(), cliente_nome: cliente_nome || 'Balcão', forma_pagamento, origem: comanda_id ? 'comanda' : 'balcao', total, itens, status: 'CONCLUIDA', operador_matricula: req.body.matricula || '-', comanda_id };
   DB.vendas.push(venda);
-  if (comanda) { comanda.status = 'FECHADA'; comanda.total = total; comanda.venda_id = venda.id; comanda.fechada_em = venda.data; }
   // Baixa estoque
   (itens || []).forEach(i => {
     const est = (DB.estoque || []).find(e => e.produto_id == i.product_id);
     if (est) est.qty = Math.max(0, Number(est.qty) - Number(i.qty || 1));
   });
   // Crédito no caixa
-  cx.saldo_atual = Number(cx.saldo_atual) + total;
+  const cx = (DB.caixas || []).find(c => c.status === 'aberto');
+  if (cx) cx.saldo_atual = Number(cx.saldo_atual) + total;
   // Fidelidade
   const cli = (DB.clientes || []).find(c => c.nome === cliente_nome);
   if (cli) {
@@ -721,28 +588,24 @@ app.post('/api/venda/estornar', (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.get('/api/venda/cupom', exigirSessaoUsuario, (req, res) => {
+app.get('/api/venda/cupom', (req, res) => {
   const v = (DB.vendas || []).find(x => x.id == req.query.id);
   if (!v) return res.json({ erro: 'Não encontrada' });
-  if (!['admin', 'gerente', 'financeiro'].includes(String(req.funcionario.role || '').toLowerCase()) && v.operador_matricula !== req.funcionario.matricula) return res.status(403).json({ erro: 'Acesso restrito às próprias vendas.' });
   res.json({ venda: v, itens: v.itens || [] });
 });
-app.get('/api/vendas', exigirSessaoUsuario, (req, res) => {
-  const todas = (DB.vendas || []).slice(-100).reverse();
-  const vendas = ['admin', 'gerente', 'financeiro'].includes(String(req.funcionario.role || '').toLowerCase()) ? todas : todas.filter(venda => venda.operador_matricula === req.funcionario.matricula);
-  res.json({ vendas });
-});
+app.get('/api/vendas', (req, res) => res.json({ vendas: (DB.vendas || []).slice(-100).reverse() }));
 
 // ===== PRODUTOS =====
-app.get('/api/produtos', (req, res) => res.json({ produtos: (DB.produtos || []).filter(p => p.status !== 'INATIVO') }));
+app.get('/api/produtos', (req, res) => res.json({ produtos: DB.produtos || [] }));
 app.post('/api/produtos/salvar', (req, res) => {
-  upsertRecord('produtos', req.body, { status: 'ATIVO' });
-  res.json({ sucesso: true });
-});
-app.post('/api/registros/arquivar', (req, res) => {
-  const colecoes = ['produtos', 'clientes', 'fornecedores', 'funcionarios', 'patrimonio', 'imoveis', 'fichas_tecnicas', 'eventos'];
-  if (!colecoes.includes(req.body.colecao)) return res.status(400).json({ erro: 'Cadastro inválido.' });
-  if (!archiveRecord(req.body.colecao, req.body.id)) return res.status(404).json({ erro: 'Registro não encontrado.' });
+  const { id } = req.body;
+  if (id) {
+    const p = (DB.produtos || []).find(x => x.id == id);
+    if (p) Object.assign(p, req.body);
+  } else {
+    DB.produtos.push({ id: nextId('produtos'), ...req.body, status: 'ATIVO' });
+  }
+  saveDB();
   res.json({ sucesso: true });
 });
 
@@ -757,13 +620,10 @@ app.post('/api/producao/receita/salvar', (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/producao/receita/excluir', async (req, res) => {
-  try {
-    if (!await deleteRecord('receitas', req.body.id)) return res.status(404).json({ erro: 'Insumo não encontrado.' });
-    res.json({ sucesso: true });
-  } catch (error) {
-    res.status(500).json({ erro: 'Não foi possível excluir o insumo.' });
-  }
+app.post('/api/producao/receita/excluir', (req, res) => {
+  DB.receitas = (DB.receitas || []).filter(r => r.id != req.body.id);
+  saveDB();
+  res.json({ sucesso: true });
 });
 app.post('/api/producao/simular', (req, res) => {
   const { produto_id, qtd } = req.body;
@@ -795,15 +655,13 @@ app.post('/api/producao/confirmar', (req, res) => {
 });
 
 // ===== CLIENTES + FIDELIDADE =====
-app.get('/api/clientes', (req, res) => res.json({ clientes: (DB.clientes || []).filter(c => c.ativo !== false).map(c => ({ ...c, pontos_disponiveis: ((DB.fidelidade || []).find(f => f.cliente_id === c.id) || {}).pontos_disponiveis || 0, valor_total_gasto: ((DB.fidelidade || []).find(f => f.cliente_id === c.id) || {}).valor_total_gasto || 0 })) }));
+app.get('/api/clientes', (req, res) => res.json({ clientes: (DB.clientes || []).map(c => ({ ...c, pontos_disponiveis: ((DB.fidelidade || []).find(f => f.cliente_id === c.id) || {}).pontos_disponiveis || 0, valor_total_gasto: ((DB.fidelidade || []).find(f => f.cliente_id === c.id) || {}).valor_total_gasto || 0 })) }));
 app.post('/api/clientes/salvar', (req, res) => {
-  const { record, created } = upsertRecord('clientes', req.body, { ativo: true, data_cadastro: hoje() });
-  if (created) {
-    DB.fidelidade = DB.fidelidade || [];
-    DB.fidelidade.push({ id: nextId('fidelidade'), cliente_id: record.id, pontos_total: 0, pontos_disponiveis: 0, pontos_resgatados: 0, valor_total_gasto: 0, atualizado_em: agora() });
-    saveDB();
-  }
-  res.json({ sucesso: true, cliente_id: record.id });
+  const c = { id: nextId('clientes'), ...req.body, ativo: true, data_cadastro: hoje() };
+  DB.clientes.push(c);
+  DB.fidelidade.push({ id: nextId('fidelidade'), cliente_id: c.id, pontos_total: 0, pontos_disponiveis: 0, pontos_resgatados: 0, valor_total_gasto: 0, atualizado_em: agora() });
+  saveDB();
+  res.json({ sucesso: true });
 });
 app.get('/api/fidelidade/:id', (req, res) => {
   const fid = (DB.fidelidade || []).find(f => f.cliente_id == req.params.id);
@@ -817,27 +675,20 @@ app.post('/api/fidelidade/ajustar', (req, res) => {
 });
 
 // ===== FORNECEDORES =====
-app.get('/api/fornecedores', (req, res) => res.json({ fornecedores: (DB.fornecedores || []).filter(f => f.status !== 'INATIVO') }));
-app.post('/api/fornecedores/salvar', (req, res) => { upsertRecord('fornecedores', req.body, { status: 'ATIVO' }); res.json({ sucesso: true }); });
+app.get('/api/fornecedores', (req, res) => res.json({ fornecedores: DB.fornecedores || [] }));
+app.post('/api/fornecedores/salvar', (req, res) => { DB.fornecedores.push({ id: nextId('fornecedores'), ...req.body, status: 'ATIVO' }); saveDB(); res.json({ sucesso: true }); });
 
 // ===== FUNCIONÁRIOS =====
-app.get('/api/funcionarios', (req, res) => res.json({ funcionarios: (DB.funcionarios || []).filter(f => f.status !== 'INATIVO').map(({ senha, senha_hash, ultimas_senhas, ...f }) => ({ ...f, unidade_nome: ((DB.unidades || []).find(u => u.id === f.unidade_id) || {}).nome })) }));
-app.post('/api/funcionarios/salvar', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
-  const payload = { ...req.body };
-  const perfisBase = ['admin', 'gerente', 'operador', 'caixa', 'vendedor', 'atendente', 'financeiro', 'rh'];
-  const perfilValido = perfisBase.includes(payload.role) || lerListaFerramenta('perfis_permissao').some(perfil => perfil.id === payload.role);
-  if (payload.role && !perfilValido) return res.status(400).json({ erro: 'Perfil de acesso inválido.' });
-  if (!payload.senha) delete payload.senha;
-  upsertRecord('funcionarios', payload, { status: 'ATIVO', data_admissao: hoje() });
-  res.json({ sucesso: true });
-});
+app.get('/api/funcionarios', (req, res) => res.json({ funcionarios: (DB.funcionarios || []).map(({ senha_hash, ultimas_senhas, ...f }) => ({ ...f, unidade_nome: ((DB.unidades || []).find(u => u.id === f.unidade_id) || {}).nome })) }));
+app.post('/api/funcionarios/salvar', (req, res) => { DB.funcionarios.push({ id: nextId('funcionarios'), ...req.body, status: 'ATIVO', data_admissao: hoje() }); saveDB(); res.json({ sucesso: true }); });
 
 // ===== PATRIMÔNIO =====
-app.get('/api/patrimonio', (req, res) => res.json({ bens: (DB.patrimonio || []).filter(p => p.status !== 'INATIVO').map(p => ({ ...p, unidade_nome: ((DB.unidades || []).find(u => u.id === p.localizacao_unidade_id) || {}).nome })) }));
+app.get('/api/patrimonio', (req, res) => res.json({ bens: (DB.patrimonio || []).map(p => ({ ...p, unidade_nome: ((DB.unidades || []).find(u => u.id === p.localizacao_unidade_id) || {}).nome })) }));
 app.post('/api/patrimonio/salvar', (req, res) => {
   const codigo = 'PAT-' + new Date().getFullYear() + '-' + String((DB.patrimonio || []).length + 1).padStart(5, '0');
-  const { record, created } = upsertRecord('patrimonio', req.body, { codigo_etiqueta: codigo, status: 'ativo', condicao_atual: req.body.condicao_atual || 'bom', data_ultima_verificacao: hoje() });
-  res.json({ sucesso: true, codigo_etiqueta: record.codigo_etiqueta, criado: created });
+  DB.patrimonio.push({ id: nextId('patrimonio'), codigo_etiqueta: codigo, ...req.body, status: 'ativo', condicao_atual: req.body.condicao_atual || 'bom', data_ultima_verificacao: hoje() });
+  saveDB();
+  res.json({ sucesso: true, codigo_etiqueta: codigo });
 });
 app.post('/api/patrimonio/transferir', (req, res) => {
   const bem = (DB.patrimonio || []).find(p => p.id == req.body.patrimonio_id);
@@ -859,16 +710,17 @@ app.post('/api/patrimonio/checklist-mudanca', (req, res) => {
 });
 
 // ===== IMÓVEIS =====
-app.get('/api/imoveis', (req, res) => res.json({ imoveis: (DB.imoveis || []).filter(i => i.status !== 'INATIVO').map(i => ({ ...i, unidade_nome: ((DB.unidades || []).find(u => u.id === i.unidade_id) || {}).nome })) }));
-app.post('/api/imoveis/salvar', (req, res) => { upsertRecord('imoveis', req.body, { status: 'ativo' }); res.json({ sucesso: true }); });
+app.get('/api/imoveis', (req, res) => res.json({ imoveis: (DB.imoveis || []).map(i => ({ ...i, unidade_nome: ((DB.unidades || []).find(u => u.id === i.unidade_id) || {}).nome })) }));
+app.post('/api/imoveis/salvar', (req, res) => { DB.imoveis.push({ id: nextId('imoveis'), ...req.body, status: 'ativo' }); saveDB(); res.json({ sucesso: true }); });
 
 // ===== FICHAS TÉCNICAS =====
-app.get('/api/fichas-tecnicas', (req, res) => res.json({ fichas: (DB.fichas_tecnicas || []).filter(f => f.ativo !== false) }));
-app.get('/api/fichas-tecnicas/:id', (req, res) => { const f = (DB.fichas_tecnicas || []).find(x => x.id == req.params.id && x.ativo !== false); res.json({ ficha: f || null }); });
+app.get('/api/fichas-tecnicas', (req, res) => res.json({ fichas: DB.fichas_tecnicas || [] }));
+app.get('/api/fichas-tecnicas/:id', (req, res) => { const f = (DB.fichas_tecnicas || []).find(x => x.id == req.params.id); res.json({ ficha: f || null }); });
 app.post('/api/fichas-tecnicas/salvar', (req, res) => {
   const { tempo_producao_min, tempo_embalagem_min, tempo_acondicionamento_min } = req.body;
   const tempo_total = Number(tempo_producao_min || 0) + Number(tempo_embalagem_min || 0) + Number(tempo_acondicionamento_min || 0);
-  upsertRecord('fichas_tecnicas', { ...req.body, tempo_total_min: tempo_total }, { ativo: true });
+  DB.fichas_tecnicas.push({ id: nextId('fichas_tecnicas'), ...req.body, tempo_total_min: tempo_total, ativo: true });
+  saveDB();
   res.json({ sucesso: true });
 });
 
@@ -894,43 +746,55 @@ app.post('/api/ordens-servico/concluir', (req, res) => {
 });
 
 // ===== COMANDAS =====
-app.get('/api/comandas', exigirSessaoUsuario, (req, res) => res.json({ comandas: DB.comandas || [] }));
-app.get('/api/comandas/abertas', exigirSessaoUsuario, (req, res) => res.json({ comandas: (DB.comandas || []).filter(c => c.status === 'ABERTA') }));
-app.post('/api/comandas/criar', exigirSessaoUsuario, (req, res) => {
-  DB.comandas = DB.comandas || [];
-  const id = nextId('comandas');
-  const numero = 'CMD-' + String(id).padStart(4, '0');
-  DB.comandas.push({ ...req.body, id, numero, status: 'ABERTA', total: 0, entrada_at: agora() });
+app.get('/api/comandas', (req, res) => res.json({ comandas: DB.comandas || [] }));
+app.get('/api/comandas/abertas', (req, res) => res.json({ comandas: (DB.comandas || []).filter(c => c.status === 'ABERTA') }));
+app.post('/api/comandas/criar', (req, res) => {
+  const numero = 'CMD-' + String((DB.comandas || []).length + 1).padStart(4, '0');
+  DB.comandas.push({ id: nextId('comandas'), numero, ...req.body, status: 'ABERTA', total: 0, entrada_at: agora() });
   saveDB();
-  res.json({ sucesso: true, id, numero });
+  res.json({ sucesso: true, numero });
 });
-app.post('/api/comandas/fechar', exigirSessaoUsuario, (req, res) => {
+app.post('/api/comandas/fechar', (req, res) => {
   const cmd = (DB.comandas || []).find(c => c.id == req.body.comanda_id);
   if (cmd) { cmd.status = 'FECHADA'; cmd.fechada_em = agora(); }
   saveDB();
   res.json({ sucesso: true });
 });
-app.get('/api/comandas/qr/:id', (req, res) => {
-  const cmd = (DB.comandas || []).find(c => c.id == req.params.id);
-  if (!cmd) return res.status(404).send('Comanda não encontrada.');
-  const numeroSeguro = String(cmd.numero).replace(/[&<>"']/g, caractere => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[caractere]));
-  const clienteSeguro = String(cmd.cliente_nome || 'Cliente').replace(/[&<>"']/g, caractere => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[caractere]));
-  const payload = JSON.stringify(`ASSADOS|COMANDA|${cmd.id}|${cmd.numero}`);
-  res.type('html').send(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Comanda ${numeroSeguro}</title><style>body{font-family:Arial,sans-serif;color:#172033;max-width:380px;margin:24px auto;padding:20px;text-align:center}h1{font-size:23px;margin:0 0 6px}p{color:#64748b}#qrcode{display:flex;justify-content:center;margin:20px auto}button{padding:10px 18px;border:0;border-radius:6px;background:#0b315d;color:#fff;font-weight:700}@media print{body{margin:0 auto}button{display:none}}</style></head><body><h1>Assados Nobre</h1><p>Comanda de atendimento</p><h2>${numeroSeguro}</h2><p>${clienteSeguro}</p><div id="qrcode"></div><p>Apresente este código no caixa para finalizar a venda.</p><button onclick="window.print()">Imprimir comanda</button><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>new QRCode(document.getElementById('qrcode'),{text:${payload},width:220,height:220,correctLevel:QRCode.CorrectLevel.M});</script></body></html>`);
-});
+app.get('/api/comandas/qr/:id', (req, res) => { const cmd = (DB.comandas || []).find(c => c.id == req.params.id); res.json({ qr: cmd ? 'QR-' + cmd.numero : null }); });
 
 // ===== PEDIDOS SITE / IFOOD =====
-app.get('/api/site/pedidos', (req, res) => res.json({ pedidos: DB.pedidos_site || [] }));
+app.get('/api/site/pedidos', (req, res) => res.status(403).json({ erro: 'Acesso restrito ao painel.' }));
+app.post('/api/site/pedidos/listar', (req, res) => {
+  if (!adminERP(req.body)) return res.status(403).json({ erro: 'Confirme sua senha de administrador para consultar pedidos.' });
+  res.json({ pedidos: DB.pedidos_site || [] });
+});
 app.post('/api/site/pedido/status', (req, res) => {
+  if (!adminERP(req.body)) return res.status(403).json({ sucesso: false, erro: 'Confirme sua senha de administrador para alterar o pedido.' });
   const p = (DB.pedidos_site || []).find(x => x.id == req.body.pedido_id);
-  if (p) p.status = req.body.status;
+  if (!p) return res.status(404).json({ sucesso: false, erro: 'Pedido não encontrado.' });
+  const status = String(req.body.status || '');
+  if (!['SOLICITADO','CONFIRMADO','EM_ENTREGA','ENTREGUE','CANCELADO'].includes(status)) return res.status(400).json({ sucesso: false, erro: 'Status inválido.' });
+  if (p.status === 'ENTREGUE' && status !== 'ENTREGUE') return res.status(409).json({ sucesso: false, erro: 'Pedido entregue não pode voltar para outro status.' });
+  if (status === 'ENTREGUE' && !p.venda_id) {
+    const resultado = registrarVendaPedidoSite(p);
+    if (!resultado.sucesso) return res.status(409).json(resultado);
+  }
+  if (status === 'CANCELADO' && p.entrega_id) {
+    const entrega = (DB.logistica || []).find(l => l.id == p.entrega_id);
+    if (entrega) entrega.status = 'CANCELADO';
+  }
+  if (status === 'EM_ENTREGA' && p.entrega_id) {
+    const entrega = (DB.logistica || []).find(l => l.id == p.entrega_id);
+    if (entrega) entrega.status = 'EM_TRANSITO';
+  }
+  p.status = status;
   saveDB();
-  res.json({ sucesso: true });
+  res.json({ sucesso: true, venda_id: p.venda_id || null, entrega_id: p.entrega_id || null });
 });
 
 // ===== EVENTOS =====
-app.get('/api/eventos', (req, res) => res.json({ eventos: (DB.eventos || []).filter(e => e.status !== 'INATIVO') }));
-app.post('/api/eventos/salvar', (req, res) => { upsertRecord('eventos', req.body, { status: 'orcamento', created_at: agora() }); res.json({ sucesso: true }); });
+app.get('/api/eventos', (req, res) => res.json({ eventos: DB.eventos || [] }));
+app.post('/api/eventos/salvar', (req, res) => { DB.eventos.push({ id: nextId('eventos'), ...req.body, status: 'orcamento', created_at: agora() }); saveDB(); res.json({ sucesso: true }); });
 
 // ===== ESTOQUE / WMS =====
 app.get('/api/wms/estoque', (req, res) => res.json({ estoque: (DB.estoque || []).map(e => ({ ...e, unidade_nome: ((DB.unidades || []).find(u => u.id === e.unidade_id) || {}).nome, valor_total: Number(e.qty || 0) * Number(e.valor_unitario || 0) })) }));
@@ -1050,48 +914,6 @@ app.post('/api/rh/ponto/registrar', (req, res) => {
   saveDB();
   res.json({ sucesso: true, registro: reg });
 });
-app.get('/api/pdv/usuario/ponto', exigirSessaoUsuario, exigirPerfilPdv, (req, res) => {
-  const registros = (DB.ponto || []).filter(item => item.funcionario_id === req.funcionario.id).slice(-60).reverse();
-  res.json({ registros });
-});
-app.post('/api/pdv/usuario/ponto', exigirSessaoUsuario, exigirPerfilPdv, (req, res) => {
-  const campos = { entrada: 'entrada', saida_almoco: 'saida_almoco', retorno_almoco: 'retorno_almoco', saida: 'saida' };
-  const campo = campos[req.body.acao];
-  if (!campo) return res.status(400).json({ erro: 'Ação de ponto inválida.' });
-  const data = hoje();
-  let registro = (DB.ponto || []).find(item => item.funcionario_id === req.funcionario.id && item.data_registro === data);
-  if (req.body.acao === 'entrada') {
-    if (registro?.entrada) return res.status(409).json({ erro: 'A entrada de hoje já foi registrada.' });
-    if (!registro) {
-      DB.ponto = DB.ponto || [];
-      registro = { id: nextId('ponto'), funcionario_id: req.funcionario.id, data_registro: data, created_at: agora() };
-      DB.ponto.push(registro);
-    }
-  } else {
-    if (!registro?.entrada) return res.status(409).json({ erro: 'Registre a entrada antes desta marcação.' });
-    if (registro.bloqueado) return res.status(409).json({ erro: 'Este registro já foi fechado pelo RH.' });
-    if (registro[campo]) return res.status(409).json({ erro: 'Esta marcação já foi registrada.' });
-    if (req.body.acao === 'retorno_almoco' && !registro.saida_almoco) return res.status(409).json({ erro: 'Registre a saída para almoço primeiro.' });
-    if (req.body.acao === 'saida' && registro.saida_almoco && !registro.retorno_almoco) return res.status(409).json({ erro: 'Registre o retorno do almoço antes da saída.' });
-  }
-  registro[campo] = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  registro.situacao = registro.saida ? 'completo' : 'incompleto';
-  if (registro.saida) {
-    const minutos = valor => { const [hora, minuto] = String(valor || '0:0').split(':').map(Number); return hora * 60 + minuto; };
-    const intervalo = registro.saida_almoco && registro.retorno_almoco ? minutos(registro.retorno_almoco) - minutos(registro.saida_almoco) : 0;
-    const horas = Math.max(0, minutos(registro.saida) - minutos(registro.entrada) - intervalo) / 60;
-    const jornada = Number(req.funcionario.jornada_diaria || 8);
-    registro.horas_trabalhadas = Number(horas.toFixed(2));
-    registro.horas_extras = Number(Math.max(0, horas - jornada).toFixed(2));
-    registro.saldo_horas = Number((horas - jornada).toFixed(2));
-  }
-  saveDB();
-  res.json({ sucesso: true, registro });
-});
-app.get('/api/pdv/usuario/consultas', exigirSessaoUsuario, exigirPerfilPdv, (req, res) => {
-  const vendas = (DB.vendas || []).filter(item => item.operador_matricula === req.funcionario.matricula).slice(-60).reverse();
-  res.json({ vendas });
-});
 app.post('/api/rh/ponto/acertar', (req, res) => {
   const reg = (DB.ponto || []).find(p => p.id == req.body.registro_id);
   if (!reg) return res.json({ erro: 'Registro não encontrado' });
@@ -1196,15 +1018,8 @@ app.post('/api/bot/config', (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/bot/regras', (req, res) => { const regra = { id: nextId('bot_regras'), palavras_chave: req.body.palavras_chave, resposta: req.body.resposta }; DB.bot_regras.push(regra); saveDB(); res.json({ sucesso: true, regra_id: regra.id }); });
-app.post('/api/bot/regras/excluir', async (req, res) => {
-  try {
-    if (!await deleteRecord('bot_regras', req.body.id)) return res.status(404).json({ erro: 'Regra não encontrada.' });
-    res.json({ sucesso: true });
-  } catch (error) {
-    res.status(500).json({ erro: 'Não foi possível excluir a regra.' });
-  }
-});
+app.post('/api/bot/regras', (req, res) => { DB.bot_regras.push({ id: nextId('bot_regras'), palavras_chave: req.body.palavras_chave, resposta: req.body.resposta }); saveDB(); res.json({ sucesso: true }); });
+app.post('/api/bot/regras/excluir', (req, res) => { DB.bot_regras = (DB.bot_regras || []).filter(r => r.id != req.body.id); saveDB(); res.json({ sucesso: true }); });
 // Endpoint principal do bot — usado pelo WhatsApp (webhook) e pelo site/celular
 function responderBot(mensagem) {
   const msg = (mensagem || '').toLowerCase();
@@ -1273,11 +1088,159 @@ app.get('/api/gerente/relatorio-vendas', (req, res) => {
 
 // ===== SITE (página pública com chatbot para celular) =====
 app.get('/api/site/produtos', (req, res) => res.json({ produtos: (DB.produtos || []).filter(p => p.categoria !== 'Insumos' && p.status === 'ATIVO') }));
-app.post('/api/site/pedido', (req, res) => {
-  const pedido = { id: nextId('pedidos_site'), ...req.body, origem: 'site', status: 'SOLICITADO', nf_emitida: false, data: agora() };
-  DB.pedidos_site.push(pedido);
+const CONFIG_SITE_PADRAO = {
+  nomeLoja: 'Assados Nobre', titulo: 'Seu sabor favorito, no conforto da sua casa',
+  descricao: 'Faça seu pedido online e receba com praticidade.', corPrincipal: '#a63b25', corFundo: '#fffaf5',
+  logo: '', imagemDestaque: '', animacao: 'suave', promocaoAtiva: false, promocaoTitulo: 'Oferta relâmpago',
+  promocaoTexto: '', cupomAtivo: false, cupomCodigo: 'BEMVINDO', cupomDesconto: 10, taxaEntrega: 0,
+  instagram: '', facebook: '', whatsapp: ''
+};
+function lerConfigSite(){
+  const registro = (DB.bot_config || []).find(x => x.nome === 'site_config');
+  try { return { ...CONFIG_SITE_PADRAO, ...(registro ? JSON.parse(registro.valor || '{}') : {}) }; }
+  catch { return { ...CONFIG_SITE_PADRAO }; }
+}
+function textoSite(valor, max = 180){ return String(valor == null ? '' : valor).trim().slice(0, max); }
+function urlSite(valor){
+  const url = textoSite(valor, 1000);
+  if (!url) return '';
+  try { const parsed = new URL(url); return ['https:', 'http:'].includes(parsed.protocol) ? url : ''; }
+  catch { return ''; }
+}
+function imagemSite(valor){
+  const imagem = String(valor || '');
+  if (imagem.length > 6 * 1024 * 1024) return '';
+  return /^data:image\/(png|jpeg|webp|gif);base64,[a-z0-9+/=]+$/i.test(imagem) ? imagem : urlSite(imagem);
+}
+function normalizarConfigSite(input = {}){
+  const padrao = CONFIG_SITE_PADRAO;
+  const cor = (v, fallback) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v) : fallback;
+  return {
+    nomeLoja: textoSite(input.nomeLoja, 80) || padrao.nomeLoja,
+    titulo: textoSite(input.titulo, 120) || padrao.titulo,
+    descricao: textoSite(input.descricao, 300),
+    corPrincipal: cor(input.corPrincipal, padrao.corPrincipal), corFundo: cor(input.corFundo, padrao.corFundo),
+    logo: imagemSite(input.logo), imagemDestaque: imagemSite(input.imagemDestaque),
+    animacao: ['suave', 'brilho', 'nenhuma'].includes(input.animacao) ? input.animacao : 'suave',
+    promocaoAtiva: input.promocaoAtiva === true || input.promocaoAtiva === 'true',
+    promocaoTitulo: textoSite(input.promocaoTitulo, 80) || padrao.promocaoTitulo,
+    promocaoTexto: textoSite(input.promocaoTexto, 200),
+    cupomAtivo: input.cupomAtivo === true || input.cupomAtivo === 'true',
+    cupomCodigo: textoSite(input.cupomCodigo, 24).toUpperCase().replace(/[^A-Z0-9_-]/g, ''),
+    cupomDesconto: Math.max(0, Math.min(80, Number(input.cupomDesconto) || 0)),
+    taxaEntrega: Math.max(0, Math.min(500, Number(input.taxaEntrega) || 0)),
+    instagram: urlSite(input.instagram), facebook: urlSite(input.facebook),
+    whatsapp: textoSite(input.whatsapp, 30).replace(/[^0-9+]/g, '')
+  };
+}
+function cadastrarClienteDoPedido(pedido){
+  DB.clientes = DB.clientes || [];
+  DB.fidelidade = DB.fidelidade || [];
+  const telefone = String(pedido.telefone || '').replace(/\D/g, '');
+  let cliente = DB.clientes.find(c => String(c.telefone || '').replace(/\D/g, '') === telefone);
+  if (!cliente) {
+    cliente = { id: nextId('clientes'), nome: pedido.cliente_nome, cpf_cnpj: '', telefone: pedido.telefone, email: pedido.email || '', ativo: true, pontos_disponiveis: 0, valor_total_gasto: 0, data_cadastro: hoje(), origem: 'site' };
+    DB.clientes.push(cliente);
+  } else {
+    cliente.nome = pedido.cliente_nome || cliente.nome;
+    cliente.email = pedido.email || cliente.email || '';
+  }
+  if (!DB.fidelidade.some(f => f.cliente_id == cliente.id)) DB.fidelidade.push({ id: nextId('fidelidade'), cliente_id: cliente.id, pontos_total: 0, pontos_disponiveis: 0, pontos_resgatados: 0, valor_total_gasto: 0, atualizado_em: agora() });
+  return cliente;
+}
+function gerarEntregaPedidoSite(pedido){
+  DB.logistica = DB.logistica || [];
+  const entrega = { id: nextId('logistica'), tipo: 'ENTREGA_SITE', origem: 'site', pedido_site_id: pedido.id, produto_nome: `Pedido site #${pedido.id} — ${(pedido.itens || []).map(i => i.nome).join(', ')}`, qty: (pedido.itens || []).reduce((s, i) => s + Number(i.quantidade || 0), 0), destino: pedido.endereco, motorista: 'A definir', placa: '-', status: 'AGUARDANDO_DESPACHO', created_at: agora() };
+  DB.logistica.push(entrega);
+  pedido.entrega_id = entrega.id;
+}
+function registrarVendaPedidoSite(pedido){
+  const unidadeId = (pedido.itens || [])[0]?.unidade_id || 1;
+  const caixa = (DB.caixas || []).find(c => c.status === 'aberto' && c.unidade_id == unidadeId);
+  const tesouraria = (DB.tesouraria || []).find(t => t.status === 'aberta' && t.data === hoje() && t.unidade_id == unidadeId);
+  if (!caixa || !tesouraria) return { sucesso: false, erro: 'Abra a tesouraria e o caixa da unidade antes de marcar o pedido como entregue.' };
+  for (const item of pedido.itens || []) {
+    const estoque = (DB.estoque || []).find(e => e.produto_id == item.produto_id && e.unidade_id == (item.unidade_id || 1));
+    if (estoque && Number(estoque.qty) < Number(item.quantidade)) return { sucesso: false, erro: `Estoque insuficiente para ${item.nome}.` };
+  }
+  DB.vendas = DB.vendas || [];
+  const total = Number(pedido.total || 0);
+  const venda = { id: nextId('vendas'), data: agora(), cliente_id: pedido.cliente_id, cliente_nome: pedido.cliente_nome, forma_pagamento: pedido.forma_pagamento || 'A_COMBINAR', origem: 'site', total, itens: (pedido.itens || []).map(i => ({ product_id: i.produto_id, nome: i.nome, qty: i.quantidade, preco: i.preco_unitario, total: i.total })), status: 'CONCLUIDA', operador_matricula: 'SITE', pedido_site_id: pedido.id, tipo_entrega: pedido.tipo_entrega };
+  for (const item of pedido.itens || []) {
+    const estoque = (DB.estoque || []).find(e => e.produto_id == item.produto_id && e.unidade_id == (item.unidade_id || 1));
+    if (estoque) estoque.qty = Number(estoque.qty) - Number(item.quantidade);
+  }
+  caixa.saldo_atual = Number(caixa.saldo_atual || 0) + total;
+  tesouraria.saldo_atual = Number(tesouraria.saldo_atual || 0) + total;
+  DB.mov_caixa = DB.mov_caixa || [];
+  DB.mov_caixa.push({ id: nextId('mov_caixa'), tipo: 'VENDA', valor: total, descricao: `Venda site #${pedido.id}`, origem: 'site', created_at: agora(), responsavel: 'SITE' });
+  const fidelidade = (DB.fidelidade || []).find(f => f.cliente_id == pedido.cliente_id);
+  if (fidelidade) {
+    const pontos = Math.floor(total);
+    fidelidade.pontos_total = Number(fidelidade.pontos_total || 0) + pontos;
+    fidelidade.pontos_disponiveis = Number(fidelidade.pontos_disponiveis || 0) + pontos;
+    fidelidade.valor_total_gasto = Number(fidelidade.valor_total_gasto || 0) + total;
+    fidelidade.atualizado_em = agora();
+  }
+  DB.vendas.push(venda);
+  pedido.venda_id = venda.id;
+  pedido.entregue_em = agora();
+  const entrega = (DB.logistica || []).find(l => l.id == pedido.entrega_id);
+  if (entrega) entrega.status = 'CONCLUIDO';
+  return { sucesso: true };
+}
+app.get('/api/site/config', (req, res) => res.json({ config: lerConfigSite() }));
+app.post('/api/site/config', (req, res) => {
+  const matricula = textoSite(req.body?.usuario?.matricula, 100);
+  const senha = String(req.body?.senha_usuario || '');
+  const funcionario = (DB.funcionarios || []).find(f => f.matricula === matricula && f.status !== 'INATIVO');
+  if (!funcionario || !verificarSenha(funcionario.senha_hash, senha)) return res.status(401).json({ sucesso: false, erro: 'Confirme sua senha para salvar as alterações.' });
+  if (funcionario.role !== 'admin' && funcionario.unidade_tipo !== 'matriz') return res.status(403).json({ sucesso: false, erro: 'Somente a administração da matriz pode editar o site.' });
+  const recebido = req.body?.config || {};
+  if (String(recebido.logo || '').length > 6 * 1024 * 1024 || String(recebido.imagemDestaque || '').length > 6 * 1024 * 1024) return res.status(413).json({ sucesso: false, erro: 'Cada imagem deve ter no máximo 4 MB.' });
+  const config = normalizarConfigSite(recebido);
+  DB.bot_config = DB.bot_config || [];
+  let registro = DB.bot_config.find(x => x.nome === 'site_config');
+  if (!registro) { registro = { id: nextId('bot_config'), nome: 'site_config', valor: '' }; DB.bot_config.push(registro); }
+  registro.valor = JSON.stringify(config);
   saveDB();
-  res.json({ sucesso: true, pedido_id: pedido.id });
+  res.json({ sucesso: true, config });
+});
+app.post('/api/site/pedido', (req, res) => {
+  const nome = textoSite(req.body?.cliente_nome, 100);
+  const telefone = textoSite(req.body?.telefone, 24);
+  const telefoneDigitos = telefone.replace(/\D/g, '');
+  const itensRecebidos = Array.isArray(req.body?.itens) ? req.body.itens : [];
+  if (nome.length < 2 || telefoneDigitos.length < 10 || !itensRecebidos.length || itensRecebidos.length > 50) return res.status(400).json({ sucesso: false, erro: 'Informe nome, telefone válido e ao menos um produto.' });
+  const itens = [];
+  for (const item of itensRecebidos) {
+    const produto = (DB.produtos || []).find(p => String(p.id) === String(item.produto_id) && p.status === 'ATIVO' && p.categoria !== 'Insumos');
+    const quantidade = Number(item.quantidade);
+    if (!produto || !Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 50) return res.status(400).json({ sucesso: false, erro: 'Um produto do pedido não está disponível ou tem quantidade inválida.' });
+    const preco = Number(produto.preco_venda || 0);
+    itens.push({ produto_id: produto.id, unidade_id: produto.unidade_id || 1, nome: textoSite(produto.nome, 100), quantidade, preco_unitario: preco, total: Math.round(preco * quantidade * 100) / 100 });
+  }
+  const subtotal = Math.round(itens.reduce((s, item) => s + item.total, 0) * 100) / 100;
+  const config = lerConfigSite();
+  const codigo = textoSite(req.body?.cupom, 24).toUpperCase();
+  const cupomValido = !!(codigo && config.cupomAtivo && config.cupomCodigo && codigo === config.cupomCodigo);
+  const desconto = cupomValido ? Math.round(subtotal * Math.min(80, Number(config.cupomDesconto) || 0)) / 100 : 0;
+  const tipoEntrega = ['entrega', 'retirada', 'encomenda'].includes(req.body?.tipo_entrega) ? req.body.tipo_entrega : 'entrega';
+  const endereco = textoSite(req.body?.endereco, 300);
+  if (tipoEntrega === 'entrega' && endereco.length < 5) return res.status(400).json({ sucesso: false, erro: 'Informe o endereço para entrega.' });
+  const taxaEntrega = tipoEntrega === 'entrega' ? Math.max(0, Number(config.taxaEntrega) || 0) : 0;
+  const pedido = {
+    id: nextId('pedidos_site'), cliente_nome: nome, telefone, email: textoSite(req.body?.email, 120),
+    tipo_entrega: tipoEntrega, endereco, data_encomenda: textoSite(req.body?.data_encomenda, 40),
+    observacao: textoSite(req.body?.observacao, 500), itens, subtotal, cupom: cupomValido ? codigo : '', desconto,
+    taxa_entrega: taxaEntrega, total: Math.max(0, Math.round((subtotal - desconto + taxaEntrega) * 100) / 100),
+    origem: 'site', status: 'SOLICITADO', nf_emitida: false, data: agora()
+  };
+  pedido.cliente_id = cadastrarClienteDoPedido(pedido).id;
+  DB.pedidos_site.push(pedido);
+  if (tipoEntrega === 'entrega') gerarEntregaPedidoSite(pedido);
+  saveDB();
+  res.json({ sucesso: true, pedido_id: pedido.id, total: pedido.total, cupom_aplicado: cupomValido });
 });
 
 // ===== CRM / CONTATOS =====
@@ -1350,125 +1313,6 @@ app.get('/api/ifood/status', (req, res) => {
 app.post('/api/ifood/configurar', (req, res) => {
   DB.ifood_config = { ...req.body, conectado: req.body.ativo, configurado_em: agora() };
   saveDB();
-  res.json({ sucesso: true });
-});
-
-function obterIntegracoesPersonalizadas() {
-  const linha = (DB.bot_config || []).find(item => item.nome === 'integracoes_personalizadas');
-  try { return linha ? JSON.parse(linha.valor || '[]') : []; } catch (e) { return []; }
-}
-function salvarIntegracoesPersonalizadas(lista) {
-  DB.bot_config = DB.bot_config || [];
-  let linha = DB.bot_config.find(item => item.nome === 'integracoes_personalizadas');
-  if (!linha) { linha = { id: nextId('bot_config'), nome: 'integracoes_personalizadas', valor: '' }; DB.bot_config.push(linha); }
-  linha.valor = JSON.stringify(lista);
-  saveDB();
-}
-app.get('/api/integracoes/personalizadas', exigirSessaoUsuario, (req, res) => res.json({ integracoes: obterIntegracoesPersonalizadas() }));
-app.post('/api/integracoes/personalizadas', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
-  const nome = String(req.body.nome || '').trim().slice(0, 80);
-  const categoria = String(req.body.categoria || 'Outra').trim().slice(0, 40);
-  const descricao = String(req.body.descricao || '').trim().slice(0, 240);
-  const url = String(req.body.url || '').trim();
-  if (!nome) return res.status(400).json({ erro: 'Informe o nome da integração.' });
-  if (url) {
-    try {
-      const endereco = new URL(url);
-      if (endereco.protocol !== 'https:' || endereco.username || endereco.password) throw new Error('URL inválida');
-    } catch (e) { return res.status(400).json({ erro: 'Use uma URL HTTPS sem usuário, senha ou token na URL.' }); }
-  }
-  const integracao = { id: crypto.randomUUID(), nome, categoria, descricao, url, status: 'manual', criado_em: agora() };
-  const lista = obterIntegracoesPersonalizadas();
-  lista.push(integracao);
-  salvarIntegracoesPersonalizadas(lista);
-  res.json({ sucesso: true, integracao });
-});
-app.post('/api/integracoes/personalizadas/excluir', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
-  const lista = obterIntegracoesPersonalizadas();
-  const atualizada = lista.filter(item => item.id !== req.body.id);
-  if (atualizada.length === lista.length) return res.status(404).json({ erro: 'Integração personalizada não encontrada.' });
-  salvarIntegracoesPersonalizadas(atualizada);
-  res.json({ sucesso: true });
-});
-
-function lerListaFerramenta(nome) {
-  const linha = (DB.bot_config || []).find(item => item.nome === nome);
-  try { return linha ? JSON.parse(linha.valor || '[]') : []; } catch (e) { return []; }
-}
-function salvarListaFerramenta(nome, lista) {
-  DB.bot_config = DB.bot_config || [];
-  let linha = DB.bot_config.find(item => item.nome === nome);
-  if (!linha) { linha = { id: nextId('bot_config'), nome, valor: '' }; DB.bot_config.push(linha); }
-  linha.valor = JSON.stringify(lista);
-  saveDB();
-}
-function listaDoUsuario(nome, matricula) {
-  const lista = lerListaFerramenta(nome);
-  return matricula ? lista.filter(item => item.matricula === matricula) : [];
-}
-const MODULOS_PERFIL = new Set(['dashboard','caixa','pdv-emergencial','configuracao-pdv','produtos','clientes','fornecedores','funcionarios','unidades','permissoes','fichas-tecnicas','ordens-servico','producao','vendas','comandas','pedidos-site','eventos','estoque','compras','devolucoes','contas','tesouraria','notas-fiscais','boletos','ifood','integracoes','metas','autorizacoes','ponto','ferias','holerites','rescisao','documentos-rh','logistica','checklists','chamados','protocolo-entregas','bot-config','gerente','ia-vendas','agenda','post-its','calculadora']);
-app.get('/api/perfis-permissao', exigirSessaoUsuario, (req, res) => res.json({ perfis: lerListaFerramenta('perfis_permissao') }));
-app.post('/api/perfis-permissao', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
-  const nome = String(req.body.nome || '').trim().slice(0, 60);
-  const descricao = String(req.body.descricao || '').trim().slice(0, 180);
-  const modulos = [...new Set((Array.isArray(req.body.modulos) ? req.body.modulos : []).filter(modulo => MODULOS_PERFIL.has(modulo)))];
-  if (!nome || !modulos.length) return res.status(400).json({ erro: 'Informe um nome e ao menos um módulo.' });
-  const perfis = lerListaFerramenta('perfis_permissao');
-  if (perfis.some(perfil => perfil.nome.toLowerCase() === nome.toLowerCase())) return res.status(409).json({ erro: 'Já existe um perfil com esse nome.' });
-  const perfil = { id: crypto.randomUUID(), nome, descricao, modulos, criado_em: agora() };
-  perfis.push(perfil);
-  salvarListaFerramenta('perfis_permissao', perfis);
-  res.json({ sucesso: true, perfil });
-});
-app.post('/api/perfis-permissao/excluir', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
-  const perfis = lerListaFerramenta('perfis_permissao');
-  const perfil = perfis.find(item => item.id === req.body.id);
-  if (!perfil) return res.status(404).json({ erro: 'Perfil não encontrado.' });
-  if ((DB.funcionarios || []).some(funcionario => funcionario.role === perfil.id)) return res.status(409).json({ erro: 'Não é possível excluir um perfil atribuído a funcionários.' });
-  salvarListaFerramenta('perfis_permissao', perfis.filter(item => item.id !== perfil.id));
-  res.json({ sucesso: true });
-});
-app.get('/api/agenda', exigirSessaoUsuario, (req, res) => res.json({ compromissos: listaDoUsuario('agenda_entries', req.funcionario.matricula) }));
-app.post('/api/agenda', exigirSessaoUsuario, (req, res) => {
-  const titulo = String(req.body.titulo || '').trim().slice(0, 100);
-  const dataHora = String(req.body.data_hora || '').trim();
-  const matricula = req.funcionario.matricula;
-  if (!titulo || !matricula || !Number.isFinite(Date.parse(dataHora))) return res.status(400).json({ erro: 'Informe título, data e usuário.' });
-  const compromisso = { id: crypto.randomUUID(), matricula, titulo, data_hora: dataHora, descricao: String(req.body.descricao || '').trim().slice(0, 500), criado_em: agora() };
-  const lista = lerListaFerramenta('agenda_entries');
-  lista.push(compromisso);
-  salvarListaFerramenta('agenda_entries', lista);
-  res.json({ sucesso: true, compromisso });
-});
-app.post('/api/agenda/excluir', exigirSessaoUsuario, (req, res) => {
-  const matricula = req.funcionario.matricula;
-  if (!matricula) return res.status(400).json({ erro: 'Usuário inválido.' });
-  const lista = lerListaFerramenta('agenda_entries');
-  const atualizada = lista.filter(item => !(item.id === req.body.id && item.matricula === matricula));
-  if (atualizada.length === lista.length) return res.status(404).json({ erro: 'Compromisso não encontrado.' });
-  salvarListaFerramenta('agenda_entries', atualizada);
-  res.json({ sucesso: true });
-});
-app.get('/api/post-its', exigirSessaoUsuario, (req, res) => res.json({ notas: listaDoUsuario('postit_notes', req.funcionario.matricula) }));
-app.post('/api/post-its', exigirSessaoUsuario, (req, res) => {
-  const titulo = String(req.body.titulo || '').trim().slice(0, 80);
-  const texto = String(req.body.texto || '').trim().slice(0, 1000);
-  const matricula = req.funcionario.matricula;
-  const cores = ['amarelo', 'azul', 'verde', 'rosa'];
-  if (!titulo || !texto || !matricula) return res.status(400).json({ erro: 'Informe título, anotação e usuário.' });
-  const nota = { id: crypto.randomUUID(), matricula, titulo, texto, cor: cores.includes(req.body.cor) ? req.body.cor : 'amarelo', criado_em: agora() };
-  const lista = lerListaFerramenta('postit_notes');
-  lista.push(nota);
-  salvarListaFerramenta('postit_notes', lista);
-  res.json({ sucesso: true, nota });
-});
-app.post('/api/post-its/excluir', exigirSessaoUsuario, (req, res) => {
-  const matricula = req.funcionario.matricula;
-  if (!matricula) return res.status(400).json({ erro: 'Usuário inválido.' });
-  const lista = lerListaFerramenta('postit_notes');
-  const atualizada = lista.filter(item => !(item.id === req.body.id && item.matricula === matricula));
-  if (atualizada.length === lista.length) return res.status(404).json({ erro: 'Anotação não encontrada.' });
-  salvarListaFerramenta('postit_notes', atualizada);
   res.json({ sucesso: true });
 });
 
@@ -1953,19 +1797,16 @@ app.post('/api/unidades/salvar', (req, res) => {
   saveDB();
   res.json({ sucesso: true });
 });
-app.post('/api/unidades/excluir', async (req, res) => {
+app.post('/api/unidades/excluir', (req, res) => {
   const u = (DB.unidades || []).find(x => x.id == req.body.id);
   if (u && u.tipo === 'matriz') return res.json({ erro: 'Não é possível excluir a Matriz!' });
-  try {
-    if (!await deleteRecord('unidades', req.body.id)) return res.status(404).json({ erro: 'Unidade não encontrada.' });
-  } catch (error) {
-    return res.status(500).json({ erro: 'Não foi possível excluir a unidade.' });
-  }
+  DB.unidades = (DB.unidades || []).filter(x => x.id != req.body.id);
+  saveDB();
   res.json({ sucesso: true });
 });
 
 // ===== PERMISSÃO DE FUNCIONÁRIOS — aumentar/alterar nível =====
-app.post('/api/funcionarios/permissao', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => {
+app.post('/api/funcionarios/permissao', (req, res) => {
   const { funcionario_id, nivel_permissao, senha_adm } = req.body;
   if (!senha_adm) return res.json({ erro: 'Alterar permissão exige senha do administrador' });
   const adm = (DB.funcionarios || []).find(f => verificarSenha(f.senha_hash, senha_adm) && f.role === 'admin');
@@ -2069,22 +1910,10 @@ app.post('/api/estoque/ajuste', (req, res) => {
 });
 
 // ===== LOG DE AUDITORIA =====
-function lerLogsAuditoria(){
-  if(Array.isArray(DB.audit_log)&&DB.audit_log.length)return DB.audit_log;
-  const linha=(DB.bot_config||[]).find(item=>item.nome==='audit_log');
-  try{return linha?JSON.parse(linha.valor||'[]'):[];}catch(error){return[];}
-}
-app.get('/api/auditoria/lista', exigirSessaoUsuario, exigirPerfilAdministrativo, (req, res) => res.json({ logs: lerLogsAuditoria().slice(-200).reverse() }));
-function registrarAuditoria(acao, detalhes, usuario_id, matricula) {
-  const logs=lerLogsAuditoria();
-  logs.push({ id: crypto.randomUUID(), acao, detalhes, usuario_id, matricula:matricula||'', data: agora() });
-  const retidos=logs.slice(-1000);
-  DB.audit_log=retidos;
-  DB.bot_config=DB.bot_config||[];
-  let linha=DB.bot_config.find(item=>item.nome==='audit_log');
-  if(!linha){linha={id:nextId('bot_config'),nome:'audit_log',valor:'[]'};DB.bot_config.push(linha);}
-  linha.valor=JSON.stringify(retidos);
-  saveDB();
+app.get('/api/auditoria/lista', (req, res) => res.json({ logs: (DB.audit_log || []).slice(-200).reverse() }));
+function registrarAuditoria(acao, detalhes, usuario_id) {
+  DB.audit_log = DB.audit_log || [];
+  DB.audit_log.push({ id: nextId('audit'), acao, detalhes, usuario_id, data: agora() });
 }
 
 // ===== MANUTENÇÃO DE FROTA =====
@@ -2488,24 +2317,92 @@ app.put('/api/leads/:id/redistribuir', async (req, res) => {
 // 📚 TREINAMENTOS & VIAGENS
 // ==========================================
 
-app.get('/api/treinamentos', async (req, res) => {
-  try {
-    const { data, error } = await supabase.from('treinamentos').select('*').order('data_inicio', { ascending: false });
-    if (error) throw error;
-    res.json({ sucesso: true, dados: data });
-  } catch (erro) {
-    res.status(400).json({ sucesso: false, erro: erro.message });
-  }
+function arquivoTreinamentoSeguro(valor, tipo){
+  const file = String(valor || '');
+  if (!file || file.length > 6 * 1024 * 1024) return '';
+  if (tipo === 'pdf' && /^data:application\/pdf;base64,[a-z0-9+/=]+$/i.test(file)) return file;
+  if (tipo === 'video' && /^data:video\/(mp4|webm|quicktime);base64,[a-z0-9+/=]+$/i.test(file)) return file;
+  try { const u = new URL(file); return u.protocol === 'https:' ? file : ''; } catch { return ''; }
+}
+app.get('/api/treinamentos', (req, res) => res.status(403).json({ erro: 'Acesso restrito à equipe.' }));
+app.post('/api/treinamentos/listar', (req, res) => {
+  if (!funcionarioERP(req.body)) return res.status(401).json({ erro: 'Confirme sua senha para acessar os treinamentos.' });
+  const dados = (DB.treinamentos || []).filter(t => t.ativo !== false).slice().sort((a,b) => String(b.data_inicio || '').localeCompare(String(a.data_inicio || '')))
+    .map(t => ({ ...t, avaliacao: (t.avaliacao || []).map(q => ({ pergunta: q.pergunta })) }));
+  res.json({ sucesso: true, dados });
+});
+app.post('/api/treinamentos', (req, res) => {
+  const admin = adminERP(req.body);
+  if (!admin) return res.status(403).json({ sucesso: false, erro: 'Apenas administrador da matriz pode cadastrar cursos. Confirme sua senha.' });
+  const b = req.body || {};
+  const titulo = textoSite(b.titulo, 120);
+  const avaliacao = Array.isArray(b.avaliacao) ? b.avaliacao.slice(0, 20).map(q => ({ pergunta: textoSite(q.pergunta, 300), resposta: textoSite(q.resposta, 200) })).filter(q => q.pergunta && q.resposta) : [];
+  if (!titulo || !avaliacao.length) return res.status(400).json({ sucesso: false, erro: 'Informe o título e ao menos uma pergunta com resposta correta.' });
+  const material = arquivoTreinamentoSeguro(b.material_dados, 'pdf');
+  const video = arquivoTreinamentoSeguro(b.video_dados, 'video');
+  if ((b.material_dados && !material) || (b.video_dados && !video)) return res.status(400).json({ sucesso: false, erro: 'Arquivo inválido. Use cartilha PDF de até 4 MB e vídeo MP4/WebM de até 4 MB, ou URL HTTPS.' });
+  DB.treinamentos = DB.treinamentos || [];
+  const curso = { id: nextId('treinamentos'), titulo, descricao: textoSite(b.descricao, 1000), data_inicio: textoSite(b.data_inicio, 20), material_nome: textoSite(b.material_nome, 150), material_dados: material, video_nome: textoSite(b.video_nome, 150), video_dados: video, avaliacao, ativo: true, criado_por: admin.matricula, criado_em: agora() };
+  DB.treinamentos.push(curso); saveDB();
+  res.json({ sucesso: true, dados: { ...curso, avaliacao: avaliacao.map(q => ({ pergunta: q.pergunta })) } });
+});
+app.post('/api/treinamentos/avaliar', (req, res) => {
+  const matricula = String(req.body?.usuario?.matricula || '');
+  const funcionario = (DB.funcionarios || []).find(f => f.matricula === matricula && f.status !== 'INATIVO');
+  if (!funcionario || !verificarSenha(funcionario.senha_hash, String(req.body?.senha_usuario || ''))) return res.status(401).json({ sucesso: false, erro: 'Confirme sua senha para registrar a avaliação.' });
+  const curso = (DB.treinamentos || []).find(t => String(t.id) === String(req.body.treinamento_id) && t.ativo !== false);
+  if (!curso) return res.status(404).json({ sucesso: false, erro: 'Curso não encontrado.' });
+  const respostas = Array.isArray(req.body.respostas) ? req.body.respostas : [];
+  const questoes = curso.avaliacao || [];
+  if (!questoes.length || respostas.length !== questoes.length) return res.status(400).json({ sucesso: false, erro: 'Responda todas as questões.' });
+  const acertos = questoes.reduce((s, q, i) => s + (textoSite(respostas[i], 200).toLowerCase() === textoSite(q.resposta, 200).toLowerCase() ? 1 : 0), 0);
+  const nota = Math.round(acertos / questoes.length * 100);
+  DB.avaliacoes_treinamento = DB.avaliacoes_treinamento || [];
+  const registro = { id: nextId('avaliacoes_treinamento'), treinamento_id: curso.id, matricula, respostas, nota, criado_em: agora() };
+  DB.avaliacoes_treinamento.push(registro); saveDB();
+  res.json({ sucesso: true, nota, aprovado: nota >= 70, total: questoes.length });
 });
 
-app.post('/api/treinamentos', async (req, res) => {
-  try {
-    const { data, error } = await supabase.from('treinamentos').insert(req.body).select();
-    if (error) throw error;
-    res.json({ sucesso: true, dados: data[0] });
-  } catch (erro) {
-    res.status(400).json({ sucesso: false, erro: erro.message });
-  }
+app.get('/api/almoxarifado', (req, res) => res.status(403).json({ erro: 'Acesso restrito ao painel.' }));
+app.post('/api/almoxarifado/listar', (req, res) => {
+  if (!adminERP(req.body)) return res.status(403).json({ erro: 'Confirme sua senha de administrador para consultar o almoxarifado.' });
+  const itens = DB.almoxarifado || [];
+  const alertas = itens.filter(i => Number(i.quantidade) <= Number(i.quantidade_minima)).map(i => ({ id: i.id, nome: i.nome, quantidade: i.quantidade, quantidade_minima: i.quantidade_minima, mensagem: `Reposição necessária: ${i.nome} tem ${i.quantidade} ${i.unidade} (mínimo ${i.quantidade_minima}).` }));
+  res.json({ itens, alertas, mensagem_ia: alertas.length ? `Atenção: ${alertas.length} material(is) no limite ou abaixo do estoque mínimo. Priorize a reposição: ${alertas.map(a => a.nome).join(', ')}.` : 'Estoque de almoxarifado dentro dos níveis mínimos.' });
+});
+app.post('/api/almoxarifado/salvar', (req, res) => {
+  const admin = adminERP(req.body);
+  if (!admin) return res.status(403).json({ sucesso: false, erro: 'Apenas administrador da matriz pode alterar o almoxarifado. Confirme sua senha.' });
+  const b = req.body || {}; const nome = textoSite(b.nome, 120); const minimo = Number(b.quantidade_minima); const quantidade = Number(b.quantidade);
+  if (!nome || !Number.isFinite(quantidade) || quantidade < 0 || !Number.isFinite(minimo) || minimo < 0) return res.status(400).json({ sucesso: false, erro: 'Informe nome, quantidade e estoque mínimo válidos.' });
+  DB.almoxarifado = DB.almoxarifado || [];
+  const item = { id: b.id ? Number(b.id) : nextId('almoxarifado'), nome, codigo: textoSite(b.codigo, 60), categoria: textoSite(b.categoria, 80), quantidade, quantidade_minima: minimo, unidade: textoSite(b.unidade, 20) || 'un', atualizado_em: agora() };
+  const indice = DB.almoxarifado.findIndex(x => x.id === item.id);
+  if (indice >= 0) DB.almoxarifado[indice] = item; else DB.almoxarifado.push(item);
+  saveDB(); res.json({ sucesso: true, item });
+});
+app.post('/api/almoxarifado/movimentar', (req, res) => {
+  if (!adminERP(req.body)) return res.status(403).json({ sucesso: false, erro: 'Apenas administrador da matriz pode movimentar estoque. Confirme sua senha.' });
+  const item = (DB.almoxarifado || []).find(x => x.id == req.body.item_id); const qtd = Number(req.body.quantidade);
+  if (!item || !Number.isFinite(qtd) || qtd <= 0 || !['entrada','saida'].includes(req.body.tipo)) return res.status(400).json({ sucesso: false, erro: 'Movimentação inválida.' });
+  if (req.body.tipo === 'saida' && qtd > Number(item.quantidade)) return res.status(400).json({ sucesso: false, erro: 'Quantidade insuficiente no almoxarifado.' });
+  item.quantidade = Number(item.quantidade) + (req.body.tipo === 'entrada' ? qtd : -qtd); item.atualizado_em = agora(); saveDB(); res.json({ sucesso: true, item });
+});
+
+app.get('/api/endomarketing', (req, res) => res.status(403).json({ erro: 'Acesso restrito à equipe.' }));
+app.post('/api/endomarketing/listar', (req, res) => {
+  if (!funcionarioERP(req.body)) return res.status(401).json({ erro: 'Confirme sua senha para consultar comunicados.' });
+  res.json({ comunicados: (DB.endomarketing || []).slice().sort((a,b) => String(b.criado_em).localeCompare(String(a.criado_em))) });
+});
+app.post('/api/endomarketing', (req, res) => {
+  const admin = adminERP(req.body);
+  if (!admin) return res.status(403).json({ sucesso: false, erro: 'Apenas administrador da matriz pode publicar comunicados. Confirme sua senha.' });
+  const b = req.body || {}; const titulo = textoSite(b.titulo, 120); const mensagem = textoSite(b.mensagem, 1500);
+  const tipo = ['informativo','convocacao_curso','comunicado'].includes(b.tipo) ? b.tipo : 'informativo';
+  if (!titulo || !mensagem) return res.status(400).json({ sucesso: false, erro: 'Preencha título e mensagem.' });
+  DB.endomarketing = DB.endomarketing || [];
+  const comunicado = { id: nextId('endomarketing'), titulo, tipo, mensagem, publico: textoSite(b.publico, 80) || 'todos', data_evento: textoSite(b.data_evento, 20), curso_id: Number(b.curso_id) || null, status: 'PUBLICADO', criado_por: admin.nome, criado_em: agora() };
+  DB.endomarketing.push(comunicado); saveDB(); res.json({ sucesso: true, comunicado });
 });
 
 app.get('/api/viagens', async (req, res) => {
