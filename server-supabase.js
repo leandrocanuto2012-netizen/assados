@@ -43,7 +43,19 @@ const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 
 app.use(cors());
 app.use(bodyParser.json({ limit: '12mb' }));
+
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname)); // fallback: se dashboard.html estiver na raiz, serve também
+
+// Rota explícita para garantir dashboard.html
+app.get('/dashboard.html', (req, res) => {
+  const p1 = path.join(__dirname, 'public', 'dashboard.html');
+  const p2 = path.join(__dirname, 'dashboard.html');
+  if (fs.existsSync(p1)) return res.sendFile(p1);
+  if (fs.existsSync(p2)) return res.sendFile(p2);
+  return res.status(404).send('dashboard.html não encontrado - coloque o arquivo em /public/dashboard.html');
+});
+
 
 // Rotas amigáveis (sem .html)
 app.get('/', (req, res) => res.redirect('/dashboard.html'));
@@ -54,7 +66,7 @@ app.get('/loja', (req, res) => res.redirect('/site.html'));
 
 // ===== STORE — Supabase (se configurado) ou arquivo local =====
 let DB = {};
-const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','pedidos_site','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log','login_security','support_tickets','backup_settings','backup_runs','almoxarifado','endomarketing','treinamentos','avaliacoes_treinamento','chamados'];
+const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','pedidos_site','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log','login_security','support_tickets','backup_settings','backup_runs','almoxarifado','endomarketing','treinamentos','avaliacoes_treinamento'];
 let STATUS_BANCO = { tipo: USAR_SUPABASE ? 'supabase' : 'local', conectado: !USAR_SUPABASE, tabelas_com_erro: [] };
 let backupTimer = null;
 
@@ -230,9 +242,7 @@ function funcionarioERP(body){
 }
 function adminERP(body){
   const funcionario = funcionarioERP(body);
-  const role = String(funcionario?.role||'').toLowerCase();
-  const isAdminRole = ['admin','adm','administrador','administrador geral'].includes(role);
-  return funcionario && (isAdminRole || funcionario.unidade_tipo === 'matriz') ? funcionario : null;
+  return funcionario && (funcionario.role === 'admin' || funcionario.unidade_tipo === 'matriz') ? funcionario : null;
 }
 function segredoValido(recebido, esperado) {
   if (!esperado || !recebido) return false;
@@ -251,10 +261,13 @@ function seed() {
     { id: 2, nome: 'Filial - Centro', tipo: 'filial', e_matriz: false, regime_tributario: 'simples_nacional', ativo: true }
   ];
   DB.funcionarios = [
-    { id: 1, matricula: 'SV-2026-0001', nome: 'Administrador Geral', cargo: 'Administrador', unidade_id: 1, unidade_tipo: 'matriz', role: 'admin', senha_hash: '123', status: 'ATIVO', salario_base: 5000, jornada_diaria: 8, data_admissao: '2024-01-15', nivel_permissao: 6 },
-    { id: 2, matricula: 'SV-2026-0002', nome: 'Maria Silva', cargo: 'Atendente', unidade_id: 2, unidade_tipo: 'filial', role: 'operador', senha_hash: '123', status: 'ATIVO', salario_base: 1600, jornada_diaria: 8, data_admissao: '2025-03-10', nivel_permissao: 1 },
-    { id: 3, matricula: 'adm', nome: 'ADM Sistema', cargo: 'Administrador', unidade_id: 1, unidade_tipo: 'matriz', role: 'admin', senha_hash: '123', status: 'ATIVO', salario_base: 5000, jornada_diaria: 8, data_admissao: '2024-01-15', nivel_permissao: 6 },
-    { id: 4, matricula: 'asm', nome: 'ASM Admin', cargo: 'Administrador', unidade_id: 1, unidade_tipo: 'matriz', role: 'admin', senha_hash: '123', status: 'ATIVO', salario_base: 5000, jornada_diaria: 8, data_admissao: '2024-01-15', nivel_permissao: 6 }
+    { id: 1, matricula: 'SV-2026-0001', nome: 'Administrador Geral', cargo: 'Administrador', unidade_id: 1, unidade_tipo: 'matriz', role: 'admin', senha_hash: '123', status: 'ATIVO', salario_base: 5000, jornada_diaria: 8, data_admissao: '2024-01-01' },
+  { id: 'adm', matricula: 'adm', nome: 'ADM Sistema', cargo: 'Administrador', unidade_id: 1, unidade_tipo: 'matriz', role: 'admin', senha_hash: '123', status: 'ATIVO', salario_base: 5000, jornada_diaria: 8, data_admissao: '2024-01-01' },
+  { id: 'as', matricula: 'as', nome: 'AS Admin', cargo: 'Administrador', unidade_id: 1, unidade_tipo: 'matriz', role: 'admin', senha_hash: '123', status: 'ATIVO', salario_base: 5000, jornada_diaria: 8, data_admissao: '2024-01-01' },
+  { id: 'SV-2026-0001', nome: 'Administrador Geral', cargo: 'Administrador', unidade_id: 1, unidade_tipo: 'matriz', role: 'admin', senha_hash: '123', status: 'ATIVO', salario_base: 5000, jornada_diaria: 8, data_admissao: '2024-01-15' },
+  { id: 'adm', matricula: 'adm', nome: 'ADM Sistema', cargo: 'Administrador', unidade_id: 1, unidade_tipo: 'matriz', role: 'admin', senha_hash: '123', status: 'ATIVO', salario_base: 5000, jornada_diaria: 8, data_admissao: '2024-01-01' },
+  { id: 'as', matricula: 'as', nome: 'AS Admin', cargo: 'Administrador', unidade_id: 1, unidade_tipo: 'matriz', role: 'admin', senha_hash: '123', status: 'ATIVO', salario_base: 5000, jornada_diaria: 8, data_admissao: '2024-01-01' },
+    { id: 2, matricula: 'SV-2026-0002', nome: 'Maria Silva', cargo: 'Atendente', unidade_id: 2, unidade_tipo: 'filial', role: 'operador', senha_hash: '123', status: 'ATIVO', salario_base: 1600, jornada_diaria: 8, data_admissao: '2025-03-10' }
   ];
   DB.controle_sistema = { id: 1, matriz_aberta: true, status_geral: 'aberta', permite_pdv_emergencial: true, mensagem_aviso: 'Sistema operando normalmente', updated_at: agora() };
   DB.produtos = [
@@ -1673,11 +1686,10 @@ app.get('/api/nf/cupom/:id', (req, res) => {
 
 // ===== CHAMADOS / HELP DESK =====
 app.get('/api/chamados/lista', (req, res) => {
-  DB.chamados = DB.chamados || [];
-  const chamados = DB.chamados.slice(-50).reverse().map(c => ({
+  const chamados = (DB.chamados || []).slice(-50).reverse().map(c => ({
     ...c,
-    aberto_por_nome: ((DB.funcionarios || []).find(f => f.id === c.aberto_por_id) || {}).nome || c.aberto_por_nome || '—',
-    responsavel_nome: ((DB.funcionarios || []).find(f => f.id === c.responsavel_id) || {}).nome || '—'
+    aberto_por_nome: ((DB.funcionarios || []).find(f => f.id === c.aberto_por_id) || {}).nome,
+    responsavel_nome: ((DB.funcionarios || []).find(f => f.id === c.responsavel_id) || {}).nome
   }));
   res.json({ chamados });
 });
