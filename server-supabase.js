@@ -2654,4 +2654,332 @@ app.get('/api/lgpd/verificar/:tipo/:id', async (req, res) => {
     res.json({ sucesso: true, precisa_aceitar: true });
   }
 });
+
+// ========== ROTAS PARA LOJA COM LOGIN DE CLIENTE - COLE NO server-supabase.js ==========
+
+// 1. CADASTRO COM VERIFICAÇÃO DE DUPLICIDADE NOME+EMAIL/TELEFONE
+app.post('/api/site/cliente/cadastro', async (req,res)=>{
+  try{
+    const {nome, telefone, email, senha} = req.body;
+    if(!nome||!telefone||!email||!senha) return res.status(400).json({sucesso:false, erro:'Preencha nome, telefone, e-mail e senha'});
+    
+    // Verifica se já existe por telefone ou email
+    const {data:existe} = await supabase.from('site_clientes').select('id, nome, email, telefone').or(`telefone.eq.${telefone},email.eq.${email}`).limit(1);
+    if(existe && existe.length>0){
+      return res.json({sucesso:false, ja_existe:true, erro:'Já existe cadastro com este telefone ou e-mail. Faça login.'});
+    }
+    // Verifica nome + email igual (mesmo nome e mesmo email)
+    const {data:existeNomeEmail} = await supabase.from('site_clientes').select('id').eq('nome', nome).eq('email', email).limit(1);
+    if(existeNomeEmail && existeNomeEmail.length>0){
+      return res.json({sucesso:false, ja_existe:true, erro:'Já existe cadastro com mesmo nome e e-mail.'});
+    }
+
+    const {data, error} = await supabase.from('site_clientes').insert({nome, telefone, email: email.toLowerCase(), senha, origem:'site'}).select().single();
+    if(error) throw error;
+    
+    res.json({sucesso:true, cliente:data});
+  }catch(e){
+    console.error('cadastro cliente', e);
+    res.status(500).json({sucesso:false, erro:e.message});
+  }
+});
+
+// 2. LOGIN CLIENTE
+app.post('/api/site/cliente/login', async (req,res)=>{
+  try{
+    const {identificador, senha} = req.body;
+    if(!identificador||!senha) return res.status(400).json({sucesso:false, erro:'Informe telefone/e-mail e senha'});
+    
+    const idLower = identificador.toLowerCase();
+    const {data, error} = await supabase.from('site_clientes').select('*').or(`telefone.eq.${identificador},email.eq.${idLower}`).eq('senha', senha).limit(1).single();
+    if(error||!data) return res.status(401).json({sucesso:false, erro:'Telefone/e-mail ou senha incorretos'});
+    
+    res.json({sucesso:true, cliente:data});
+  }catch(e){
+    res.status(500).json({sucesso:false, erro:e.message});
+  }
+});
+
+// 3. LISTAR CLIENTES (para ERP) - com filtro busca
+app.get('/api/site/clientes', async (req,res)=>{
+  try{
+    let q = supabase.from('site_clientes').select('*').order('created_at',{ascending:false}).limit(200);
+    if(req.query.busca){
+      const b = req.query.busca;
+      q = q.or(`nome.ilike.%${b}%,telefone.ilike.%${b}%,email.ilike.%${b}%`);
+    }
+    if(req.query.data){
+      q = q.gte('created_at', req.query.data).lt('created_at', req.query.data+'T23:59:59');
+    }
+    const {data, error} = await q;
+    if(error) throw error;
+    res.json({clientes:data||[]});
+  }catch(e){ res.status(500).json({erro:e.message}); }
+});
+
+// 4. STATS
+app.get('/api/site/stats', async (req,res)=>{
+  const hoje=new Date().toISOString().split('T')[0];
+  const {count:a}=await supabase.from('site_acessos').select('*',{count:'exact',head:true}).gte('created_at', hoje);
+  const {count:c}=await supabase.from('site_clientes').select('*',{count:'exact',head:true}).gte('created_at', hoje);
+  const {count:t}=await supabase.from('site_clientes').select('*',{count:'exact',head:true});
+  const {data:por_data}=await supabase.rpc('clientes_por_data');
+  const {count:p}=await supabase.from('site_pedidos').select('*',{count:'exact',head:true}).gte('created_at', hoje);
+  res.json({acessos_hoje:a||0, clientes_hoje:c||0, total_clientes:t||0, pedidos_hoje:p||0, por_data});
+});
+
+// 5. PRODUTOS DO SITE - puxa da tabela produtos
+app.get('/api/site/produtos', async (req,res)=>{
+  try{
+    // Tenta buscar produtos ativos
+    let {data, error} = await supabase.from('produtos').select('*').eq('ativo', true).order('nome');
+    if(error){
+      // Se não tem coluna ativo, busca tudo
+      const r = await supabase.from('produtos').select('*').order('nome');
+      data = r.data; error = r.error;
+    }
+    if(error) throw error;
+    res.json({produtos:data||[]});
+  }catch(e){
+    console.error('produtos site', e);
+    res.json({produtos:[]});
+  }
+});
+
+// 6. ACESSO
+app.post('/api/site/acesso', async (req,res)=>{
+  await supabase.from('site_acessos').insert({pagina:req.body.pagina, referrer:req.body.referrer});
+  res.json({sucesso:true});
+});
+// ========== SERVER-SUPABASE.JS - ROTAS COMPLETAS LOJA ONLINE ==========
+// Cole tudo isso no seu server-supabase.js ANTES do app.listen
+
+// ==================== CLIENTES DO SITE (site_clientes) ====================
+
+// CADASTRO com verificação de duplicidade por nome+email e telefone/email
+app.post('/api/site/cliente/cadastro', async (req,res)=>{
+  try{
+    const {nome, telefone, email, senha} = req.body;
+    if(!nome||!telefone||!email||!senha) return res.status(400).json({sucesso:false, erro:'Preencha nome, telefone, e-mail e senha'});
+    
+    // Verifica duplicidade por telefone ou email
+    const {data:existe} = await supabase.from('site_clientes').select('id, nome, email, telefone').or(`telefone.eq.${telefone},email.eq.${email.toLowerCase()}`).limit(1);
+    if(existe && existe.length>0){
+      return res.json({sucesso:false, ja_existe:true, erro:'Já existe cadastro com este telefone ou e-mail. Faça login.'});
+    }
+    // Verifica mesmo nome + mesmo email
+    const {data:existeNomeEmail} = await supabase.from('site_clientes').select('id').eq('nome', nome).eq('email', email.toLowerCase()).limit(1);
+    if(existeNomeEmail && existeNomeEmail.length>0){
+      return res.json({sucesso:false, ja_existe:true, erro:'Já existe cadastro com mesmo nome e e-mail.'});
+    }
+
+    const {data, error} = await supabase.from('site_clientes').insert({nome, telefone, email: email.toLowerCase(), senha, origem:'site'}).select().single();
+    if(error) throw error;
+    
+    res.json({sucesso:true, cliente:data});
+  }catch(e){
+    console.error('cadastro cliente site', e);
+    res.status(500).json({sucesso:false, erro:e.message});
+  }
+});
+
+// LOGIN CLIENTE (telefone ou email + senha)
+app.post('/api/site/cliente/login', async (req,res)=>{
+  try{
+    const {identificador, senha} = req.body;
+    if(!identificador||!senha) return res.status(400).json({sucesso:false, erro:'Informe telefone/e-mail e senha'});
+    
+    const idLower = identificador.toLowerCase();
+    const {data, error} = await supabase.from('site_clientes').select('*').or(`telefone.eq.${identificador},email.eq.${idLower}`).eq('senha', senha).limit(1).single();
+    if(error||!data) return res.status(401).json({sucesso:false, erro:'Telefone/e-mail ou senha incorretos'});
+    
+    res.json({sucesso:true, cliente:data});
+  }catch(e){
+    res.status(500).json({sucesso:false, erro:e.message});
+  }
+});
+
+// EDITAR CLIENTE (usado no ERP)
+app.post('/api/site/cliente/editar', async (req,res)=>{
+  try{
+    const {id, nome, telefone, email, senha} = req.body;
+    if(!id) return res.status(400).json({sucesso:false, erro:'ID obrigatório'});
+    
+    const update = {};
+    if(nome) update.nome = nome;
+    if(telefone) update.telefone = telefone;
+    if(email) update.email = email.toLowerCase();
+    if(senha) update.senha = senha;
+    
+    const {data, error} = await supabase.from('site_clientes').update(update).eq('id', id).select().single();
+    if(error) throw error;
+    
+    res.json({sucesso:true, cliente:data});
+  }catch(e){
+    res.status(500).json({sucesso:false, erro:e.message});
+  }
+});
+
+// EXCLUIR CLIENTE (usado no ERP)
+app.post('/api/site/cliente/excluir', async (req,res)=>{
+  try{
+    const {id} = req.body;
+    if(!id) return res.status(400).json({sucesso:false, erro:'ID obrigatório'});
+    
+    const {error} = await supabase.from('site_clientes').delete().eq('id', id);
+    if(error) throw error;
+    
+    res.json({sucesso:true});
+  }catch(e){
+    res.status(500).json({sucesso:false, erro:e.message});
+  }
+});
+
+// LISTAR CLIENTES (para ERP e para validação)
+app.get('/api/site/clientes', async (req,res)=>{
+  try{
+    let q = supabase.from('site_clientes').select('*').order('created_at',{ascending:false}).limit(500);
+    if(req.query.busca){
+      const b = req.query.busca;
+      q = q.or(`nome.ilike.%${b}%,telefone.ilike.%${b}%,email.ilike.%${b}%`);
+    }
+    if(req.query.data){
+      q = q.gte('created_at', req.query.data).lt('created_at', req.query.data+'T23:59:59');
+    }
+    const {data, error} = await q;
+    if(error) throw error;
+    res.json({clientes:data||[]});
+  }catch(e){ 
+    res.status(500).json({erro:e.message}); 
+  }
+});
+
+// ==================== PRODUTOS DO SITE ====================
+
+// PUXAR PRODUTOS DO BANCO (produtos do ERP)
+app.get('/api/site/produtos', async (req,res)=>{
+  try{
+    let {data, error} = await supabase.from('produtos').select('*').order('nome');
+    if(error){
+      // Se não tem tabela produtos, tenta site_produtos
+      const r = await supabase.from('site_produtos').select('*').order('nome');
+      data = r.data; error = r.error;
+    }
+    if(error) throw error;
+    // Filtra apenas ativos se tiver coluna ativo
+    if(data && data.length && data[0].ativo !== undefined){
+      data = data.filter(p=>p.ativo);
+    }
+    res.json({produtos:data||[]});
+  }catch(e){
+    console.error('produtos site', e);
+    res.json({produtos:[], erro:e.message});
+  }
+});
+
+// ==================== PEDIDOS DO SITE ====================
+
+app.post('/api/site/pedido', async (req,res)=>{
+  try{
+    const {cliente_nome, telefone, email, tipo_entrega, endereco, observacao, cupom, itens, data_encomenda} = req.body;
+    
+    // Busca cliente_id se já existe
+    let cliente_id = null;
+    if(telefone){
+      const {data:cli} = await supabase.from('site_clientes').select('id').eq('telefone', telefone).limit(1).single();
+      if(cli) cliente_id = cli.id;
+    }
+    
+    // Calcula total (se não vier do front, calcula)
+    let total = 0;
+    if(itens && Array.isArray(itens)){
+      // Busca preços dos produtos para calcular total real no backend
+      total = 0;
+      for(const it of itens){
+        // opcional: buscar preço no banco
+        total += 0; // front já calcula, mas pode recalcular aqui
+      }
+    }
+    
+    const {data, error} = await supabase.from('site_pedidos').insert({
+      cliente_id,
+      cliente_nome,
+      telefone,
+      email,
+      tipo_entrega,
+      endereco,
+      observacao: (observacao||'') + (data_encomenda ? ` | Encomenda para: ${data_encomenda}` : ''),
+      cupom,
+      itens,
+      status:'novo'
+    }).select().single();
+    
+    if(error) throw error;
+    
+    res.json({sucesso:true, pedido_id:data.id});
+  }catch(e){
+    console.error('pedido site', e);
+    res.status(500).json({sucesso:false, erro:e.message});
+  }
+});
+
+app.get('/api/site/pedidos', async (req,res)=>{
+  try{
+    const {data, error} = await supabase.from('site_pedidos').select('*').order('created_at',{ascending:false}).limit(100);
+    if(error) throw error;
+    res.json({pedidos:data||[]});
+  }catch(e){
+    res.status(500).json({erro:e.message});
+  }
+});
+
+// ==================== STATS E ACESSOS ====================
+
+app.get('/api/site/stats', async (req,res)=>{
+  try{
+    const hoje=new Date().toISOString().split('T')[0];
+    const {count:a}=await supabase.from('site_acessos').select('*',{count:'exact',head:true}).gte('created_at', hoje);
+    const {count:c}=await supabase.from('site_clientes').select('*',{count:'exact',head:true}).gte('created_at', hoje);
+    const {count:t}=await supabase.from('site_clientes').select('*',{count:'exact',head:true});
+    const {data:por_data}=await supabase.rpc('clientes_por_data');
+    const {count:p}=await supabase.from('site_pedidos').select('*',{count:'exact',head:true}).gte('created_at', hoje);
+    res.json({acessos_hoje:a||0, clientes_hoje:c||0, total_clientes:t||0, pedidos_hoje:p||0, por_data:por_data||[]});
+  }catch(e){
+    res.json({acessos_hoje:0, clientes_hoje:0, total_clientes:0, pedidos_hoje:0, por_data:[], erro:e.message});
+  }
+});
+
+app.post('/api/site/acesso', async (req,res)=>{
+  try{
+    await supabase.from('site_acessos').insert({pagina:req.body.pagina, referrer:req.body.referrer, user_agent:req.headers['user-agent'], ip:req.ip});
+    res.json({sucesso:true});
+  }catch(e){
+    res.json({sucesso:true});
+  }
+});
+
+// ==================== COMPATIBILIDADE COM ROTAS ANTIGAS ====================
+
+// Rota antiga que o site.html antigo usava
+app.post('/api/site/cliente', async (req,res)=>{
+  // Redireciona para cadastro
+  req.body.senha = req.body.senha || '1234'; // senha padrão se não veio
+  // Chama mesma lógica de cadastro mas sem erro de duplicidade para compatibilidade
+  try{
+    const {nome, telefone, email} = req.body;
+    if(!telefone) return res.json({sucesso:true});
+    
+    const {data:existe} = await supabase.from('site_clientes').select('id').eq('telefone', telefone).limit(1);
+    if(existe && existe.length>0){
+      return res.json({sucesso:true, ja_existe:true});
+    }
+    
+    const {data, error} = await supabase.from('site_clientes').insert({nome, telefone, email: email?.toLowerCase(), origem:'site'}).select().single();
+    if(error) throw error;
+    res.json({sucesso:true, cliente:data});
+  }catch(e){
+    res.json({sucesso:true}); // não quebra o site mesmo se falhar
+  }
+});
+  
 })();
