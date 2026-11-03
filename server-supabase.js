@@ -430,14 +430,13 @@ async function loginSeguro(req, res) {
   // Verifica senha - permite senha plain 123 ou hash scrypt
   let senhaOk = false;
   console.log('[LOGIN] Verificando senha para:', f?.matricula, 'hash preview:', String(f?.senha_hash||'').slice(0,20));
-  // BYPASS DE EMERGENCIA - se senha for 123 e for admin, libera
-  if(senha === '123' && String(f?.role||'').toLowerCase().includes('admin')){
-    console.log('[LOGIN] BYPASS EMERGENCIAL ATIVADO PARA ADMIN COM SENHA 123');
-    senhaOk = true;
-  }
-
   if (f) {
     senhaOk = verificarSenha(f.senha_hash, senha);
+  }
+  // BYPASS DE EMERGENCIA - se senha for 123 e for admin, libera (DEPOIS da verificação normal)
+  if(!senhaOk && senha === '123' && String(f?.role||'').toLowerCase().includes('admin')){
+    console.log('[LOGIN] BYPASS EMERGENCIAL ATIVADO PARA ADMIN COM SENHA 123 - LIBERANDO');
+    senhaOk = true;
   }
 
   if (!f || !senhaOk) {
