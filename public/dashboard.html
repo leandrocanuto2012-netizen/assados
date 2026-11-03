@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Assados Nobre ERP -  Gestão Completa</title>
+<title>Assados Nobre ERP - Gestão Completa</title>
 <link rel="icon" type="image/png" href="/icons/nobre_premium_moderno.png">
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -442,8 +442,7 @@ const API_BASE = window.ASSADOS_API_URL || (window.location.protocol.startsWith(
 const LOGOS_DISPONIVEIS = [
   { valor: 'nobre_premium_moderno.png', nome: 'Premium Moderno' },
   { valor: 'nobre_dourado_metalico.png', nome: 'Dourado Metálico' },
-  { valor: 'nobre_bordogold_metalico.png', nome: 'Bordo Gold Metálico' },
-  { valor: 'nobre_icon_carimbo_relevo_clean.png', nome: 'Ícone Carimbo' }
+  { valor: 'nobre_bordogold_metalico.png', nome: 'Bordo Gold Metálico' }
 ];
 let currentUser = null;
 let currentSessionToken = null;
@@ -2727,12 +2726,15 @@ async function renderBotConfig(){
         <div id="botRegras" style="margin-top:14px"></div>
         <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addBotRegra()"><i data-lucide="plus"></i> Nova Regra</button></div>
     </div>
-    <div class="card"><div class="card-title"><i data-lucide="message-circle"></i> Testar o Bot</div>
+    <div class="card"><div class="card-title"><i data-lucide="message-circle"></i> Conversa com o Bot (sem webhook)</div>
+      <div id="botStatusEnvio" style="margin-top:10px"><span class="card-sub">Verificando conexão com o WhatsApp...</span></div>
+      <div class="form-group" style="margin-top:12px"><label>Enviar a resposta também para um número do WhatsApp (opcional)</label><input id="botTelefone" placeholder="Ex.: 5541999999999"></div>
       <div class="chat-box" style="margin-top:14px;height:300px">
         <div class="chat-messages" id="botTestMsgs"><div class="chat-msg bot">Olá! Eu sou o bot da sorveteria. Me pergunte sobre sabores, picolés ou eventos!</div></div>
         <div class="chat-input"><input id="botTestInput" placeholder="Digite uma mensagem..." onkeypress="if(event.key==='Enter')testarBot()">
           <button onclick="testarBot()"><i data-lucide="send" style="width:16px;height:16px"></i></button></div></div></div>`;
   lucide.createIcons();
+  carregarStatusWhatsApp();
   const r = await apiGET('/api/bot/config');
   const form = document.getElementById('botConfigForm');
   const campos = {nome_bot:'Nome do Bot', saudacao:'Saudação Inicial', horario_atendimento:'Horário de Atendimento', endereco:'Endereço'};
@@ -2752,7 +2754,25 @@ function renderBotRegras(){
 async function addBotRegra(){ const kw = prompt('Palavras-chave (|):'); if(!kw) return; const resp = prompt('Resposta:'); if(!resp) return; const r = await apiPOST('/api/bot/regras', {...userPayload(), palavras_chave:kw, resposta:resp}); if(!r.sucesso){ toast(r.erro||'Não foi possível salvar a regra.','error'); return; } window._botRegras.push({id:r.regra_id,nome:kw,valor:resp}); renderBotRegras(); toast('Regra salva!'); }
 async function delBotRegra(i){ const regra = window._botRegras[i]; if(!regra || !confirm('Excluir esta regra?')) return; if(!regra.id){ toast('Regra sem identificador. Atualize a tela e tente novamente.','error'); return; } const r = await apiPOST('/api/bot/regras/excluir', {...userPayload(), id:regra.id}); if(!r.sucesso){ toast(r.erro||'Não foi possível excluir a regra.','error'); return; } window._botRegras.splice(i,1); renderBotRegras(); toast('Regra excluída.'); }
 async function salvarBotConfig(){ const dados = {...userPayload()}; ['nome_bot','saudacao','horario_atendimento','endereco'].forEach(k=>{ const el = document.getElementById('bot_'+k); if(el) dados[k]=el.value; }); const r = await apiPOST('/api/bot/config', dados); if(r.sucesso) toast('Salvo!'); else toast(r.erro||'Erro','error'); }
-async function testarBot(){ const input = document.getElementById('botTestInput'); const msg = input.value; if(!msg) return; const box = document.getElementById('botTestMsgs'); box.innerHTML += `<div class="chat-msg user">${msg}</div>`; input.value=''; box.scrollTop = box.scrollHeight; const r = await apiPOST('/api/bot/responder', {mensagem:msg}); box.innerHTML += `<div class="chat-msg bot">${r.resposta||r.erro||'...'}</div>`; box.scrollTop = box.scrollHeight; }
+async function carregarStatusWhatsApp(){
+  const el=document.getElementById('botStatusEnvio'); if(!el) return;
+  const r=await apiGET('/api/bot/status');
+  el.innerHTML = r.configurado
+    ? `<span class="badge ok">WhatsApp conectado (${escaparHtmlIntegracao(r.provider)})</span> <span class="card-sub">As respostas enviadas com número serão entregues pelo WhatsApp.</span>`
+    : `<span class="badge warn">WhatsApp não configurado</span> <span class="card-sub">Configure no Render: ${escaparHtmlIntegracao((r.falta||[]).join(', ')||'WHATSAPP_PROVIDER, WHATSAPP_API_KEY')}. Sem isso o bot só responde na tela.</span>`;
+}
+async function testarBot(){
+  const input=document.getElementById('botTestInput'); const msg=input.value; if(!msg) return;
+  const box=document.getElementById('botTestMsgs');
+  box.innerHTML+=`<div class="chat-msg user">${escaparHtmlIntegracao(msg)}</div>`; input.value=''; box.scrollTop=box.scrollHeight;
+  const numero=document.getElementById('botTelefone')?.value||'';
+  const r=await apiPOST('/api/bot/chat',{mensagem:msg,numero});
+  const aviso = numero
+    ? (r.enviado?'<div style="font-size:11px;color:#15803d">✓ enviado pelo WhatsApp</div>':`<div style="font-size:11px;color:#b45309">não enviado: ${escaparHtmlIntegracao(r.motivo||'erro')}</div>`)
+    : '';
+  box.innerHTML+=`<div class="chat-msg bot">${escaparHtmlIntegracao(r.resposta||r.erro||'...')}${aviso}</div>`;
+  box.scrollTop=box.scrollHeight;
+}
 // ===== GERENTE =====
 async function renderGerente(){
   const c = document.getElementById('content');
@@ -3212,7 +3232,7 @@ function renderMetaIA(){
       <button class="btn btn-sm btn-secondary" style="background:#f3e8ff;border-color:#7c3aed;color:#7c3aed" onclick="perguntarIA('Como fazer uma venda?')">❓ Ajuda: Venda</button>
       <button class="btn btn-sm btn-secondary" style="background:#f3e8ff;border-color:#7c3aed;color:#7c3aed" onclick="perguntarIA('Como cadastrar produto?')">❓ Ajuda: Produto</button>
       <button class="btn btn-sm btn-secondary" style="background:#f3e8ff;border-color:#7c3aed;color:#7c3aed" onclick="perguntarIA('Primeiro acesso, por onde começo?')">❓ Primeiros Passos</button>
-      <button class="btn btn-sm btn-secondary" style="background:#ecfdf5;border-color:#059669;color:#059669" onclick="perguntarIA('corrigir:')">📝 Corretor</button>
+      <button class="btn btn-sm btn-secondary" style="background:#ecfdf5;border-color:#059669;color:#059669" onclick="perguntarIA('corrigir: ')">📝 Corretor</button>
       <button class="btn btn-sm btn-secondary" style="background:#fffbeb;border-color:#d97706;color:#d97706" onclick="perguntarIA('Quais as leis sanitárias para sorveteria?')">⚖️ Legislação</button>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
