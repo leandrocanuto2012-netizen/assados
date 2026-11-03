@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#a63b25"><title>Loja | Assados Nobre</title>
+<style>
+:root{--accent:#a63b25;--paper:#fffaf5;--ink:#28231f;--muted:#776e67;--line:#eee5dc;--white:#fff}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}.wrap{max-width:1160px;width:calc(100% - 32px);margin:auto}.top{height:70px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}.top .wrap{height:100%;display:flex;align-items:center;gap:14px}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:850;font-size:19px}.brand img{width:42px;height:42px;object-fit:contain;border-radius:10px}.nav{margin-left:auto;display:flex;gap:8px}.nav a,.nav button{padding:10px 12px;border:0;border-radius:10px;background:transparent;color:var(--ink);text-decoration:none;font-weight:700}.nav a:hover,.nav button:hover{background:#f6eee7}.btn{border:0;border-radius:11px;background:var(--accent);color:#fff;padding:11px 15px;font-weight:800}.btn-light{background:#fff;color:var(--ink);border:1px solid var(--line)}.count{background:#fff;color:var(--accent);border-radius:50px;padding:2px 7px}.hero{margin:26px auto 22px;min-height:290px;border-radius:24px;padding:clamp(28px,6vw,64px);display:flex;align-items:center;color:#fff;background:linear-gradient(100deg,#241a17d9,#241a1744),linear-gradient(135deg,#b55333,#efbe82);background-size:cover;background-position:center}.hero-copy{max-width:620px}.hero h1{font-size:clamp(32px,5vw,56px);line-height:1.04;margin:8px 0 14px;letter-spacing:-1.3px}.hero p{font-size:17px;max-width:540px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:34px 0 16px}.section-head h2{margin:2px 0;font-size:28px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:850}.search{max-width:290px;width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fff}.promo{margin:18px auto;padding:15px 18px;border:1px solid #efd38d;background:#fff3ce;border-radius:14px;display:flex;justify-content:space-between;align-items:center;gap:12px}.promo strong{font-size:16px}.promo small{display:block;color:#705320}.flash{animation:flash 1.8s ease-in-out infinite}@keyframes flash{50%{box-shadow:0 0 22px #ffd64a}}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}.product{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden;animation:rise .35s ease both}@keyframes rise{from{opacity:.3;transform:translateY(9px)}to{opacity:1;transform:none}}.image{height:165px;background:linear-gradient(145deg,#fff1e0,#f6d5bd);display:grid;place-items:center;font-size:58px}.image img{width:100%;height:100%;object-fit:cover}.pinfo{padding:14px;display:flex;flex-direction:column;flex:1}.category{color:var(--accent);font-size:11px;font-weight:850;text-transform:uppercase}.product h3{margin:5px 0;font-size:17px;line-height:1.25}.product p{font-size:13px;color:var(--muted);margin:0 0 12px}.buy{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px}.price{font-size:19px;font-weight:850}.empty{grid-column:1/-1;text-align:center;padding:46px;background:#fff;border:1px solid var(--line);border-radius:16px;color:var(--muted)}.how{margin:45px 0 34px;padding:22px;background:#fff;border:1px solid var(--line);border-radius:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.how b{display:block;margin:7px 0}.footer{border-top:1px solid var(--line);padding:24px 0;color:var(--muted);display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}.social{display:flex;gap:14px}.social a{color:var(--accent);font-weight:750}.floating{position:fixed;right:20px;bottom:20px;z-index:8}.chat-toggle{border:0;border-radius:50px;padding:14px 18px;background:#1a4935;color:#fff;font-weight:850;box-shadow:0 9px 28px #0002}.chat{display:none;position:fixed;right:18px;bottom:78px;width:min(360px,calc(100vw - 28px));height:430px;background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:0 18px 50px #0003;z-index:10;overflow:hidden;flex-direction:column}.chat.open{display:flex}.chathead{padding:13px 15px;background:#1a4935;color:#fff;font-weight:800;display:flex;justify-content:space-between}.messages{flex:1;overflow:auto;background:#faf8f5;padding:13px;display:flex;flex-direction:column;gap:8px}.bubble{max-width:88%;white-space:pre-wrap;padding:10px 12px;border-radius:13px;background:#fff;border:1px solid var(--line)}.bubble.me{align-self:flex-end;background:#e6f4ea}.chatform{display:flex;gap:7px;padding:9px;border-top:1px solid var(--line)}.chatform input{flex:1;min-width:0;padding:10px;border:1px solid var(--line);border-radius:9px}.chatform button{border:0;border-radius:9px;background:var(--accent);color:#fff;padding:0 14px}.overlay{display:none;position:fixed;inset:0;background:#17110db8;z-index:20;align-items:center;justify-content:center;padding:14px}.overlay.open{display:flex}.modal{width:min(590px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;padding:22px}.modal h2{margin:0 0 8px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field{display:flex;flex-direction:column;gap:5px}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:800}.field input,.field select,.field textarea{min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 11px;background:#fff}.field textarea{min-height:66px}.actions{display:flex;justify-content:flex-end;gap:9px;margin-top:16px}.lines{display:flex;flex-direction:column}.line{padding:11px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}.qty{display:flex;align-items:center;gap:7px;margin-top:4px}.qty button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:2px 8px}.sum{display:flex;justify-content:space-between;margin:9px 0}.notice{padding:12px;border-radius:10px;background:#eef8f0;color:#19552d;margin-top:10px}.anim-brilho .hero{animation:heroGlow 3s alternate infinite}@keyframes heroGlow{to{filter:saturate(1.2) brightness(1.07)}}@media(max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:640px){.wrap{width:calc(100% - 22px)}.top{height:62px}.brand{font-size:15px}.brand img{width:35px;height:35px}.nav{gap:0}.nav a,.nav button{font-size:11px;padding:8px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.image{height:130px}.pinfo{padding:11px}.section-head{align-items:stretch;flex-direction:column}.search{max-width:none}.hero{min-height:240px;padding:26px}.how{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.promo{align-items:flex-start;flex-direction:column}}@media(max-width:390px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="/site.html"><img id="logo" src="/icons/nobre_premium_moderno.png" alt=""><span id="brand">Assados Nobre</span></a><nav class="nav"><button onclick="abrirConta()">Minha conta</button><a href="/login.html" title="Acesso da equipe - Login" class="btn btn-light" style="font-size:12px;padding:10px 14px">ERP • Equipe</a><button class="btn" onclick="abrirCarrinho()">Carrinho <span class="count" id="count">0</span></button></nav></div></header>
+<main class="wrap"><section class="hero" id="hero"><div class="hero-copy"><span class="eyebrow" style="color:#fff">Feito com carinho</span><h1 id="title">Seu sabor favorito, no conforto da sua casa</h1><p id="description">Faça seu pedido online e receba com praticidade.</p><button class="btn" onclick="document.getElementById('catalog').scrollIntoView({behavior:'smooth'})">Ver produtos</button></div></section><div id="promotion"></div><section id="catalog"><div class="section-head"><div><span class="eyebrow">Cardápio online</span><h2>Escolha seus favoritos</h2></div><input class="search" id="search" placeholder="Buscar produto..." oninput="filtrar()"></div><div class="grid" id="products"><div class="empty">Carregando produtos…</div></div></section><section class="how"><div>🛒<b>1. Escolha</b><span>Adicione produtos ao carrinho.</span></div><div>📍<b>2. Combine</b><span>Informe entrega, retirada ou encomenda.</span></div><div>💬<b>3. Tire dúvidas</b><span>Converse com nosso assistente.</span></div></section><footer class="footer"><span>© <span id="year"></span> <b id="footerName">Assados Nobre</b> · Pedidos online</span><div class="social" id="social"></div></footer></main>
+<div class="floating"><button class="chat-toggle" onclick="toggleChat()">💬 Precisa de ajuda?</button></div><section class="chat" id="chat"><div class="chathead"><span id="botName">Assistente da loja</span><button onclick="toggleChat()" aria-label="Fechar" style="border:0;background:none;color:white;font-size:20px">×</button></div><div class="messages" id="messages"><div class="bubble">Olá! Posso ajudar com produtos, entrega, horários ou encomendas. Como posso ajudar?</div></div><form class="chatform" onsubmit="enviarChat(event)"><input id="chatText" maxlength="500" placeholder="Digite sua dúvida…"><button>Enviar</button></form></section>
+<div class="overlay" id="account" onclick="fecharFora(event,'account')"><section class="modal"><h2>Minha conta de cliente</h2><p>Salve seus dados neste aparelho para agilizar os próximos pedidos. Não é necessário criar senha.</p><form onsubmit="salvarConta(event)"><div class="formgrid"><div class="field full"><label>Nome</label><input id="accountName" required maxlength="100"></div><div class="field"><label>Telefone / WhatsApp</label><input id="accountPhone" required maxlength="24"></div><div class="field"><label>E-mail (opcional)</label><input id="accountEmail" type="email" maxlength="120"></div></div><div id="lastOrder" class="notice" style="display:none"></div><div class="actions"><button type="button" class="btn btn-light" onclick="closeModal('account')">Fechar</button><button class="btn">Salvar dados</button></div></form></section></div>
+<div class="overlay" id="cart" onclick="fecharFora(event,'cart')"><section class="modal"><h2>Seu carrinho</h2><div class="lines" id="lines"></div><div id="totals"></div><form id="checkout" onsubmit="finalizar(event)"><h3>Como receber?</h3><div class="formgrid"><div class="field"><label>Nome</label><input id="customerName" required maxlength="100"></div><div class="field"><label>Telefone / WhatsApp</label><input id="customerPhone" required maxlength="24" inputmode="tel"></div><div class="field"><label>E-mail (opcional)</label><input id="customerEmail" type="email" maxlength="120"></div><div class="field"><label>Modalidade</label><select id="deliveryType" onchange="atualizarTotal()"><option value="entrega">Entrega</option><option value="retirada">Retirada</option><option value="encomenda">Encomenda</option></select></div><div class="field full" id="addressBox"><label>Endereço</label><input id="address" maxlength="300" placeholder="Rua, número, bairro e referência"></div><div class="field" id="dateBox" style="display:none"><label>Data desejada</label><input id="orderDate" type="datetime-local"></div><div class="field"><label>Cupom promocional</label><input id="coupon" maxlength="24" placeholder="Ex.: BEMVINDO"></div><div class="field full"><label>Observações / detalhes da encomenda</label><textarea id="note" maxlength="500" placeholder="Sabores, quantidade ou instruções especiais"></textarea></div></div><div id="orderMessage"></div><div class="actions"><button type="button" class="btn btn-light" onclick="closeModal('cart')">Continuar comprando</button><button class="btn" id="submitOrder">Enviar pedido</button></div></form></section></div>
+<script>
+const API=location.origin;
+let products=[],config={},cart=JSON.parse(localStorage.getItem('assados_site_cart')||'[]'),account=JSON.parse(localStorage.getItem('assados_site_account')||'{}');
+const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// FETCH COM NO-CACHE E RETRY - garante que atualiza do banco
+async function get(path){
+  const r=await fetch(API+path+(path.includes('?')?'&':'?')+'_='+Date.now(),{cache:'no-store'});
+  if(!r.ok) throw new Error('GET '+path+' falhou '+r.status);
+  return r.json();
+}
+async function post(path,data){
+  const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),cache:'no-store'});
+  const j=await r.json();
+  if(!r.ok) throw new Error(j.erro||'Erro em '+path);
+  return j;
+}
+
+async function registrarAcesso(){
+  try{
+    await post('/api/site/acesso',{pagina:location.pathname, referrer:document.referrer||''});
+  }catch(e){ console.warn('acesso log falhou', e); }
+}
+async function registrarClienteDB(cliente){
+  try{
+    const r=await post('/api/site/cliente',{nome:cliente.nome, telefone:cliente.telefone, email:cliente.email});
+    console.log('cliente registrado no banco', r);
+    return r;
+  }catch(e){ console.warn('cliente DB falhou', e); }
+}
+async function init(){ 
+  registrarAcesso();
+
+  document.getElementById('year').textContent=new Date().getFullYear();
+  preencherConta();
+  try{
+    const [c,p,b]=await Promise.all([
+      get('/api/site/config'),
+      get('/api/site/produtos'),
+      get('/api/bot/config').catch(()=>({config_geral:[]}))
+    ]);
+    config=c.config||c||{};
+    products=p.produtos||p||[];
+    aplicarConfig();
+    const botCfg=b.config_geral||b.config||[];
+    document.getElementById('botName').textContent=botCfg.find(x=>x.nome==='nome_bot')?.valor||config.nomeBot||'Assistente da loja';
+    renderProducts();
+    renderCart();
+  }catch(e){
+    console.error('Erro init', e);
+    document.getElementById('products').innerHTML='<div class="empty">Não foi possível carregar agora. '+esc(e.message)+' <br><button class="btn" onclick="location.reload()">Tentar novamente</button></div>';
+  }
+}
+
+function aplicarConfig(){
+  const name=config.nomeLoja||'Assados Nobre';
+  document.title=name+' | Loja';
+  document.getElementById('brand').textContent=name;
+  document.getElementById('footerName').textContent=name;
+  document.getElementById('title').textContent=config.titulo||'Seu sabor favorito, no conforto da sua casa';
+  document.getElementById('description').textContent=config.descricao||'Faça seu pedido online e receba com praticidade.';
+  document.documentElement.style.setProperty('--accent',config.corPrincipal||'#a63b25');
+  document.documentElement.style.setProperty('--paper',config.corFundo||'#fffaf5');
+  document.body.classList.toggle('anim-brilho', config.animacao==='brilho');
+  if(config.logo) document.getElementById('logo').src=config.logo;
+  if(config.imagemDestaque){
+    document.getElementById('hero').style.backgroundImage=`linear-gradient(100deg,#241a17d9,#241a1744),url("${config.imagemDestaque}")`;
+  }
+  // promocao aceita boolean true ou string "true"
+  const promoAtiva = config.promocaoAtiva===true || String(config.promocaoAtiva).toLowerCase()==='true';
+  if(promoAtiva && config.promocaoTexto){
+    document.getElementById('promotion').innerHTML=`<div class="promo ${config.animacao==='brilho'?'flash':''}"><div><strong>⚡ ${esc(config.promocaoTitulo||'Oferta relâmpago')}</strong><small>${esc(config.promocaoTexto)}</small></div>${(config.cupomAtivo===true || String(config.cupomAtivo).toLowerCase()==='true')?`<button class="btn btn-light" onclick="usarCupom()">Cupom ${esc(config.cupomCodigo||'')}</button>`:''}</div>`;
+  } else {
+    document.getElementById('promotion').innerHTML='';
+  }
+  const links=[];
+  if(config.instagram) links.push(`<a target="_blank" rel="noopener" href="${esc(config.instagram)}">Instagram</a>`);
+  if(config.facebook) links.push(`<a target="_blank" rel="noopener" href="${esc(config.facebook)}">Facebook</a>`);
+  if(config.whatsapp) links.push(`<a target="_blank" rel="noopener" href="https://wa.me/${esc(String(config.whatsapp).replace(/\D/g,''))}">WhatsApp</a>`);
+  document.getElementById('social').innerHTML=links.join('');
+}
+
+function icon(cat){
+  const c=String(cat||'').toLowerCase();
+  if(/sorvete|picol/.test(c)) return '🍦';
+  if(/açaí|acai/.test(c)) return '🫐';
+  if(/bebida/.test(c)) return '🥤';
+  return '🍽️';
+}
+
+function renderProducts(list=products){
+  const box=document.getElementById('products');
+  if(!list.length){box.innerHTML='<div class="empty">Nenhum produto disponível no momento.</div>';return}
+  box.innerHTML=list.map(p=>`<article class="product"><div class="image">${p.imagem||p.imagem_url?`<img src="${esc(p.imagem||p.imagem_url)}" alt="${esc(p.nome)}" loading="lazy">`:icon(p.categoria)}</div><div class="pinfo"><span class="category">${esc(p.categoria||'Produto')}</span><h3>${esc(p.nome)}</h3><p>${esc(p.descricao||p.sabor||'Preparado com carinho.')}</p><div class="buy"><span class="price">${money(p.preco_venda||p.preco||0)}</span><button class="btn" onclick="add('${esc(String(p.id))}')">Adicionar +</button></div></div></article>`).join('');
+}
+
+function filtrar(){
+  const q=document.getElementById('search').value.toLowerCase();
+  renderProducts(products.filter(p=>`${p.nome} ${p.categoria} ${p.sabor||''} ${p.descricao||''}`.toLowerCase().includes(q)));
+}
+
+function saveCart(){localStorage.setItem('assados_site_cart',JSON.stringify(cart));renderCart()}
+function add(id){
+  id=String(id);
+  const item=cart.find(x=>String(x.id)===id);
+  if(item) item.qtd++; else cart.push({id,qtd:1});
+  saveCart(); toast('Adicionado ao carrinho!');
+}
+function changeQty(id,delta){
+  id=String(id);
+  const i=cart.find(x=>String(x.id)===id);
+  if(i) i.qtd+=delta;
+  cart=cart.filter(x=>x.qtd>0);
+  saveCart();
+}
+function renderCart(){
+  const count=cart.reduce((n,x)=>n+x.qtd,0);
+  document.getElementById('count').textContent=count;
+  const list=cart.map(x=>({...x,p:products.find(p=>String(p.id)===String(x.id))})).filter(x=>x.p);
+  const lines=document.getElementById('lines');
+  if(!lines) return;
+  if(!list.length){
+    lines.innerHTML='<div class="empty">Carrinho vazio. Escolha produtos para começar.</div>';
+    document.getElementById('checkout').style.display='none';
+    document.getElementById('totals').innerHTML='';
+    return;
+  }
+  document.getElementById('checkout').style.display='block';
+  lines.innerHTML=list.map(x=>`<div class="line"><div><b>${esc(x.p.nome)}</b><div class="qty"><button type="button" onclick="changeQty('${esc(x.id)}',-1)">−</button>${x.qtd}<button type="button" onclick="changeQty('${esc(x.id)}',1)">+</button><button type="button" onclick="changeQty('${esc(x.id)}',-${x.qtd})">Remover</button></div></div><b>${money(Number(x.p.preco_venda||x.p.preco||0)*x.qtd)}</b></div>`).join('');
+  atualizarTotal();
+}
+function atualizarTotal(){
+  const typeEl=document.getElementById('deliveryType');
+  const type=typeEl? typeEl.value : 'entrega';
+  const addrBox=document.getElementById('addressBox');
+  const dateBox=document.getElementById('dateBox');
+  if(addrBox) addrBox.style.display=type==='entrega'?'flex':'none';
+  if(dateBox) dateBox.style.display=type==='encomenda'?'flex':'none';
+  const subtotal=cart.reduce((sum,x)=>{
+    const p=products.find(p=>String(p.id)===String(x.id));
+    return sum+Number(p?.preco_venda||p?.preco||0)*x.qtd;
+  },0);
+  const fee=type==='entrega'?Number(config.taxaEntrega||0):0;
+  const totalsEl=document.getElementById('totals');
+  if(totalsEl){
+    totalsEl.innerHTML=`<div class="sum"><span>Subtotal</span><b>${money(subtotal)}</b></div><div class="sum"><span>Entrega</span><b>${money(fee)}</b></div><div class="sum" style="font-size:19px"><strong>Total estimado</strong><strong>${money(subtotal+fee)}</strong></div>`;
+  }
+  return subtotal+fee;
+}
+
+function abrirCarrinho(){renderCart();preencherConta();document.getElementById('cart').classList.add('open');atualizarTotal()}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function fecharFora(e,id){if(e.target.id===id) closeModal(id)}
+function preencherConta(){
+  if(!account.nome) return;
+  [['accountName','customerName','nome'],['accountPhone','customerPhone','telefone'],['accountEmail','customerEmail','email']].forEach(([a,b,k])=>{
+    const elA=document.getElementById(a), elB=document.getElementById(b);
+    if(elA) elA.value=account[k]||'';
+    if(elB) elB.value=account[k]||'';
+  });
+}
+function abrirConta(){
+  preencherConta();
+  const orders=JSON.parse(localStorage.getItem('assados_site_orders')||'[]');
+  const last=document.getElementById('lastOrder');
+  if(last){ last.style.display=orders.length?'block':'none'; if(orders.length) last.textContent=`Último pedido: #${orders[0].id} · ${orders[0].data}`; }
+  document.getElementById('account').classList.add('open');
+}
+async function salvarConta(e){
+  e.preventDefault();
+  account={nome:document.getElementById('accountName').value.trim(),telefone:document.getElementById('accountPhone').value.trim(),email:document.getElementById('accountEmail').value.trim()};
+  localStorage.setItem('assados_site_account',JSON.stringify(account));
+  preencherConta();
+  await registrarClienteDB(account);
+  closeModal('account'); toast('Dados salvos e registrados no banco!');
+}
+function usarCupom(){
+  const code=config.cupomCodigo||'';
+  if(!code) return;
+  const input=document.getElementById('coupon');
+  if(input) input.value=code;
+  abrirCarrinho();
+  toast('Cupom '+code+' aplicado!');
+}
+function toast(msg){
+  let t=document.getElementById('_toast');
+  if(!t){ t=document.createElement('div'); t.id='_toast'; t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#28231f;color:#fff;padding:10px 14px;border-radius:10px;z-index:99'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none', 2500);
+}
+
+// BOT 100% - com fallback se API falhar
+function toggleChat(){
+  document.getElementById('chat').classList.toggle('open');
+}
+function addMessage(text, me=false){
+  const box=document.getElementById('messages');
+  const b=document.createElement('div');
+  b.className='bubble'+(me?' me':'');
+  b.textContent=text;
+  box.appendChild(b);
+  box.scrollTop=box.scrollHeight;
+}
+async function enviarChat(e){
+  e.preventDefault();
+  const input=document.getElementById('chatText');
+  const msg=input.value.trim();
+  if(!msg) return;
+  addMessage(msg, true);
+  input.value='';
+  // tenta chamar bot real, se falhar usa fallback inteligente
+  try{
+    const r=await post('/api/bot/chat',{mensagem:msg, historico:[]});
+    const resposta=r.resposta||r.message||r.reply||'Desculpe, não entendi. Posso ajudar com produtos, entrega ou horários.';
+    addMessage(resposta,false);
+  }catch(err){
+    console.warn('Bot API falhou, usando fallback', err);
+    // Fallback 100% funcional offline
+    const lower=msg.toLowerCase();
+    let resp='';
+    if(lower.includes('horario')||lower.includes('hora')) resp='Funcionamos de Segunda a Sábado das 10h às 22h, Domingo das 11h às 20h.';
+    else if(lower.includes('entrega')||lower.includes('taxa')) resp='Taxa de entrega: '+(config.taxaEntrega? money(config.taxaEntrega) : 'consulte no carrinho')+'. Entregamos em até 60min.';
+    else if(lower.includes('produto')||lower.includes('cardapio')) resp='Temos '+(products.length||'vários')+' produtos no cardápio! Digite na busca o que deseja.';
+    else if(lower.includes('pagamento')||lower.includes('pagar')) resp='Aceitamos dinheiro, PIX, cartão na entrega e online.';
+    else resp='Obrigado pela mensagem! Em breve nossa equipe responde. Enquanto isso, adicione produtos ao carrinho e finalize seu pedido.';
+    addMessage(resp,false);
+  }
+}
+
+async function finalizar(e){
+  e.preventDefault();
+  const btn=document.getElementById('submitOrder');
+  const msgBox=document.getElementById('orderMessage');
+  if(!cart.length){ toast('Carrinho vazio!'); return; }
+  btn.disabled=true; btn.textContent='Enviando...';
+  const type=document.getElementById('deliveryType').value;
+  const payload={
+    cliente_nome:document.getElementById('customerName').value.trim(),
+    telefone:document.getElementById('customerPhone').value.trim(),
+    email:document.getElementById('customerEmail').value.trim(),
+    tipo_entrega:type,
+    endereco:document.getElementById('address').value.trim(),
+    data_encomenda:document.getElementById('orderDate').value,
+    observacao:document.getElementById('note').value.trim(),
+    cupom:document.getElementById('coupon').value.trim(),
+    itens:cart.map(x=>({produto_id:x.id,quantidade:x.qtd}))
+  };
+  if(!payload.cliente_nome||!payload.telefone){ msgBox.innerHTML='<div class="notice" style="background:#fee">Preencha nome e telefone.</div>'; btn.disabled=false; btn.textContent='Enviar pedido'; return; }
+  if(type==='entrega' && !payload.endereco){ msgBox.innerHTML='<div class="notice" style="background:#fee">Informe o endereço para entrega.</div>'; btn.disabled=false; btn.textContent='Enviar pedido'; return; }
+  try{
+    const r=await post('/api/site/pedido',payload);
+    if(!r.sucesso) throw new Error(r.erro||'Falha ao enviar');
+    // Salva pedido local para histórico
+    const orders=JSON.parse(localStorage.getItem('assados_site_orders')||'[]');
+    orders.unshift({id:r.pedido_id||Date.now(), data:new Date().toLocaleString('pt-BR'), total:atualizarTotal()});
+    localStorage.setItem('assados_site_orders',JSON.stringify(orders.slice(0,10)));
+    // Salva conta
+    account={nome:payload.cliente_nome,telefone:payload.telefone,email:payload.email};
+    localStorage.setItem('assados_site_account',JSON.stringify(account));
+    cart=[]; saveCart();
+    msgBox.innerHTML=`<div class="notice">✅ Pedido enviado! #${r.pedido_id||''} - Em breve confirmamos no WhatsApp.</div>`;
+    btn.textContent='Enviado!';
+    setTimeout(()=>{ closeModal('cart'); btn.disabled=false; btn.textContent='Enviar pedido'; msgBox.innerHTML=''; }, 2500);
+    toast('Pedido enviado com sucesso!');
+  }catch(err){
+    console.error('Erro pedido', err);
+    msgBox.innerHTML='<div class="notice" style="background:#fee;color:#a00">Erro: '+esc(err.message)+'<br>Tente novamente ou fale no WhatsApp.</div>';
+    btn.disabled=false; btn.textContent='Enviar pedido';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
