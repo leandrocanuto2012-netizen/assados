@@ -459,6 +459,15 @@ async function loginSeguro(req, res) {
 }
 
 
+
+// FIX - endpoint que o dashboard chama no login e estava faltando (causava travamento na tela de login)
+app.get('/api/perfis-permissao', (req, res) => {
+  res.json({ perfis: [], total: 0 });
+});
+app.post('/api/perfis-permissao', (req, res) => {
+  res.json({ perfis: [], total: 0 });
+});
+
 // ===== DASHBOARD =====
 app.get('/api/dashboard/resumo', (req, res) => {
   const vendasHoje = (DB.vendas || []).filter(v => (v.data || '').slice(0, 10) === hoje());
