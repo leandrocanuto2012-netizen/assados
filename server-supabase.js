@@ -55,15 +55,15 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.json({ limit: '12mb' }));
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(__dirname)); // fallback: se dashboard.html estiver na raiz, serve também
+app.use(express.static(__dirname)); // fallback: se login.html estiver na raiz, serve também
 
 // Rota explícita para garantir dashboard.html
-app.get('/dashboard.html', (req, res) => {
-  const p1 = path.join(__dirname, 'public', 'dashboard.html');
-  const p2 = path.join(__dirname, 'dashboard.html');
+app.get('/login.html', (req, res) => {
+  const p1 = path.join(__dirname, 'public', '/login.html');
+  const p2 = path.join(__dirname, 'login.html');
   if (fs.existsSync(p1)) return res.sendFile(p1);
   if (fs.existsSync(p2)) return res.sendFile(p2);
-  return res.status(404).send('dashboard.html não encontrado - coloque o arquivo em /public/dashboard.html');
+  return res.status(404).send('login.html não encontrado - coloque o arquivo em /public/login.html');
 });
 
 
