@@ -299,11 +299,11 @@ function seed() {
   DB.pdv_emergencial = []; DB.log_bloqueio = []; DB.log_caixa = []; DB.mov_caixa = [];
   DB.logistica = []; DB.frota = []; DB.checklists_exec = []; DB.pedidos_site = [];
   DB.login_security = []; DB.support_tickets = []; DB.backup_runs = []; DB.backup_settings = [{ id: 1, habilitado: false, destino: 'local', intervalo_horas: 24, retencao: 7, atualizado_em: agora() }];
-  DB.bot_config = [{ nome: 'nome_bot', valor: 'SorveteBot' }, { nome: 'saudacao', valor: 'Olá! Bem-vindo à Sorveteria!' }];
+  DB.bot_config = [{ nome: 'nome_bot', valor: 'AssadosBot' }, { nome: 'saudacao', valor: 'Olá! Bem-vindo à Assados Nobre!' }];
   DB.bot_regras = [
-    { id: 1, palavras_chave: 'sabor|sabores|sorvete', resposta: 'Temos os sabores: Morango, Chocolate, Baunilha, Acai com granola e muito mais!' },
-    { id: 2, palavras_chave: 'picole|picolé|picoles', resposta: 'Nossos picolés são R$ 4,50 cada - chocolate, morango, uva e limão!' },
-    { id: 3, palavras_chave: 'preco|preço|valor|quanto', resposta: 'Sorvete 2L R$ 45,90 | Acai 300ml R$ 12,90 | Picole R$ 4,50 | Refrigerante R$ 5,00' },
-    { id: 4, palavras_chave: 'horario|horário|abre|fecha|funcionamento', resposta: 'Funcionamos de segunda a domingo, das 10h as 22h!' },
-    { id: 5, palavras_chave: 'evento|festa|aniversario|empresa', resposta: 'Fazemos eventos e festas! Envie data, quantidade de pessoas e local que enviamos o orcamento.' },
-    { id: 6, palavras_chave: 'ifood|delivery|entrega|entregador', resposta: 'Es
+    { id: 1, palavras_chave: 'cardapio|menu|carne|assado', resposta: 'Temos Costela, Picanha, Cupim, Frango Assado, Linguiça e Kafta! Qual você deseja?' },
+    { id: 2, palavras_chave: 'preco|preço|valor|quanto', resposta: 'Costela R$ 89,90/kg | Picanha R$ 129,90/kg | Frango R$ 49,90/kg | Acompanhamentos a partir de R$ 12,90' },
+    { id: 3, palavras_chave: 'horario|horário|abre|fecha|funcionamento', resposta: 'Funcionamos de segunda a domingo, das 10h as 20h! Faça seu pedido.' },
+    { id: 4, palavras_chave: 'evento|festa|aniversario|empresa', resposta: 'Fazemos assados para eventos! Informe data, quantidade de pessoas e local que enviamos o orcamento.' },
+    { id: 5, palavras_chave: 'ifood|delivery|entrega|entregador', resposta: 'Estamos no iFood! Ou fazemos entrega propria - informe seu endereco.' },
+    { id: 
