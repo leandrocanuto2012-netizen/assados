@@ -171,22 +171,104 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
 .support-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
 .support-footer a{color:var(--accent-dark);font-weight:700;text-decoration:none}
 .support-footer a:hover{text-decoration:underline}
+
+/* === LOGIN DARK IGUAL PRINT V15 - FIXO === */
+#loginScreen{
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  width:100%;
+  background: radial-gradient(1200px 600px at 20% 0%, #1e3a8a 0%, #172554 45%, #020617 100%);
+  padding:20px;
+  box-sizing:border-box;
+  position:fixed;
+  inset:0;
+  z-index:9999;
+}
+#loginScreen .login-box{
+  background:#101010;
+  border-radius:28px;
+  padding:32px 26px 22px;
+  width:100%;
+  max-width:380px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+  border:1px solid #1f1f1f;
+}
+#loginScreen .login-brand{
+  width:100%;
+  height:172px;
+  object-fit:contain;
+  background:#1e4bd8;
+  border-radius:18px;
+  display:block;
+  margin-bottom:26px;
+}
+#loginScreen h1{color:#c8a028;font-size:28px;font-weight:800;margin:0 0 6px;}
+#loginScreen p{color:#9aa0aa;font-size:14px;margin:0 0 22px;}
+#loginScreen label{color:#e5e7eb;font-size:14px;font-weight:600;margin:16px 0 8px;display:block;}
+#loginScreen input#loginMatricula,
+#loginScreen input#loginSenha{
+  width:100%;
+  height:52px;
+  background:#2a2a2e;
+  border:1.5px solid #3a3a40;
+  border-radius:12px;
+  padding:0 16px;
+  color:#e5e7eb;
+  font-size:15px;
+  outline:none;
+  box-sizing:border-box;
+}
+#loginScreen .senha-wrap{position:relative;width:100%;}
+#loginScreen .senha-wrap input{padding-right:64px;}
+#loginScreen #btnOlhoLogin{
+  position:absolute;
+  right:4px;top:4px;bottom:4px;
+  width:52px;height:44px;
+  background:#2f2f33;
+  border:1px solid #3f3f46;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;cursor:pointer;color:#d1d5db;
+}
+#loginScreen button[onclick="fazerLogin()"]{
+  width:100%;height:52px;background:#d4a72c;color:#111;
+  border:0;border-radius:12px;font-size:16px;font-weight:700;margin-top:20px;cursor:pointer;
+}
+#loginScreen #loginError{margin-top:12px;min-height:18px;font-size:13px;color:#f87171;text-align:center;}
+#loginScreen #loginHint{
+  margin-top:14px;background:rgba(212,167,44,0.12);
+  border-radius:10px;padding:10px;text-align:center;
+  font-size:12px;color:#9ca3af;
+}
+#loginScreen .login-links{margin-top:16px;text-align:center;}
+#loginScreen .login-links button{background:none;border:0;color:#c49a2a;font-size:14px;font-weight:600;margin:5px auto;display:block;cursor:pointer;}
+#loginScreen .login-links .sub-link{color:#9ca3af;font-weight:400;font-size:13px;text-decoration:underline;}
+
 </style>
 </head>
 <body>
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
-    <img class="login-brand brand-logo" src="/icons/nobre_premium_moderno.png" alt="Logo Assados Nobre" fetchpriority="high">
-    <h1>Assados Nobre <span style="color:var(--accent)">ERP</span></h1>
+    <img class="login-brand brand-logo" src="/icons/nobre_premium_moderno.png" alt="Logo Assados Nobre" onerror="this.style.background='#1e4bd8'">
+    <h1>Assados Nobre ERP</h1>
     <p>Gestão completa do seu negócio</p>
     <label>Matrícula</label>
     <input type="text" id="loginMatricula" placeholder="Digite sua matrícula" autocomplete="username">
     <label>Senha</label>
-    <input type="password" id="loginSenha" placeholder="Digite sua senha" autocomplete="current-password">
+    <div class="senha-wrap">
+      <input type="password" id="loginSenha" placeholder="Digite sua senha" autocomplete="current-password">
+      <button type="button" id="btnOlhoLogin" onclick="alternarSenhaLogin()" aria-label="Mostrar senha">👁️</button>
+    </div>
     <button onclick="fazerLogin()">Entrar</button>
-    <div class="login-error" id="loginError"></div>
-    <div class="login-hint">Entre com sua matrícula e senha cadastradas.</div>
+    <div id="loginError"></div>
+    <div id="loginHint">Entre com sua matrícula e senha cadastradas.</div>
+    <div class="login-links">
+      <button onclick="if(typeof abrirModalEsqueciSenha==='function') abrirModalEsqueciSenha(); else { const d=document.getElementById('loginError'); if(d) d.textContent='Entre em contato com o administrador'; }">Esqueceu sua senha?</button>
+      <button class="sub-link" onclick="if(typeof abrirChamadoSemLogin==='function') abrirChamadoSemLogin(); else { if(typeof showView==='function') showView('chamados'); }">Abrir chamado sem login</button>
+    </div>
   </div>
 </div>
 <!-- APP -->
@@ -356,7 +438,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
 <div id="toastContainer"></div>
 <script>
 
-const API_BASE = (window.location.protocol.startsWith('http')) ? window.location.origin : 'http://localhost:8080';
+const API_BASE = window.ASSADOS_API_URL || (window.location.protocol.startsWith('http') && window.location.hostname && window.location.hostname!=='null' ? window.location.origin : 'https://assados.onrender.com');
 const LOGOS_DISPONIVEIS = [
   { valor: 'nobre_premium_moderno.png', nome: 'Premium Moderno' },
   { valor: 'nobre_dourado_metalico.png', nome: 'Dourado Metálico' },
@@ -450,37 +532,33 @@ function instalarMascarasDeCampos(root=document){
   });
 }
 instalarMascarasDeCampos();
+function alternarSenhaLogin(){
+  const i=document.getElementById('loginSenha');
+  const b=document.getElementById('btnOlhoLogin');
+  if(!i) return;
+  const m=i.type==='password';
+  i.type=m?'text':'password';
+  if(b) b.textContent=m?'🙈':'👁️';
+}
 function instalarOlhosDeSenha(root=document){
-  const campos=root.querySelectorAll('input[type="password"]:not([data-olho-senha])');
-  if(!campos.length)return;
+  const campos=root.querySelectorAll('input[type="password"]:not([data-olho-senha]):not(#loginSenha)');
+  if(!campos.length) return;
   campos.forEach(input=>{
     input.dataset.olhoSenha='true';
-    const wrapper=document.createElement('span');
-    wrapper.style.cssText='display:block;position:relative;width:100%';
-    input.parentNode.insertBefore(wrapper,input);
-    wrapper.appendChild(input);
+    const w=document.createElement('span');
+    w.style.cssText='display:block;position:relative;width:100%';
+    input.parentNode.insertBefore(w,input);
+    w.appendChild(input);
     input.style.paddingRight='42px';
-    const botao=document.createElement('button');
-    botao.className='password-visibility-toggle';
-    botao.type='button';
-    botao.title='Mostrar senha';
-    botao.setAttribute('aria-label','Mostrar senha');
-    botao.setAttribute('aria-pressed','false');
-    botao.style.cssText='position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;width:30px;height:30px;margin:0;padding:0;border:0;background:transparent;color:#697586;cursor:pointer;display:flex;align-items:center;justify-content:center';
-    botao.innerHTML='<i data-lucide="eye"></i>';
-    botao.onclick=()=>{
-      const mostrar=input.type==='password';
-      input.type=mostrar?'text':'password';
-      botao.title=mostrar?'Ocultar senha':'Mostrar senha';
-      botao.setAttribute('aria-label',botao.title);
-      botao.setAttribute('aria-pressed',String(mostrar));
-      botao.innerHTML=`<i data-lucide="${mostrar?'eye-off':'eye'}"></i>`;
-      lucide.createIcons();
-    };
-    wrapper.appendChild(botao);
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.textContent='👁️';
+    btn.style.cssText='position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;width:30px;height:30px;border:0;background:transparent;cursor:pointer;font-size:18px';
+    btn.onclick=(e)=>{ e.preventDefault(); const mo=input.type==='password'; input.type=mo?'text':'password'; btn.textContent=mo?'🙈':'👁️'; };
+    w.appendChild(btn);
   });
-  lucide.createIcons();
 }
+
 instalarOlhosDeSenha();
 new MutationObserver(()=>{instalarOlhosDeSenha();instalarMascarasDeCampos();}).observe(document.body,{childList:true,subtree:true});
 function toast(msg, tipo='success'){ const t = document.createElement('div'); t.className = 'toast '+tipo; t.textContent = msg; document.getElementById('toastContainer').appendChild(t); setTimeout(()=>t.remove(), 3000); }
@@ -561,13 +639,13 @@ async function fazerLogin(){
     try{localStorage.setItem('erp_user',JSON.stringify(currentUser));localStorage.setItem('erp_token',currentSessionToken);}catch(e){}
     const perfisResposta=await apiGET('/api/perfis-permissao');
     window._perfisPermissao=perfisResposta.perfis||[];
-    const perfisBase=['admin','gerente','financeiro','rh','operador','caixa','vendedor','atendente'];
+    const perfisBase=['admin','adm','gerente','financeiro','rh','operador','caixa','vendedor','atendente','administrador','administrador geral'];
     if(!perfisBase.includes(String(currentUser.role||'').toLowerCase())&&!perfilPersonalizadoDoUsuario()){
       await apiPOST('/api/logout',{});currentSessionToken=null;currentUser=null;
       document.getElementById('loginError').textContent='Perfil sem configuração. Solicite ao administrador que atribua um perfil válido.';
       return;
     }
-    await iniciarSessao();
+    console.log('Login OK, iniciando sessão...'); await iniciarSessao(); console.log('Sessão iniciada');
   } else {
     document.getElementById('loginError').textContent = r.erro || 'Erro ao entrar';
   }
@@ -588,7 +666,7 @@ function toggleSidebar(forceOpen){
 function showView(view){
   if(isPdvUser()&&!['pdv-usuario','caixa','ponto-usuario','consultas-usuario'].includes(view)) view='pdv-usuario';
   const perfil=perfilPersonalizadoDoUsuario();
-  if(perfil&&!perfil.modulos.includes(view)) view=perfil.modulos.find(modulo=>document.querySelector(`.menu-item[data-view="${modulo}"]`))||'dashboard';
+  const _role=String(currentUser?.role||'').toLowerCase().trim(); const _isAdmin=['admin','adm','administrador','administrador geral'].includes(_role)||(currentUser?.nivel_permissao||0)>=5; if(!_isAdmin && perfil&&!perfil.modulos.includes(view)) view=perfil.modulos.find(m=>document.querySelector(`.menu-item[data-view="${m}"]`))||'dashboard';
   currentView = view;
   if(window.matchMedia('(max-width: 760px)').matches) toggleSidebar(false);
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.toggle('active', m.dataset.view===view));
@@ -613,8 +691,12 @@ function showView(view){
   else (renderers[view] || renderDashboard)();
   lucide.createIcons();
 }
-function perfilPersonalizadoDoUsuario(){return (window._perfisPermissao||[]).find(perfil=>perfil.id===currentUser?.role)||null;}
+function navegar(view){ showView(view); }
+function perfilPersonalizadoDoUsuario(){const r=String(currentUser?.role||'').toLowerCase().trim(); if(['admin','adm','administrador','administrador geral'].includes(r)) return null; return (window._perfisPermissao||[]).find(p=>p.id===currentUser?.role)||null;}
 function aplicarMenuPerfil(){
+  const r=String(currentUser?.role||'').toLowerCase().trim();
+  const isAdmin=['admin','adm','administrador','administrador geral'].includes(r)||(currentUser?.nivel_permissao||0)>=5;
+  if(isAdmin){document.querySelectorAll('.menu-item,.menu-group').forEach(e=>e.classList.remove('hidden'));return;}
   const perfil=perfilPersonalizadoDoUsuario();
   document.querySelectorAll('.menu-item').forEach(item=>item.classList.toggle('hidden',Boolean(perfil&&!perfil.modulos.includes(item.dataset.view))));
   document.querySelectorAll('.menu-group').forEach(group=>group.classList.toggle('hidden',Boolean(perfil&&!group.querySelector('.menu-item:not(.hidden)'))));
@@ -641,7 +723,7 @@ async function renderPontoUsuario(){
   const c=document.getElementById('content');
   c.innerHTML=`<h1 class="page-title">Meu ponto</h1><p class="page-sub">Marque entrada, intervalo e saída. Os horários são registrados pelo servidor.</p><div id="pontoPdvConteudo"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando marcações...</p></div></div>`;
   lucide.createIcons();
-  const r=await apiGET('/api/pdv/usuario/ponto');
+  const r=await apiGET('/api/pdv/usuario/ponto?matricula='+encodeURIComponent(currentUser?.matricula||''));
   const box=document.getElementById('pontoPdvConteudo');if(!box)return;
   if(r.erro){box.innerHTML=`<div class="alert-item critico"><i data-lucide="circle-alert"></i><span>${escaparHtmlIntegracao(r.erro)}</span></div>`;lucide.createIcons();return;}
   const hoje=dataHojeLocal(),reg=(r.registros||[]).find(item=>item.data_registro===hoje);
@@ -662,7 +744,7 @@ async function renderPontoUsuario(){
   lucide.createIcons();
 }
 async function registrarPontoPdv(acao){
-  const r=await apiPOST('/api/pdv/usuario/ponto',{acao});
+  const r=await apiPOST('/api/pdv/usuario/ponto',{...userPayload(),acao});
   if(!r.sucesso){toast(r.erro||'Não foi possível registrar o ponto.','error');return;}
   toast('Ponto registrado às '+r.registro[acao]+'.');
   await renderPontoUsuario();
@@ -671,7 +753,7 @@ async function renderConsultasUsuario(){
   const c=document.getElementById('content');
   c.innerHTML=`<h1 class="page-title">Minhas consultas</h1><p class="page-sub">Vendas registradas com sua matrícula.</p><div class="card" id="consultasPdv"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando vendas...</p></div></div>`;
   lucide.createIcons();
-  const r=await apiGET('/api/pdv/usuario/consultas');
+  const r=await apiGET('/api/pdv/usuario/consultas?matricula='+encodeURIComponent(currentUser?.matricula||''));
   const el=document.getElementById('consultasPdv');if(!el)return;
   if(r.erro){el.innerHTML=`<div class="alert-item critico"><i data-lucide="circle-alert"></i><span>${escaparHtmlIntegracao(r.erro)}</span></div>`;lucide.createIcons();return;}
   const total=(r.vendas||[]).reduce((s,v)=>s+Number(v.total||0),0);
@@ -1327,7 +1409,7 @@ async function renderProdutos(){
     <div id="abaProducao" class="hidden"></div>`;
   lucide.createIcons();
   const r = await apiGET('/api/produtos');
-  window._produtosLista = (r.produtos || []).filter(p=>p.status!=='INATIVO');
+  window._produtosLista = (r.produtos || []).filter(p=>p.status!=='INATIVO' && !p.arquivado);
   document.getElementById('produtosTable').innerHTML = tabelaSimples(window._produtosLista, [
     {chave:'sku',titulo:'SKU'}, {chave:'nome',titulo:'Nome'},
     {chave:'categoria',titulo:'Categoria',render:d=>`<span class="badge cyan">${d.categoria||'-'}</span>`},
@@ -1526,6 +1608,7 @@ async function ajustarFidelidade(id){
   const r = await apiPOST('/api/fidelidade/ajustar', {...userPayload(), cliente_id:id, pontos:document.getElementById('fidPontos').value, motivo:document.getElementById('fidMotivo').value});
   if(r.sucesso){ toast('Fidelidade atualizada!'); document.querySelector('.modal-overlay').remove(); renderClientes(); }
   else toast(r.erro||'Erro','error');
+}
 // ==========================================
 // 📈 DASHBOARD COMPARATIVO DE UNIDADES
 // ==========================================
@@ -1715,7 +1798,6 @@ function renderTesourariaUnidade() {
       </div>
     </div>
   `;
-}
 }
 // ===== FORNECEDORES =====
 async function renderFornecedores(){
@@ -3081,6 +3163,40 @@ async function salvarMeta(){
   else toast(r.erro||'Erro','error');
 }
 async function excluirMeta(id){ if(!confirm('Excluir esta meta?')) return; const r = await apiPOST('/api/metas/excluir', {...userPayload(), id}); if(r.sucesso){ toast('Meta excluída'); renderMetas(); } }
+// ===== METAS SUGERIDAS PELA IA =====
+let _metasIASugeridas = [];
+async function sugerirMetasIA(){
+  const box = document.getElementById('modalContainer');
+  box.innerHTML = '<div class="modal-overlay"><div class="modal"><h3><i data-lucide="sparkles"></i> Metas sugeridas pela IA</h3><div class="empty-state"><i data-lucide="loader-2"></i><p>Analisando os últimos 3 meses...</p></div></div></div>';
+  lucide.createIcons();
+  const r = await apiGET('/api/metas/ia-sugerir');
+  if(r.erro){ box.innerHTML=''; toast(r.erro,'error'); return; }
+  _metasIASugeridas = r.sugestoes || [];
+  const tipoLabel = { vendas_total:'Vendas Totais (R$)', picoles_unidades:'Picolés (unidades)', ticket_medio:'Ticket Médio (R$)', clientes_novos:'Novos Clientes' };
+  const historico = (r.historico || []).map(h => `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>${escaparHtmlIntegracao(h.mes)}</span><span>${fmt(h.total_vendas)} · ${h.picoles} picolés · ${h.num_vendas} venda(s)</span></div>`).join('') || '<p style="font-size:12px;color:var(--muted)">Sem histórico de vendas nos últimos 3 meses — usando valores padrão.</p>';
+  box.innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()"><div class="modal"><h3><i data-lucide="sparkles"></i> Metas sugeridas pela IA</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Baseado nos últimos 3 meses, com crescimento projetado de 15%.</p>
+    <div style="margin-bottom:16px">${historico}</div>
+    ${metasSugeridasHtml(_metasIASugeridas, tipoLabel)}
+    <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+    <button class="btn btn-primary" onclick="aplicarMetasIA()"><i data-lucide="check"></i> Aplicar todas</button></div></div></div>`;
+  lucide.createIcons();
+}
+function metasSugeridasHtml(sugestoes, tipoLabel){
+  return (sugestoes||[]).map((s,i) => `<label style="display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer">
+    <input type="checkbox" data-meta-ia="${i}" checked style="margin-top:3px">
+    <span style="flex:1"><b>${escaparHtmlIntegracao(s.descricao || tipoLabel[s.tipo] || s.tipo)}</b>
+    <div style="font-size:13px;color:var(--muted)">Meta: <b>${fmt(s.valor_meta)}</b> · base ${fmt(s.base)} · ${escaparHtmlIntegracao(s.crescimento)}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">${escaparHtmlIntegracao(s.justificativa)}</div></span></label>`).join('');
+}
+async function aplicarMetasIA(){
+  const sugestoes = (document.querySelectorAll('[data-meta-ia]') || []);
+  const selecionadas = [...sugestoes].filter(el => el.checked).map(el => _metasIASugeridas[Number(el.dataset.metaIa)]).filter(Boolean);
+  if(!selecionadas.length){ toast('Selecione ao menos uma meta.','info'); return; }
+  const r = await apiPOST('/api/metas/ia-aplicar', {...userPayload(), sugestoes: selecionadas});
+  if(r.sucesso){ toast(r.aplicadas + ' meta(s) criada(s)!'); document.querySelector('.modal-overlay').remove(); renderMetas(); }
+  else toast(r.erro || 'Erro ao aplicar metas', 'error');
+}
 // ===== META IA — Assistente Inteligente =====
 function renderMetaIA(){
   const c = document.getElementById('content');
@@ -3247,6 +3363,34 @@ async function salvarDevolutiva(id){
   if(r.sucesso){ toast('Devolutiva enviada!'); document.querySelector('.modal-overlay').remove(); renderChamados(); } else toast(r.erro||'Erro','error');
 }
 function verChamado(id){ toast('Chamado #'+id+' — ver detalhes no painel.','info'); }
+// ===== CHAMADO SEM LOGIN (tela de acesso) =====
+function abrirChamadoSemLogin(){
+  document.getElementById('modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)this.remove()"><div class="modal"><h3><i data-lucide="headset"></i> Abrir Chamado sem Login</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Informe seu nome e contato para que a equipe retorne com o protocolo.</p>
+    <div class="form-grid">
+      <div class="form-group"><label>Seu nome</label><input id="chSLNome" placeholder="Nome completo"></div>
+      <div class="form-group"><label>Telefone / e-mail</label><input id="chSLContato" placeholder="(00) 00000-0000"></div>
+      <div class="form-group"><label>Prioridade</label><select id="chSLPrioridade"><option>baixa</option><option selected>media</option><option>alta</option><option>urgente</option></select></div>
+      <div class="form-group"><label>Assunto</label><input id="chSLTitulo" placeholder="Ex: Não consigo entrar no sistema"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Descrição</label><textarea id="chSLMotivo" rows="3" placeholder="Descreva o problema..."></textarea></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+    <button class="btn btn-primary" onclick="enviarChamadoSemLogin()"><i data-lucide="send"></i> Abrir Chamado</button></div></div></div>`;
+  lucide.createIcons();
+}
+async function enviarChamadoSemLogin(){
+  const nome = document.getElementById('chSLNome').value.trim();
+  const contato = document.getElementById('chSLContato').value.trim();
+  const titulo = document.getElementById('chSLTitulo').value.trim();
+  const motivo = document.getElementById('chSLMotivo').value.trim();
+  if(!nome || !titulo || !motivo){ toast('Preencha nome, assunto e descrição.','error'); return; }
+  const r = await apiPOST('/api/chamados/abrir', {
+    titulo, motivo, prioridade: document.getElementById('chSLPrioridade').value,
+    aberto_por_nome: nome, contato, canal: 'sem_login'
+  });
+  if(r.sucesso){ toast('Chamado '+r.protocolo+' aberto! Guarde o protocolo.'); document.querySelector('.modal-overlay').remove(); }
+  else toast(r.erro || 'Erro ao abrir chamado', 'error');
+}
 // ===== PROTOCOLO DE ENTREGAS =====
 async function renderProtocoloEntregas(){
   const c = document.getElementById('content');
@@ -3618,17 +3762,17 @@ async function renderAuditoria(){
 // 👤 FUNCIONÁRIOS COMPLETOS
 // ==========================================
 function renderFuncionariosCompleto() {
-  const nivel = usuarioLogado?.nivel_permissao || 1;
+  const nivel = currentUser?.nivel_permissao || 1;
   const podeDadosSensiveis = nivel >= 5;
-  const podeEditar = nivel >= 6;
-  return `
+  const podeEditar = nivel >= 5;
+  document.getElementById('content').innerHTML = `
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">👤 Cadastro Completo de Funcionários</h2>
-        <p class="text-slate-500">Dados pessoais, foto e informações sensíveis</p>
+        <h1 class="page-title">👤 Cadastro Completo de Funcionários</h1>
+        <p class="page-sub">Dados pessoais, foto e informações sensíveis</p>
       </div>
-      ${podeEditar ? `<button onclick="modalNovoFuncionario()" class="bg-green-600 text-white px-4 py-2 rounded-lg">+ Novo Funcionário</button>` : ''}
+      ${podeEditar ? `<button onclick="modalFuncionario()" class="btn btn-primary">+ Novo Funcionário</button>` : ''}
     </div>
     <div class="bg-white rounded-2xl p-6 border border-slate-200">
       <h3 class="font-bold text-lg mb-4">Lista de Funcionários</h3>
@@ -3644,19 +3788,7 @@ function renderFuncionariosCompleto() {
               <th class="text-center p-3">Ações</th>
             </tr>
           </thead>
-          <tbody id="tabela-funcionarios">
-            <tr>
-              <td class="p-3"><div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">👤</div></td>
-              <td class="p-3 font-medium">Administrador Geral</td>
-              <td class="p-3">SV-2026-0001</td>
-              <td class="p-3">Administrador</td>
-              <td class="p-3"><span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Nível 6</span></td>
-              <td class="p-3 text-center">
-                <button onclick="modalEditarFuncionario(1)" class="text-blue-600 hover:underline">Editar</button>
-                ${podeDadosSensiveis ? `<button onclick="modalDadosSensiveis(1)" class="ml-2 text-amber-600 hover:underline">Sigilo</button>` : ''}
-              </td>
-            </tr>
-          </tbody>
+          <tbody id="tabela-funcionarios"><tr><td colspan="6" class="p-3" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -3670,6 +3802,32 @@ function renderFuncionariosCompleto() {
     </div>`}
   </div>
   `;
+  lucide.createIcons();
+  carregarTabelaFuncionariosCompleto(podeDadosSensiveis);
+}
+async function carregarTabelaFuncionariosCompleto(podeDadosSensiveis){
+  const corpo=document.getElementById('tabela-funcionarios');
+  if(!corpo)return;
+  const r=await apiGET('/api/funcionarios');
+  if(r.erro){corpo.innerHTML=`<tr><td colspan="6" class="p-3" style="color:var(--danger)">${escaparHtmlIntegracao(r.erro)}</td></tr>`;return;}
+  const lista=r.funcionarios||[];
+  window._funcionariosCache=lista;
+  corpo.innerHTML=lista.length?lista.map(f=>{
+    const nv=NIVEIS_PERMISSAO.find(n=>n.id===(f.nivel_permissao||1))||NIVEIS_PERMISSAO[0];
+    const inicial=(f.nome||'?').trim().charAt(0).toUpperCase();
+    return `<tr>
+      <td class="p-3"><div style="width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent-dark);display:flex;align-items:center;justify-content:center;font-weight:700">${escaparHtmlIntegracao(inicial)}</div></td>
+      <td class="p-3 font-medium">${escaparHtmlIntegracao(f.nome)}</td>
+      <td class="p-3">${escaparHtmlIntegracao(f.matricula||'-')}</td>
+      <td class="p-3">${escaparHtmlIntegracao(f.cargo||'-')}</td>
+      <td class="p-3"><span class="badge" style="background:${nv.cor}22;color:${nv.cor}">Nível ${nv.id} — ${nv.nome}</span></td>
+      <td class="p-3 text-center">
+        <button class="btn btn-sm btn-secondary" onclick='modalFuncionario(${JSON.stringify(f).replace(/'/g,"&#39;")})'>Editar</button>
+        ${podeDadosSensiveis ? `<button class="btn btn-sm btn-secondary" style="margin-left:4px" onclick="modalDadosSensiveis(${Number(f.id)})">Sigilo</button>` : ''}
+      </td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="6" class="p-3" style="text-align:center;color:var(--muted)">Nenhum funcionário cadastrado.</td></tr>';
+  lucide.createIcons();
 }
 // ==========================================
 // 💰 FOLHA DE PAGAMENTO
@@ -4285,9 +4443,23 @@ function filtrarCategoriaDemo(catId) {
   }
 }
 // Funções auxiliares (chamadas pelos botões)
-function modalNovoFuncionario() { alert('Abrir formulário — implementar conexão com API'); }
-function modalEditarFuncionario(id) { alert(`Editar funcionário ${id}`); }
-function modalDadosSensiveis(id) { alert(`Acesso aos dados sensíveis — registro no log`); }
+function modalNovoFuncionario() { modalFuncionario(); }
+function modalEditarFuncionario(id) { modalFuncionario((window._funcionariosCache||[]).find(f=>f.id==id) || {}); }
+async function modalDadosSensiveis(id){
+  const base=await pedirSenhaAdm('Dados sensíveis do funcionário #'+id);
+  if(!base || !base.senha){ toast('Acesso cancelado','error'); return; }
+  const r=await apiGET('/api/funcionarios/sensiveis/'+id+'?senha_adm='+encodeURIComponent(base.senha));
+  if(r.erro){ toast(r.erro,'error'); return; }
+  const f=r.funcionario||{};
+  const linha=(label,valor)=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">${label}</span><b>${escaparHtmlIntegracao(valor||'—')}</b></div>`;
+  document.getElementById('modalContainer').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)this.remove()"><div class="modal"><h3><i data-lucide="shield-check"></i> Dados sensíveis — ${escaparHtmlIntegracao(f.nome||('#'+id))}</h3>
+    ${linha('CPF',f.cpf)}${linha('Data de nascimento',f.data_nascimento)}${linha('Telefone',f.telefone)}${linha('E-mail',f.email)}
+    ${linha('Endereço',f.endereco)}${linha('Banco',f.banco)}${linha('Agência',f.agencia)}${linha('Conta',f.conta)}
+    ${linha('PIX',f.pix)}${linha('Contato de emergência',f.contato_emergencia)}
+    <div class="alert-item alerta" style="margin-top:12px"><i data-lucide="info"></i><span style="font-size:12px">Acessos a esta área podem ser registrados no log de auditoria (LGPD).</span></div>
+    <div class="form-actions"><button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Fechar</button></div></div></div>`;
+  lucide.createIcons();
+}
 function modalGerarFolha() { alert('Gerar folha de pagamento'); }
 function conferirFolha() { alert('Folha conferida ✅'); }
 function modalCompararFolha() { alert('Comparativo entre competências'); }
@@ -4308,23 +4480,33 @@ function usuarioParaPersistir(usuario){
     matricula: usuario?.matricula || '',
     nome: usuario?.nome || '',
     role: usuario?.role || '',
+    nivel_permissao: Number(usuario?.nivel_permissao || 0),
     unidade_tipo: usuario?.unidade_tipo || '',
     unidade_nome: usuario?.unidade_nome || ''
   };
 }
 async function iniciarSessao(){
-  document.getElementById('loginScreen').classList.add('hidden');
-  const app=document.getElementById('app');
-  app.classList.remove('hidden');
-  app.classList.toggle('pdv-user-mode',isPdvUser());
-  aplicarMenuPerfil();
-  document.querySelector('.user-avatar').textContent = (currentUser.nome||'AD').substring(0,2).toUpperCase();
-  atualizarListaDeLogos();
-  aplicarLogoSelecionada();
-  await carregarEstadoSistema();
-  showView(isPdvUser()?'pdv-usuario':'dashboard');
-  lucide.createIcons();
+  try {
+    document.getElementById('loginScreen').classList.add('hidden');
+    const app=document.getElementById('app');
+    if(app){ app.classList.remove('hidden'); app.classList.toggle('pdv-user-mode', isPdvUser()); }
+  } catch(e){ console.log('Erro ao mostrar app', e); }
+  try { aplicarMenuPerfil(); } catch(e){}
+  try { 
+    const av=document.querySelector('.user-avatar');
+    if(av) av.textContent = (currentUser.nome||'AD').substring(0,2).toUpperCase();
+  } catch(e){}
+  try { atualizarListaDeLogos(); } catch(e){}
+  try { aplicarLogoSelecionada(); } catch(e){}
+  try { carregarEstadoSistema(); } catch(e){ console.log('carregarEstadoSistema falhou mas vou continuar', e); }
+  try { 
+    const view = (typeof isPdvUser==='function' && isPdvUser()) ? 'pdv-usuario' : 'dashboard';
+    showView(view); 
+  } catch(e){ console.log('showView falhou', e); }
+  try { if(window.lucide) lucide.createIcons(); } catch(e){}
+  console.log('✅ Sessão iniciada para', currentUser?.matricula);
 }
+
 async function restaurarSessao(){
   try{
     const salvo=JSON.parse(localStorage.getItem('erp_user')||'null');
@@ -4336,7 +4518,7 @@ async function restaurarSessao(){
         const perfisResposta=await apiGET('/api/perfis-permissao');
         window._perfisPermissao=perfisResposta.perfis||[];
       }catch(e){}
-      await iniciarSessao();
+      console.log('Login OK, iniciando sessão...'); await iniciarSessao(); console.log('Sessão iniciada');
     }
   }catch(e){ try{localStorage.removeItem('erp_user');localStorage.removeItem('erp_token');}catch(e2){} }
 }
