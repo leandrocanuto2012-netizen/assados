@@ -1,0 +1,12 @@
+{
+  "name": "assados-nobre-erp",
+  "version": "1.0.0",
+  "description": "Sistema ERP Assados Nobre",
+  "main": "server-supabase.js",
+  "scripts": {
+    "start": "node server-supabase.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
