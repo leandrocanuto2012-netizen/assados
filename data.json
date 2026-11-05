@@ -1,0 +1,666 @@
+{
+  "unidades": [
+    {
+      "id": 1,
+      "nome": "Matriz - Sede",
+      "tipo": "matriz",
+      "e_matriz": true,
+      "regime_tributario": "simples_nacional",
+      "ativo": true,
+      "nivel_permissao": 6
+    },
+    {
+      "id": 2,
+      "nome": "Filial - Centro",
+      "tipo": "filial",
+      "e_matriz": false,
+      "regime_tributario": "simples_nacional",
+      "ativo": true,
+      "nivel_permissao": 3
+    }
+  ],
+  "funcionarios": [
+    {
+      "id": 1,
+      "matricula": "SV-2026-0001",
+      "nome": "Administrador Geral",
+      "cargo": "Administrador",
+      "unidade_id": 1,
+      "unidade_tipo": "matriz",
+      "role": "admin",
+      "senha_hash": "scrypt$185f34cd1df82fc15f2c23fc7fb4c4ac$f5864d76e9cb20a99ec3f6e413ba1091b4d02fd7b137f71a8703d46b3e2d4b1f025660af55f5b4b736cd726c1629e32417a707b9b1341e44c9a35c81a136881d",
+      "status": "ATIVO",
+      "salario_base": 5000,
+      "jornada_diaria": 8,
+      "data_admissao": "2024-01-15"
+    },
+    {
+      "id": 2,
+      "matricula": "SV-2026-0002",
+      "nome": "Maria Silva",
+      "cargo": "Atendente",
+      "unidade_id": 2,
+      "unidade_tipo": "filial",
+      "role": "operador",
+      "senha_hash": "scrypt$161df71ed3c812bc7ca573ae9c135fbd$3fa71968c24b1cd3bd2bf4bb8afceb1d75f157c5d5f64cd04bb8255d30bfecac8fb57fea61cb9ffab7a3b367ab7c405bb3374d7eea91ca751b87c674efb7ded2",
+      "status": "ATIVO",
+      "salario_base": 1600,
+      "jornada_diaria": 8,
+      "data_admissao": "2025-03-10"
+    }
+  ],
+  "controle_sistema": {
+    "id": 1,
+    "matriz_aberta": true,
+    "status_geral": "aberta",
+    "permite_pdv_emergencial": true,
+    "updated_at": "2026-11-03T14:39:52.291Z"
+  },
+  "produtos": [
+    {
+      "id": 1,
+      "sku": "SOR-MOR",
+      "nome": "Sorvete Morango 2L",
+      "categoria": "Sorvetes",
+      "sabor": "Morango",
+      "preco_venda": 45.9,
+      "preco_por_kg": 22.95,
+      "custo": 18,
+      "estoque_minimo": 20,
+      "producao_propria": true,
+      "status": "ATIVO",
+      "unidade_id": 1
+    },
+    {
+      "id": 2,
+      "sku": "PIC-CHOC",
+      "nome": "Picolé Chocolate",
+      "categoria": "Picolés",
+      "sabor": "Chocolate",
+      "preco_venda": 4.5,
+      "custo": 1.2,
+      "estoque_minimo": 100,
+      "producao_propria": true,
+      "status": "ATIVO",
+      "unidade_id": 1
+    },
+    {
+      "id": 3,
+      "sku": "ACA-300",
+      "nome": "Açaí 300ml",
+      "categoria": "Açaí",
+      "sabor": "Açaí com granola",
+      "preco_venda": 12.9,
+      "custo": 4.5,
+      "estoque_minimo": 30,
+      "producao_propria": true,
+      "status": "ATIVO",
+      "unidade_id": 1
+    },
+    {
+      "id": 4,
+      "sku": "BEB-COLA",
+      "nome": "Refrigerante Cola 350ml",
+      "categoria": "Bebidas",
+      "preco_venda": 5,
+      "custo": 2.5,
+      "estoque_minimo": 48,
+      "producao_propria": false,
+      "status": "ATIVO",
+      "unidade_id": 1
+    },
+    {
+      "id": 5,
+      "sku": "INS-LEITE",
+      "nome": "Leite Integral 1L",
+      "categoria": "Insumos",
+      "preco_venda": 6.5,
+      "custo": 4.8,
+      "estoque_minimo": 50,
+      "producao_propria": false,
+      "status": "ATIVO",
+      "unidade_id": 1
+    },
+    {
+      "id": 6,
+      "status": "ATIVO"
+    }
+  ],
+  "clientes": [
+    {
+      "id": 1,
+      "nome": "Cliente Balcão",
+      "cpf_cnpj": "",
+      "telefone": "",
+      "ativo": true,
+      "pontos_disponiveis": 0,
+      "valor_total_gasto": 0
+    },
+    {
+      "id": 2,
+      "ativo": true,
+      "data_cadastro": "2026-11-03"
+    }
+  ],
+  "fidelidade": [
+    {
+      "id": 1,
+      "cliente_id": 1,
+      "pontos_total": 0,
+      "pontos_disponiveis": 0,
+      "valor_total_gasto": 0
+    },
+    {
+      "id": 2,
+      "cliente_id": 2,
+      "pontos_total": 0,
+      "pontos_disponiveis": 0,
+      "pontos_resgatados": 0,
+      "valor_total_gasto": 0,
+      "atualizado_em": "2026-11-03T14:39:52.552Z"
+    }
+  ],
+  "fornecedores": [
+    {
+      "id": 1,
+      "nome": "Laticínios Bom Leite",
+      "cnpj": "00.000.000/0001-00",
+      "telefone": "(41) 3333-3333",
+      "categoria_fornecimento": "Insumos",
+      "status": "ATIVO"
+    },
+    {
+      "id": 2,
+      "status": "ATIVO"
+    }
+  ],
+  "caixas": [
+    {
+      "id": 1,
+      "nome": "Caixa Principal",
+      "status": "fechado",
+      "saldo_inicial": 0,
+      "saldo_atual": 0,
+      "unidade_id": 1,
+      "ativo": true,
+      "fechada_por": 1,
+      "fechada_em": "2026-11-03T14:39:52.507Z"
+    }
+  ],
+  "tesouraria": [
+    {
+      "id": 1,
+      "data": "2026-11-03",
+      "status": "fechada",
+      "saldo_inicial": 0,
+      "saldo_atual": 0,
+      "aberta_por": 1,
+      "aberta_em": "2026-11-03T14:39:52.748Z",
+      "unidade_id": 1,
+      "fechada_por": 1,
+      "fechada_em": "2026-11-03T14:39:52.752Z"
+    }
+  ],
+  "vendas": [
+    {
+      "id": 1,
+      "data": "2026-11-03T14:39:52.479Z",
+      "cliente_nome": "Balcão",
+      "origem": "balcao",
+      "total": 0,
+      "status": "CONCLUIDA",
+      "operador_matricula": "-"
+    }
+  ],
+  "comandas": [
+    {
+      "id": 1,
+      "numero": "CMD-0001",
+      "status": "ABERTA",
+      "total": 0,
+      "entrada_at": "2026-11-03T14:39:52.666Z"
+    }
+  ],
+  "contas": [
+    {
+      "id": 1,
+      "status": "ABERTO"
+    }
+  ],
+  "notas_fiscais": [
+    {
+      "id": 1,
+      "numero": "NF-000001",
+      "serie": "1",
+      "origem_tipo": "venda",
+      "razao_social_destinatario": "Cliente",
+      "valor_bruto": 100,
+      "regime_tributario": "simples_nacional",
+      "aliquota": 6,
+      "valor_imposto": 6,
+      "base_calculo": 100,
+      "status": "autorizada",
+      "chave_acesso": "CHV1793716792687",
+      "data_emissao": "2026-11-03T14:39:52.687Z"
+    }
+  ],
+  "autorizacoes": [],
+  "ponto": [
+    {
+      "id": 1,
+      "funcionario_id": 1,
+      "data_registro": "2026-11-03",
+      "created_at": "2026-11-03T13:45:21.697Z",
+      "entrada": "10:45",
+      "situacao": "completo",
+      "saida_almoco": "10:45",
+      "retorno_almoco": "10:45",
+      "saida": "10:45",
+      "horas_trabalhadas": 0,
+      "horas_extras": 0,
+      "saldo_horas": -8
+    },
+    {
+      "id": 2,
+      "funcionario_id": 3,
+      "created_at": "2026-11-03T14:39:52.785Z",
+      "horas_trabalhadas": 0,
+      "horas_extras": 0,
+      "saldo_horas": 0,
+      "situacao": "incompleto"
+    }
+  ],
+  "ferias": [
+    {
+      "id": 1,
+      "funcionario_id": 3,
+      "um_terco_constitucional": null,
+      "valor_total": null,
+      "status": "aprovada",
+      "created_at": "2026-11-03T14:39:52.804Z"
+    }
+  ],
+  "holerites": [
+    {
+      "id": 1,
+      "funcionario_id": 3,
+      "salario_base": null,
+      "inss": null,
+      "irrf": null,
+      "fgts": null,
+      "pis_cofins": null,
+      "valor_liquido": null,
+      "status": "processada",
+      "data_geracao": "2026-11-03T14:39:52.820Z"
+    }
+  ],
+  "documentos_rh": [
+    {
+      "id": 1,
+      "funcionario_id": 3,
+      "data_cadastro": "2026-11-03T14:39:52.836Z"
+    }
+  ],
+  "remessas": [
+    {
+      "id": 1,
+      "codigo": "REM-20261103-001",
+      "origem_unidade_id": 1,
+      "status": "enviada",
+      "data_envio": "2026-11-03T14:39:52.722Z",
+      "responsavel_envio_id": 1
+    }
+  ],
+  "patrimonio": [
+    {
+      "id": 1,
+      "codigo_etiqueta": "PAT-2026-00001",
+      "status": "ativo",
+      "condicao_atual": "bom",
+      "data_ultima_verificacao": "2026-11-03"
+    }
+  ],
+  "imoveis": [
+    {
+      "id": 1,
+      "status": "ativo"
+    }
+  ],
+  "eventos": [
+    {
+      "id": 1,
+      "status": "orcamento",
+      "created_at": "2026-11-03T14:39:52.696Z"
+    }
+  ],
+  "fichas_tecnicas": [
+    {
+      "id": 1,
+      "tempo_total_min": 0,
+      "ativo": true
+    }
+  ],
+  "ordens_servico": [
+    {
+      "id": 1,
+      "codigo": "OS-20261103-001",
+      "status": "pendente",
+      "solicitante_id": 1,
+      "created_at": "2026-11-03T14:39:52.635Z"
+    }
+  ],
+  "estoque": [],
+  "mov_estoque": [],
+  "pdv_emergencial": [
+    {
+      "id": 1,
+      "codigo": "EMERG-20261103-001",
+      "unidade_id": 2,
+      "funcionario_id": 2,
+      "tipo_registro": "venda",
+      "dados_json": {},
+      "valor_total": 0,
+      "sincronizado": false,
+      "created_at": "2026-11-03T14:39:52.612Z"
+    }
+  ],
+  "log_bloqueio": [],
+  "log_caixa": [
+    {
+      "id": 1,
+      "evento": "LOGOUT",
+      "matricula": "SV-2026-0001",
+      "created_at": "2026-11-03T13:45:15.708Z"
+    },
+    {
+      "id": 2,
+      "evento": "PONTO_ENTRADA",
+      "matricula": "SV-2026-0001",
+      "created_at": "2026-11-03T13:45:21.698Z"
+    },
+    {
+      "id": 3,
+      "evento": "PONTO_SAIDA_ALMOCO",
+      "matricula": "SV-2026-0001",
+      "created_at": "2026-11-03T13:45:21.720Z"
+    },
+    {
+      "id": 4,
+      "evento": "PONTO_RETORNO_ALMOCO",
+      "matricula": "SV-2026-0001",
+      "created_at": "2026-11-03T13:45:21.768Z"
+    },
+    {
+      "id": 5,
+      "evento": "PONTO_SAIDA",
+      "matricula": "SV-2026-0001",
+      "created_at": "2026-11-03T13:45:21.780Z"
+    },
+    {
+      "id": 6,
+      "evento": "LOGOUT",
+      "matricula": "-",
+      "created_at": "2026-11-03T14:39:52.368Z"
+    },
+    {
+      "id": 7,
+      "evento": "FECHAMENTO_CAIXA",
+      "matricula": "-",
+      "created_at": "2026-11-03T14:39:52.507Z"
+    }
+  ],
+  "mov_caixa": [],
+  "logistica": [
+    {
+      "id": 1,
+      "status": "EM_TRANSITO",
+      "created_at": "2026-11-03T14:39:52.848Z"
+    }
+  ],
+  "frota": [
+    {
+      "id": 1,
+      "status": "disponivel"
+    }
+  ],
+  "checklists_exec": [
+    {
+      "id": 1,
+      "modelo_id": 3,
+      "responsavel_execucao_id": 1,
+      "status": "incompleto",
+      "data_execucao": "2026-11-03T14:39:52.592Z",
+      "itens": [
+        {
+          "texto": "PAT-2026-00001 — undefined",
+          "respondido": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "protocolo": "CHK-20261103-0002",
+      "nome": "Checklist",
+      "itens": [],
+      "status": "em_andamento",
+      "iniciado_por": 1,
+      "iniciado_em": "2026-11-03T14:39:53.080Z",
+      "finalizado": false,
+      "aprovado": false
+    }
+  ],
+  "pedidos_site": [
+    {
+      "id": 1,
+      "origem": "site_ia",
+      "status": "CONFIRMADO",
+      "nf_emitida": false,
+      "data": "2026-11-03T14:39:52.916Z"
+    }
+  ],
+  "login_security": [
+    {
+      "matricula": "SV-2026-0001",
+      "tentativas": 0,
+      "bloqueado_ate": null,
+      "ultima_tentativa": "2026-11-05T06:22:18.848Z",
+      "atualizado_em": "2026-11-05T06:22:18.848Z"
+    },
+    {
+      "matricula": "SV-2026-0002",
+      "tentativas": 0,
+      "bloqueado_ate": null,
+      "ultima_tentativa": "2026-11-05T06:03:50.593Z",
+      "atualizado_em": "2026-11-05T06:03:50.642Z"
+    }
+  ],
+  "support_tickets": [],
+  "backup_runs": [],
+  "backup_settings": [
+    {
+      "id": 1,
+      "habilitado": false,
+      "destino": "local",
+      "intervalo_horas": 24,
+      "retencao": 7,
+      "atualizado_em": "2026-11-03T14:39:52.300Z"
+    }
+  ],
+  "bot_config": [
+    {
+      "nome": "nome_bot",
+      "valor": "SorveteBot"
+    },
+    {
+      "nome": "saudacao",
+      "valor": "Olá! Bem-vindo à Sorveteria!"
+    }
+  ],
+  "bot_regras": [
+    {
+      "id": 1,
+      "palavras_chave": "sabor|sabores|sorvete",
+      "resposta": "Temos os sabores: Morango, Chocolate, Baunilha, Açaí com granola e muito mais!"
+    },
+    {
+      "id": 2,
+      "palavras_chave": "picole|picolé|picoles",
+      "resposta": "Nossos picolés são R$ 4,50 cada — chocolate, morango, uva e limão!"
+    },
+    {
+      "id": 3,
+      "palavras_chave": "preco|preço|valor|quanto",
+      "resposta": "Sorvete 2L R$ 45,90 | Açaí 300ml R$ 12,90 | Picolé R$ 4,50 | Refrigerante R$ 5,00"
+    },
+    {
+      "id": 4,
+      "palavras_chave": "horario|horário|abre|fecha|funcionamento",
+      "resposta": "Funcionamos de segunda a domingo, das 10h às 22h!"
+    },
+    {
+      "id": 5,
+      "palavras_chave": "evento|festa|aniversario|empresa",
+      "resposta": "Fazemos eventos e festas! Envie data, quantidade de pessoas e local que enviamos o orçamento."
+    },
+    {
+      "id": 6,
+      "palavras_chave": "ifood|delivery|entrega|entregador",
+      "resposta": "Estamos no iFood! Ou se preferir, fazemos entrega própria — informe seu endereço."
+    }
+  ],
+  "ia_pedidos": [
+    {
+      "id": 1,
+      "status": "CONFIRMADO",
+      "data": "2026-11-03T14:39:52.916Z"
+    }
+  ],
+  "almoxarifado": [],
+  "endomarketing": [],
+  "treinamentos": [],
+  "avaliacoes_treinamento": [],
+  "agenda": [],
+  "post_its": [],
+  "perfis_permissao": [],
+  "integracoes_personalizadas": [],
+  "pdv_config": {
+    "fundo_inicial": 250,
+    "formas_pagamento": [
+      "PIX",
+      "DINHEIRO"
+    ],
+    "forma_padrao": "DINHEIRO",
+    "habilitar_balanca": false,
+    "rodape_cupom": "Volte!"
+  },
+  "receitas": [
+    {
+      "id": 1
+    }
+  ],
+  "abonos": [
+    {
+      "id": 1,
+      "funcionario_id": 3,
+      "justificativa": "",
+      "autorizado_por": 1,
+      "lancado_em": "2026-11-03T14:39:52.794Z"
+    }
+  ],
+  "crm_contatos": [
+    {
+      "id": 1,
+      "data": "2026-11-03T14:39:52.923Z",
+      "status": "pendente"
+    }
+  ],
+  "boletos": [
+    {
+      "id": 1,
+      "numero": "BOL-000001",
+      "status": "pendente",
+      "data_geracao": "2026-11-03T14:39:52.938Z"
+    }
+  ],
+  "ifood_config": {
+    "configurado_em": "2026-11-03T14:39:52.957Z"
+  },
+  "metas": [
+    {
+      "id": 1,
+      "mes": "2026-11",
+      "criado_em": "2026-11-03T14:39:53.018Z"
+    }
+  ],
+  "meta_ia_log": [
+    {
+      "id": 1,
+      "resposta": "Olá! Eu sou a META IA, sua assistente completa. 🤖\n\nTenho 4 modos:\n📊 DADOS — vendas, estoque, metas, financeiro\n📖 AJUDA — como usar o sistema (pergunte \"como...\")\n📝 CORRETOR — digite \"corrigir:\" + texto\n⚖️ LEGISLAÇÃO — ANVISA, rotulagem, impostos, CLT\n\nO que deseja?",
+      "data": "2026-11-03T14:39:53.038Z"
+    },
+    {
+      "id": 2,
+      "resposta": "Olá! Eu sou a META IA, sua assistente completa. 🤖\n\nTenho 4 modos:\n📊 DADOS — vendas, estoque, metas, financeiro\n📖 AJUDA — como usar o sistema (pergunte \"como...\")\n📝 CORRETOR — digite \"corrigir:\" + texto\n⚖️ LEGISLAÇÃO — ANVISA, rotulagem, impostos, CLT\n\nO que deseja?",
+      "data": "2026-11-03T14:55:57.297Z"
+    },
+    {
+      "id": 3,
+      "mensagem": "resumo geral",
+      "resposta": "📋 Resumo Geral do Negócio:\n\n💰 Vendas hoje: R$ 0,00\n📊 Vendas do mês: R$ 0,00\n🍦 Picolés no mês: 0\n🎫 Ticket médio: R$ 0,00\n📦 Estoque baixo: 0 item(ns)\n💸 Contas a vencer: R$ 0,00\n👥 Ponto incompleto: 1\n🎯 Metas ativas: 1\n\n💡 Peça uma \"dica\" para recomendações específicas!",
+      "data": "2026-11-03T14:55:57.328Z"
+    },
+    {
+      "id": 4,
+      "mensagem": "corrigir: hj nos temos promocao de venda de picole",
+      "resposta": "📝 CORRETOR ORTOGRÁFICO\n\n📄 Texto original:\n\"hj nos temos promocao de venda de picole\"\n\n✅ Texto corrigido:\n\"Hoje nos temos promoção de venda de picolé.\"\n\n💡 Dicas:\n• Evite abreviações (vc → você, q → que, tb → também) em comunicações oficiais\n• Sempre comece frases com letra maiúscula\n• Termine com ponto final\n\nQuer que eu revise outro texto? É só enviar!",
+      "data": "2026-11-03T15:00:13.342Z"
+    },
+    {
+      "id": 5,
+      "mensagem": "resumo geral",
+      "resposta": "📋 Resumo Geral do Negócio:\n\n💰 Vendas hoje: R$ 0,00\n📊 Vendas do mês: R$ 0,00\n🍦 Picolés no mês: 0\n🎫 Ticket médio: R$ 0,00\n📦 Estoque baixo: 0 item(ns)\n💸 Contas a vencer: R$ 0,00\n👥 Ponto incompleto: 1\n🎯 Metas ativas: 1\n\n💡 Peça uma \"dica\" para recomendações específicas!",
+      "data": "2026-11-03T15:02:23.389Z"
+    }
+  ],
+  "chamados": [
+    {
+      "id": 1,
+      "protocolo": "CHM-2026-00001",
+      "status": "aberto",
+      "prioridade": "media",
+      "aberto_em": "2026-11-03T14:39:53.047Z",
+      "tratativas": [],
+      "devolutivas": []
+    }
+  ],
+  "protocolos_entrega": [
+    {
+      "id": 1,
+      "protocolo": "ENT-20261103-0001",
+      "status": "pendente",
+      "criado_em": "2026-11-03T14:39:53.067Z",
+      "assinatura_recebedor": null
+    }
+  ],
+  "bot_log": [
+    {
+      "id": 1,
+      "remetente": "painel",
+      "mensagem": "cardapio",
+      "resposta": "Olá! Eu sou o SorveteBot. Posso te ajudar com: sabores e preços, picolés, açaí, eventos/festas, delivery/iFood e horários. O que deseja?",
+      "origem": "painel",
+      "data": "2026-11-05T06:34:34.058Z"
+    }
+  ],
+  "site_clientes": [
+    {
+      "id": 1793859618697,
+      "nome": "Teste Site",
+      "telefone": "41999990001",
+      "email": "teste@site.com",
+      "senha": "123456",
+      "origem": "site",
+      "created_at": "2026-11-05T06:20:18.697Z"
+    }
+  ]
+}

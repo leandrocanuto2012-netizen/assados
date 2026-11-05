@@ -72,9 +72,12 @@ Use tokens aleatórios fortes e diferentes para `ADMIN_RECOVERY_TOKEN` e `BACKUP
 
 ## Supabase
 
-Para conectar o backend ao Supabase, configure `SUPABASE_URL` e `SUPABASE_KEY` no ambiente do servidor. O esquema principal do ERP deve estar criado no projeto Supabase. A migração disponível neste repositório, [sql/02-seguranca-backups.sql](sql/02-seguranca-backups.sql), adiciona as estruturas necessárias ao fluxo de segurança e backups.
+Para conectar o backend ao Supabase, configure `SUPABASE_URL` e `SUPABASE_KEY` no ambiente do servidor. Aplique as duas migrações no projeto Supabase, nesta ordem:
 
-Revise e aplique a migração no projeto Supabase correto antes de ativar os recursos relacionados. Faça primeiro a validação em um ambiente de teste.
+1. [sql/01-estrutura-completa.sql](sql/01-estrutura-completa.sql) — esquema completo do ERP (cadastros, caixa/PDV, produção, financeiro, RH, bot, metas, módulos do painel). Executar **primeiro**.
+2. [sql/02-seguranca-backups.sql](sql/02-seguranca-backups.sql) — segurança e backups (`login_security`, `support_tickets`) e estruturas da loja online (`site_clientes`, `site_pedidos`, `site_acessos`), CRM de leads, folha de pagamento, viagens, suporte técnico e LGPD, incluindo a função `clientes_por_data` usada pelas estatísticas do site. Executar **depois**.
+
+Ambas as migrações são idempotentes (podem ser executadas mais de uma vez) e terminam com um `SELECT` de confirmação. Revise e aplique no projeto Supabase correto antes de ativar os recursos relacionados; faça primeiro a validação em um ambiente de teste.
 
 ## Segurança e recuperação de acesso
 
