@@ -208,6 +208,14 @@ table.data-table{width:100%;border-collapse:collapse;font-size:13px}
       </div>
     </div>
 
+    <div class="menu-group" data-group="loja">
+      <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="shopping-bag"></i> Loja Online <i data-lucide="chevron-down" class="chev"></i></div>
+      <div class="menu-items">
+        <div class="menu-item" data-view="site-stats" onclick="showView('site-stats')"><i data-lucide="bar-chart-3"></i> Acessos & Clientes</div>
+        <div class="menu-item" data-view="site-clientes" onclick="showView('site-clientes')"><i data-lucide="users"></i> Clientes Cadastrados</div>
+        <div class="menu-item" data-view="site-pedidos" onclick="showView('site-pedidos')"><i data-lucide="shopping-cart"></i> Pedidos do Site</div>
+      </div>
+    </div>
     <div class="menu-group" data-group="dash">
       <div class="menu-group-header" onclick="toggleGroup(this)"><i data-lucide="home"></i> Dashboard <i data-lucide="chevron-down" class="chev"></i></div>
       <div class="menu-items">
