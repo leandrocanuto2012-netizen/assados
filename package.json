@@ -8,5 +8,15 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.3",
+    "@supabase/supabase-js": "^2.45.0",
+    "nodemailer": "^6.9.15",
+    "xlsx": "^0.18.5",
+    "docx": "^8.5.0",
+    "node-localstorage": "^3.0.5"
   }
 }
