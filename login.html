@@ -49,6 +49,7 @@ input:focus{border-color:#d4a72c}
 </div>
 <script>
 function sair(){
+  try{ fetch('/api/logout',{method:'POST',credentials:'include'}).catch(()=>{}); }catch(e){}
   localStorage.removeItem('erp_user');
   localStorage.removeItem('erp_token');
   localStorage.removeItem('token');
@@ -67,7 +68,7 @@ async function fazerLogin(){
   btn.disabled=true; btn.textContent='Entrando...';
   err.textContent='Chamando /api/login no Render...';
   try{
-    const r=await fetch('/api/login?_cb='+Date.now(),{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify({matricula:mat,senha:sen}),cache:'no-store'});
+    const r=await fetch('/api/login?_cb='+Date.now(),{method:'POST',credentials:'include',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify({matricula:mat,senha:sen}),cache:'no-store'});
     const text=await r.text();
     let j;
     try{ j=JSON.parse(text); }catch(e){ throw new Error('Resposta não é JSON: '+text.slice(0,200)); }

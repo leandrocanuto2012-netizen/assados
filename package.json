@@ -4,7 +4,8 @@
   "description": "Sistema ERP Assados Nobre",
   "main": "server-supabase.js",
   "scripts": {
-    "start": "node server-supabase.js"
+    "start": "node server-supabase.js",
+    "test": "node testes-basicos.js"
   },
   "engines": {
     "node": ">=20"

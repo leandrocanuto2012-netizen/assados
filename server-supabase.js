@@ -54,6 +54,25 @@ const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.json({ limit: '12mb' }));
 
+// ===== PORTÃO DE LOGIN (lado servidor) =====
+// Páginas protegidas só são servidas com cookie de sessão válido.
+const PAGINAS_PROTEGIDAS = new Set(['/', '/dashboard', '/painel', '/dashboard.html', '/modulos-gestao.html']);
+function cookieSessao(req) {
+  const raw = String(req.headers.cookie || '');
+  const m = raw.match(/(?:^|; )assados_session=([^;]*)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || !PAGINAS_PROTEGIDAS.has(req.path)) return next();
+  const tok = cookieSessao(req);
+  let valido = false;
+  if (tok) {
+    try { valido = !!usuarioPorToken({ headers: { authorization: 'Bearer ' + tok } }); } catch { valido = false; }
+  }
+  if (!valido) return res.redirect(302, '/login.html');
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname)); // fallback: se login.html estiver na raiz, serve também
 
@@ -76,7 +95,7 @@ app.get('/loja', (req, res) => res.redirect('/site.html'));
 
 // ===== STORE - Supabase (se configurado) ou arquivo local =====
 let DB = {};
-const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','pedidos_site','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log','login_security','support_tickets','backup_settings','backup_runs','almoxarifado','endomarketing','treinamentos','avaliacoes_treinamento','agenda','post_its','integracoes_personalizadas','perfis_permissao'];
+const TABELAS = ['unidades','funcionarios','produtos','clientes','fidelidade','fornecedores','caixas','tesouraria','vendas','comandas','contas','notas_fiscais','autorizacoes','ponto','ferias','holerites','documentos_rh','remessas','patrimonio','imoveis','eventos','fichas_tecnicas','ordens_servico','estoque','mov_estoque','pdv_emergencial','log_bloqueio','log_caixa','mov_caixa','logistica','frota','checklists_exec','site_clientes','site_pedidos','site_acessos','bot_config','bot_regras','ia_pedidos','receitas','acertos','abonos','transferencias','bot_log','login_security','support_tickets','backup_settings','backup_runs','almoxarifado','endomarketing','treinamentos','avaliacoes_treinamento','agenda','post_its','integracoes_personalizadas','perfis_permissao'];
 let STATUS_BANCO = { tipo: USAR_SUPABASE ? 'supabase' : 'local', conectado: !USAR_SUPABASE, tabelas_com_erro: [] };
 let backupTimer = null;
 
@@ -479,7 +498,9 @@ async function loginSeguro(req, res) {
   }
   const { senha_hash, ...usuario } = f;
   // Retorna exatamente o que o dashboard.html espera
-  res.json({ sucesso: true, token: 'tok-' + f.id, usuario, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
+  const token = 'tok-' + f.id;
+  res.cookie('assados_session', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.json({ sucesso: true, token, usuario, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
 }
 
 
@@ -1445,7 +1466,7 @@ app.post('/api/site/config', (req, res) => {
   saveDB();
   res.json({ sucesso: true, config });
 });
-app.post('/api/site/pedido', (req, res) => {
+app.post('/api/site/pedido', async (req, res) => {
   const nome = textoSite(req.body?.cliente_nome, 100);
   const telefone = textoSite(req.body?.telefone, 24);
   const telefoneDigitos = telefone.replace(/\D/g, '');
@@ -1478,6 +1499,23 @@ app.post('/api/site/pedido', (req, res) => {
   pedido.cliente_id = cadastrarClienteDoPedido(pedido).id;
   DB.pedidos_site.push(pedido);
   if (tipoEntrega === 'entrega') gerarEntregaPedidoSite(pedido);
+  // Integração contábil automática: gera 1 lançamento de receita por unidade (itens rateados).
+  try {
+    if (!DB.gestao_lancamentos_contabeis) DB.gestao_lancamentos_contabeis = [];
+    const porUnidade = {};
+    for (const it of itens) { const uid = Number(it.unidade_id) || 1; porUnidade[uid] = (porUnidade[uid] || 0) + Number(it.total || 0); }
+    const comp = new Date().toISOString().slice(0, 7) + '-01';
+    const linhas = Object.entries(porUnidade).map(([uid, valor]) => ({
+      id: nextId('gestao_lancamentos_contabeis'), unidade_id: Number(uid), competencia: comp,
+      tipo: 'receita', categoria: 'Vendas do site', descricao: `Pedido #${pedido.id} via site (${pedido.origem})`,
+      documento_ref: `site_pedido_${pedido.id}`, valor: Math.round(valor * 100) / 100,
+      status: 'confirmado', origem: 'site', usuario_id: 'site', data_lancamento: hoje().slice(0, 10)
+    }));
+    if (linhas.length) {
+      DB.gestao_lancamentos_contabeis.push(...linhas);
+      if (USAR_SUPABASE) { try { await supabase.from('gestao_lancamentos_contabeis').insert(linhas); } catch (e) { console.error('Erro ao gerar lançamento contábil do pedido site:', e.message); } }
+    }
+  } catch (e) { console.error('Erro na integração contábil do pedido site:', e.message); }
   saveDB();
   res.json({ sucesso: true, pedido_id: pedido.id, total: pedido.total, cupom_aplicado: cupomValido });
 });
@@ -2220,6 +2258,7 @@ app.get('/api/session', (req, res) => {
 });
 
 app.post('/api/logout', (req, res) => {
+  res.clearCookie('assados_session', { httpOnly: true, sameSite: 'lax' });
   res.json({ sucesso: true });
 });
 
@@ -2272,9 +2311,54 @@ app.get('/api/pdv/usuario/consultas', (req, res) => {
   res.json({ vendas });
 });
 
+// ===== MÓDULOS DE GESTÃO (Contabilidade / EDRAS / Jurídico) =====
+// Exigem Supabase: as tabelas estão em 03-modulos-gestao.sql (RLS service_role only).
+// Em modo local (JSON) as rotas respondem 503 com mensagem explicativa.
+(function ativarModulosGestao() {
+  const authenticateGestao = (req, res, next) => {
+    const u = usuarioPorToken(req);
+    if (!u) return res.status(401).json({ sucesso: false, erro: 'Autenticação necessária. Faça login novamente.' });
+    req.user = u;
+    if (req.user.pode_ver_todas_filiais === undefined) {
+      const ehAdmin = String(req.user.role || '').toLowerCase() === 'admin';
+      const ehMatriz = String(req.user.unidade_tipo || '').toLowerCase() === 'matriz';
+      if (ehAdmin || ehMatriz) req.user.pode_ver_todas_filiais = true;
+    }
+    req.unidadesPermitidas = [Number(req.user.unidade_id)].filter(n => Number.isFinite(n) && n > 0);
+    next();
+  };
+  const authorizeGestao = (modulo, acao = 'consultar') => (req, res, next) => {
+    const role = String(req.user.role || '').toLowerCase();
+    const ehMatriz = String(req.user.unidade_tipo || '').toLowerCase() === 'matriz';
+    if (role === 'admin' || ehMatriz) return next();
+    // Módulos pessoais: qualquer usuário autenticado acessa os próprios registros.
+    if (modulo === 'edras' || modulo === 'dashboard_usuario') return next();
+    const permissoes = Array.isArray(req.user.permissoes) ? req.user.permissoes.map(p => String(p).toLowerCase()) : [];
+    if (permissoes.includes(String(modulo).toLowerCase())) return next();
+    return res.status(403).json({ sucesso: false, erro: `Sem permissão para o módulo ${modulo} (ação: ${acao}). Contate o administrador.` });
+  };
+  if (USAR_SUPABASE && supabase) {
+    try {
+      const createGestaoRouter = require('./gestao-router');
+      app.use('/api/gestao', createGestaoRouter({ supabase, authenticate: authenticateGestao, authorize: authorizeGestao }));
+      console.log('📊 Módulos de gestão ativados: Contabilidade · EDRAS · Jurídico em /api/gestao');
+    } catch (e) {
+      console.error('⚠️  Não foi possível ativar os módulos de gestão:', e.message);
+    }
+  } else {
+    app.use('/api/gestao', (req, res) => res.status(503).json({ sucesso: false, erro: 'Módulos de gestão (Contabilidade/EDRAS/Jurídico) exigem banco Supabase. Defina SUPABASE_URL e SUPABASE_KEY e aplique 03-modulos-gestao.sql.' }));
+    console.log('📊 Módulos de gestão desativados: exigem Supabase (SUPABASE_URL + SUPABASE_KEY + migração 03-modulos-gestao.sql).');
+  }
+})();
+
 // ===== STARTUP (carrega Supabase antes de subir) =====
 (async () => {
   await loadDB();
+  // Unifica nomes: código interno usa pedidos_site; migração Supabase cria site_pedidos.
+  if (!DB.site_pedidos) DB.site_pedidos = DB.pedidos_site || [];
+  DB.pedidos_site = DB.site_pedidos;
+  if (!DB.site_clientes) DB.site_clientes = [];
+  if (!DB.site_acessos) DB.site_acessos = [];
   app.listen(PORT, '0.0.0.0', () => {
     console.log('🍖 Assados ERP rodando na porta ' + PORT + ' | Banco: ' + (USAR_SUPABASE ? 'Supabase ✅' : 'Arquivo local (defina SUPABASE_URL e SUPABASE_KEY)'));
     console.log('   Dashboard: http://localhost:' + PORT + '/dashboard.html');

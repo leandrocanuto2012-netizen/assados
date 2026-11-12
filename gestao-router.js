@@ -13,7 +13,7 @@ module.exports = function createGestaoRouter({ supabase, authenticate, authorize
   const can = (moduleName, action='consultar') => authorize(moduleName, action);
   const userId = req => String(req.user.id ?? req.user.matricula ?? '');
   const unitId = req => Number(req.user.unidade_id);
-  const fail = (res, error, status=400) => res.status(status).json({ sucesso:false, erro });
+  const fail = (res, error, status=400) => res.status(status).json({ sucesso:false, erro: error });
   const audit = async (req, modulo, acao, registroId, detalhes={}) => {
     await supabase.from('gestao_auditoria').insert({ unidade_id:unitId(req), usuario_id:userId(req), modulo, acao, registro_id:registroId ? String(registroId) : null, detalhes });
   };
@@ -38,13 +38,28 @@ module.exports = function createGestaoRouter({ supabase, authenticate, authorize
       unidades = (data||[]).filter(u=>u.ativo !== false).map(u=>Number(u.id));
     }
     if (!unidades.length) unidades=[unitId(req)];
-    const { data, error } = await supabase.from('gestao_lancamentos_contabeis').select('unidade_id,tipo,valor,competencia').in('unidade_id',unidades).eq('status','confirmado');
+    const { data, error } = await supabase.from('gestao_lancamentos_contabeis').select('unidade_id,tipo,valor,competencia,origem').in('unidade_id',unidades).eq('status','confirmado');
     if (error) return fail(res,'Falha ao consolidar indicadores.',500);
+    // Integração com o site: pedidos online entram na receita por unidade (cada item tem sua unidade_id).
+    const sitePorUnidade = {};
+    try {
+      const { data: pedSite } = await supabase.from('site_pedidos').select('id,status,itens').neq('status','CANCELADO');
+      for (const p of (pedSite || [])) {
+        for (const it of (Array.isArray(p.itens) ? p.itens : [])) {
+          const uid = Number(it.unidade_id) || unitId(req);
+          sitePorUnidade[uid] = (sitePorUnidade[uid] || 0) + Number(it.total || 0);
+        }
+      }
+    } catch { /* tabela de pedidos do site ainda não aplicada: ignora */ }
     const resumo = unidades.map(id => {
-      const rows=(data||[]).filter(x=>Number(x.unidade_id)===id);
-      return { unidade_id:id, receitas:rows.filter(x=>x.tipo==='receita').reduce((s,x)=>s+Number(x.valor),0), despesas:rows.filter(x=>x.tipo==='despesa').reduce((s,x)=>s+Number(x.valor),0), lancamentos:rows.length };
+      const rows=(data||[]).filter(x=>Number(x.unidade_id)===id && x.origem!=='site'); // lançamentos de origem 'site' já entram pelo agregado de pedidos do site
+      const vendas_site = Number(sitePorUnidade[id] || 0);
+      const receitas = rows.filter(x=>x.tipo==='receita').reduce((s,x)=>s+Number(x.valor),0) + vendas_site;
+      const despesas = rows.filter(x=>x.tipo==='despesa').reduce((s,x)=>s+Number(x.valor),0);
+      return { unidade_id:id, receitas, despesas, lancamentos:rows.length, vendas_site };
     });
-    res.json({ sucesso:true, unidades:resumo });
+    const total_geral = resumo.reduce((t,x)=>({receitas:t.receitas+x.receitas,despesas:t.despesas+x.despesas,lancamentos:t.lancamentos+x.lancamentos,vendas_site:t.vendas_site+x.vendas_site}),{receitas:0,despesas:0,lancamentos:0,vendas_site:0});
+    res.json({ sucesso:true, unidades:resumo, total_geral });
   });
 
   router.get('/contabilidade/lancamentos', can('contabilidade'), async (req,res)=>{
