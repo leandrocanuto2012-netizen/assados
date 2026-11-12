@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Assados Nobre ERP</title>
+<link rel="icon" type="image/png" href="/icons/nobre_premium_moderno.png">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Quicksand',sans-serif}
+body{background:#f7f5ef;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(1200px 600px at 20% 0%, #1e3a8a 0%, #172554 45%, #020617 100%)}
+.login-box{background:#fff;border-radius:28px;padding:32px 26px 22px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.15);border:1px solid #e5e0d4}
+.login-brand{width:100%;height:140px;object-fit:contain;background:#1e4bd8;border-radius:18px;display:block;margin-bottom:20px}
+h1{color:#c8a028;font-size:26px;font-weight:800;margin:0 0 6px}
+p.sub{color:#697586;font-size:14px;margin:0 0 20px}
+label{color:#202b3c;font-size:13px;font-weight:700;margin:14px 0 6px;display:block}
+input{width:100%;height:50px;background:#fff;border:1.5px solid #e5e0d4;border-radius:12px;padding:0 14px;font-size:15px;outline:none}
+input:focus{border-color:#d4a72c}
+.senha-wrap{position:relative}
+.senha-wrap input{padding-right:44px}
+#btnOlho{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:none;background:#fff;border-radius:8px;cursor:pointer}
+.btn-entrar{width:100%;height:52px;background:#d4a72c;color:#111;border:0;border-radius:12px;font-size:16px;font-weight:800;margin-top:18px;cursor:pointer}
+.btn-entrar:disabled{opacity:.6;cursor:not-allowed}
+#error{margin-top:12px;min-height:18px;font-size:13px;color:#c62828;text-align:center;white-space:pre-wrap}
+#ok{margin-top:8px;font-size:12px;color:#16a34a;text-align:center}
+.hint{margin-top:14px;background:rgba(212,167,44,0.12);border-radius:10px;padding:10px;text-align:center;font-size:11px;color:#697586}
+.link-voltar{display:block;text-align:center;margin-top:14px;font-size:13px;color:#697586;text-decoration:none}
+.link-voltar:hover{color:#202b3c}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <img class="login-brand" src="/icons/nobre_premium_moderno.png" alt="Logo" onerror="this.style.background='#1e4bd8'">
+  <h1>Assados Nobre ERP</h1>
+  <p class="sub">Acesso da equipe</p>
+  <label>Matrícula</label>
+  <input id="mat" placeholder="Ex: SV-2026-0001" value="SV-2026-0001" autocomplete="username">
+  <label>Senha</label>
+  <div class="senha-wrap">
+    <input id="sen" type="password" placeholder="Sua senha" value="123" autocomplete="current-password">
+    <button id="btnOlho" type="button" onclick="document.getElementById('sen').type=document.getElementById('sen').type==='password'?'text':'password'">👁️</button>
+  </div>
+  <button class="btn-entrar" id="btnEntrar" onclick="fazerLogin()">Entrar</button>
+  <div id="error"></div>
+  <div id="ok"></div>
+  <div class="hint">Chama <b>/api/login</b> no Render. Token fica no navegador.</div>
+  <a class="link-voltar" href="/site.html">← Voltar para a loja</a>
+  <button onclick="sair()" style="margin-top:10px;background:none;border:none;color:#999;font-size:11px;cursor:pointer;width:100%">Limpar sessão e tentar novamente</button>
+</div>
+<script>
+function sair(){
+  try{ fetch('/api/logout',{method:'POST',credentials:'include'}).catch(()=>{}); }catch(e){}
+  localStorage.removeItem('erp_user');
+  localStorage.removeItem('erp_token');
+  localStorage.removeItem('token');
+  document.getElementById('error').textContent='Sessão limpa. Tente logar.';
+  document.getElementById('ok').textContent='';
+}
+
+async function fazerLogin(){
+  const mat=document.getElementById('mat').value.trim();
+  const sen=document.getElementById('sen').value.trim();
+  const err=document.getElementById('error');
+  const ok=document.getElementById('ok');
+  const btn=document.getElementById('btnEntrar');
+  err.textContent=''; ok.textContent='';
+  if(!mat||!sen){ err.textContent='Informe matrícula e senha.'; return; }
+  btn.disabled=true; btn.textContent='Entrando...';
+  err.textContent='Chamando /api/login no Render...';
+  try{
+    const r=await fetch('/api/login?_cb='+Date.now(),{method:'POST',credentials:'include',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify({matricula:mat,senha:sen}),cache:'no-store'});
+    const text=await r.text();
+    let j;
+    try{ j=JSON.parse(text); }catch(e){ throw new Error('Resposta não é JSON: '+text.slice(0,200)); }
+    console.log('login resposta', j);
+    if(!r.ok){ throw new Error(j.erro||('HTTP '+r.status)); }
+    if(!j.sucesso){ throw new Error(j.erro||'Falha no login'); }
+    const user=j.usuario||j.funcionario||j.user;
+    if(!user) throw new Error('Login ok mas sem usuário no retorno');
+    if(!j.token) throw new Error('Login ok mas sem token');
+    localStorage.setItem('erp_user', JSON.stringify(user));
+    localStorage.setItem('erp_token', j.token);
+    localStorage.setItem('token', j.token);
+    ok.textContent='Login OK! Indo para dashboard...';
+    err.textContent='';
+    setTimeout(()=>{ location.href='/dashboard.html'; }, 600);
+  }catch(e){
+    console.error('erro login', e);
+    err.textContent='Erro: '+e.message;
+    ok.textContent='';
+    btn.disabled=false; btn.textContent='Entrar';
+  }
+}
+
+// Só redireciona se já estiver logado E o usuário clicar, não automático agressivo
+// Se já tiver token, mostra mensagem mas não força
+try{
+  const t=localStorage.getItem('erp_token');
+  const u=localStorage.getItem('erp_user');
+  if(t&&u){
+    const parsed=JSON.parse(u);
+    document.getElementById('ok').textContent='Você já está logado como '+(parsed.nome||parsed.matricula||'usuário')+'. Clique em Entrar para ir ao dashboard ou Limpar sessão.';
+  }
+}catch(e){}
+</script>
+</body>
+</html>
