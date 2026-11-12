@@ -2990,6 +2990,17 @@ async function renderIfood(){
     </div>
     <div class="card" style="margin-top:16px"><div class="card-title"><i data-lucide="history"></i> Últimos Pedidos iFood</div>
       <div id="ifPedidos" style="margin-top:14px"><div class="empty-state"><i data-lucide="loader-2"></i><p>Carregando...</p></div></div></div>`;
+  <div class="menu-item" onclick="window.location.href='modulos-gestao.html#contabilidade'">
+  <i data-lucide="calculator"></i> Contabilidade
+</div>
+
+<div class="menu-item" onclick="window.location.href='modulos-gestao.html#edras'">
+  <i data-lucide="brain"></i> EDRAS
+</div>
+
+<div class="menu-item" onclick="window.location.href='modulos-gestao.html#juridico'">
+  <i data-lucide="scale"></i> Jurídico
+</div>
   lucide.createIcons();
   const r = await apiGET('/api/ifood/status');
   document.getElementById('ifStatus').innerHTML = r.conectado?'<span class="badge ok">CONECTADO</span>':'<span class="badge warn">DESCONECTADO</span>';
