@@ -4642,14 +4642,27 @@ function reenviarTermoLgpd(id) { alert(`Termo reenviado por SMS para o usuário 
 // ===== Funcoes exclusivas do GitHub (sessao, almoxarifado, cursos, endomarketing, editor de site) =====
 function usuarioParaPersistir(usuario){
   if(!usuario) return null;
+
+  const cargo = String(usuario.cargo || '').toLowerCase();
+  const unidadeTipo = String(usuario.unidade_tipo || '').toLowerCase();
+  const roleOriginal = String(usuario.role || '').toLowerCase();
+
+  const ehAdmin =
+    ['admin','adm','administrador','administrador geral'].includes(roleOriginal) ||
+    cargo.includes('admin') ||
+    unidadeTipo === 'matriz' ||
+    Number(usuario.nivel_permissao || 0) >= 6;
+
   return {
-    id: usuario?.id || null,
-    matricula: usuario?.matricula || '',
-    nome: usuario?.nome || '',
-    role: usuario?.role || '',
-    nivel_permissao: Number(usuario?.nivel_permissao || 0),
-    unidade_tipo: usuario?.unidade_tipo || '',
-    unidade_nome: usuario?.unidade_nome || ''
+    id: usuario.id || null,
+    matricula: usuario.matricula || '',
+    nome: usuario.nome || '',
+    cargo: usuario.cargo || '',
+    role: ehAdmin ? 'admin' : (usuario.role || ''),
+    nivel_permissao: ehAdmin ? 6 : Number(usuario.nivel_permissao || 0),
+    unidade_id: usuario.unidade_id || null,
+    unidade_tipo: usuario.unidade_tipo || '',
+    unidade_nome: usuario.unidade_nome || ''
   };
 }
 async function iniciarSessao(){
