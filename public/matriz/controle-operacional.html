@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Controle Operacional | Assados ERP</title>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <style>
+         body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+         .status-open { background: #dcfce7; color: #166534; }
+         .status-closed { background: #fee2e2; color: #991b1b; }
+         .status-pause { background: #fef3c7; color: #92400e; }
+     </style>
+ </head>
+ <body class="min-h-screen">
+     <div class="container mx-auto px-4 py-6 max-w-7xl">
+         <!-- Cabeçalho -->
+         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+             <div>
+                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                     <i class="ri-store-2-line text-blue-600"></i> Controle Operacional
+                 </h1>
+                 <p class="text-gray-500 mt-1">Visão geral das unidades — Abertura e Fechamento</p>
+             </div>
+             <div class="mt-4 md:mt-0 text-sm text-gray-500">
+                 <i class="ri-time-line"></i> Última atualização: <span id="hora-atual"></span>
+             </div>
+         </div>
+         <!-- Resumo Rápido -->
+         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+             <div class="card p-5">
+                 <p class="text-gray-500 text-sm">Total de Unidades</p>
+                 <p class="text-3xl font-bold text-gray-800 mt-1" id="total-unidades">3</p>
+             </div>
+             <div class="card p-5">
+                 <p class="text-gray-500 text-sm">Abertas</p>
+                 <p class="text-3xl font-bold text-green-600 mt-1" id="unidades-abertas">2</p>
+             </div>
+             <div class="card p-5">
+                 <p class="text-gray-500 text-sm">Fechadas</p>
+                 <p class="text-3xl font-bold text-red-600 mt-1" id="unidades-fechadas">1</p>
+             </div>
+             <div class="card p-5">
+                 <p class="text-gray-500 text-sm">Próximo Fechamento</p>
+                 <p class="text-xl font-bold text-gray-800 mt-1">22:00</p>
+             </div>
+         </div>
+         <!-- Lista de Unidades -->
+         <h2 class="text-lg font-semibold text-gray-700 mb-4">Status das Unidades</h2>
+         <div class="space-y-4" id="lista-unidades">
+             <!-- Unidade 1 -->
+             <div class="card p-5">
+                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                     <div class="flex items-center gap-4">
+                         <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                             <i class="ri-building-line text-blue-600 text-xl"></i>
+                         </div>
+                         <div>
+                             <h3 class="font-semibold text-gray-800">LC Bank — Matriz</h3>
+                             <p class="text-sm text-gray-500">Curitiba — Centro • Responsável: Leandro C.</p>
+                         </div>
+                     </div>
+                     <div class="flex items-center gap-4">
+                         <span class="px-3 py-1 rounded-full text-sm font-medium status-closed">
+                             <i class="ri-lock-line mr-1"></i> Fechada
+                         </span>
+                         <span class="text-sm text-gray-500">08:00 — 20:00</span>
+                     </div>
+                 </div>
+             </div>
+             <!-- Unidade 2 -->
+             <div class="card p-5">
+                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                     <div class="flex items-center gap-4">
+                         <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                             <i class="ri-restaurant-line text-orange-600 text-xl"></i>
+                         </div>
+                         <div>
+                             <h3 class="font-semibold text-gray-800">Assados — Filial Centro</h3>
+                             <p class="text-sm text-gray-500">Curitiba — Centro • Gerente: Maria S.</p>
+                         </div>
+                     </div>
+                     <div class="flex items-center gap-4">
+                         <span class="px-3 py-1 rounded-full text-sm font-medium status-open">
+                             <i class="ri-lock-open-line mr-1"></i> Aberta
+                         </span>
+                         <span class="text-sm text-gray-500">08:00 — 22:00</span>
+                         <button class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm transition">
+                             <i class="ri-settings-3-line"></i>
+                         </button>
+                     </div>
+                 </div>
+             </div>
+             <!-- Unidade 3 -->
+             <div class="card p-5">
+                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                     <div class="flex items-center gap-4">
+                         <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                             <i class="ri-restaurant-line text-orange-600 text-xl"></i>
+                         </div>
+                         <div>
+                             <h3 class="font-semibold text-gray-800">Assados — Filial Bacacheri</h3>
+                             <p class="text-sm text-gray-500">Curitiba — Bacacheri • Gerente: João P.</p>
+                         </div>
+                     </div>
+                     <div class="flex items-center gap-4">
+                         <span class="px-3 py-1 rounded-full text-sm font-medium status-open">
+                             <i class="ri-lock-open-line mr-1"></i> Aberta
+                         </span>
+                         <span class="text-sm text-gray-500">08:00 — 21:00</span>
+                         <button class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm transition">
+                             <i class="ri-settings-3-line"></i>
+                         </button>
+                     </div>
+                 </div>
+             </div>
+         </div>
+         <!-- Ações da Matriz -->
+         <div class="mt-8 card p-6 border-t-4 border-blue-500">
+             <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                 <i class="ri-admin-line text-blue-600"></i> Ações da Matriz
+             </h3>
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <button class="bg-green-50 hover:bg-green-100 text-green-700 p-4 rounded-lg text-center transition">
+                     <i class="ri-login-box-line text-2xl block mb-2"></i>
+                     Abrir Todas Unidades
+                 </button>
+                 <button class="bg-red-50 hover:bg-red-100 text-red-700 p-4 rounded-lg text-center transition">
+                     <i class="ri-logout-box-line text-2xl block mb-2"></i>
+                     Fechar Todas Unidades
+                 </button>
+                 <button class="bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-lg text-center transition">
+                     <i class="ri-calendar-check-line text-2xl block mb-2"></i>
+                     Relatório Diário
+                 </button>
+             </div>
+         </div>
+     </div>
+     <script>
+         function atualizarHora() {
+             const agora = new Date();
+             document.getElementById('hora-atual').textContent = agora.toLocaleString('pt-BR');
+         }
+         atualizarHora();
+         setInterval(atualizarHora, 60000);
+     </script>
+ </body>
+ </html>
