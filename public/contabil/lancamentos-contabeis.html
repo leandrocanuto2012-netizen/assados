@@ -1,1 +1,176 @@
-
+<!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Lançamentos Contábeis | Assados ERP</title>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <style>
+         body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+         .debito { color: #dc2626; }
+         .credito { color: #16a34a; }
+         .linha-par { background: #fafafa; }
+     </style>
+ </head>
+ <body class="min-h-screen">
+     <div class="container mx-auto px-4 py-6 max-w-6xl">
+         <!-- Cabeçalho -->
+         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+             <div>
+                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                     <i class="ri-book-open-line text-blue-600"></i> Lançamentos Contábeis
+                 </h1>
+                 <p class="text-gray-500 mt-1">Histórico de débitos, créditos e movimentações</p>
+             </div>
+             <div class="mt-4 md:mt-0 flex gap-2">
+                 <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                     <i class="ri-add-line"></i> Novo Lançamento
+                 </button>
+                 <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                     <i class="ri-download-line"></i> Exportar
+                 </button>
+             </div>
+         </div>
+         <!-- Filtros -->
+         <div class="card p-4 mb-6">
+             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                 <div>
+                     <label class="text-sm font-medium text-gray-600 mb-1 block">Período</label>
+                     <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                         <option>Outubro / 2026</option>
+                         <option>Setembro / 2026</option>
+                         <option>Últimos 30 dias</option>
+                     </select>
+                 </div>
+                 <div>
+                     <label class="text-sm font-medium text-gray-600 mb-1 block">Conta</label>
+                     <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                         <option>Todas as contas</option>
+                         <option>Caixa</option>
+                         <option>Clientes</option>
+                         <option>Fornecedores</option>
+                         <option>Receitas</option>
+                     </select>
+                 </div>
+                 <div>
+                     <label class="text-sm font-medium text-gray-600 mb-1 block">Unidade</label>
+                     <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                         <option>Todas</option>
+                         <option>Filial Centro</option>
+                         <option>Filial Bacacheri</option>
+                     </select>
+                 </div>
+                 <div>
+                     <label class="text-sm font-medium text-gray-600 mb-1 block">Busca</label>
+                     <input type="text" placeholder="Procurar..." class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                 </div>
+             </div>
+         </div>
+         <!-- Tabela de Lançamentos -->
+         <div class="card overflow-hidden">
+             <div class="overflow-x-auto">
+                 <table class="w-full text-sm">
+                     <thead class="bg-gray-50 border-b border-gray-200">
+                         <tr>
+                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Data</th>
+                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Histórico</th>
+                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Conta</th>
+                             <th class="px-4 py-3 text-right font-semibold text-gray-600">Débito</th>
+                             <th class="px-4 py-3 text-right font-semibold text-gray-600">Crédito</th>
+                             <th class="px-4 py-3 text-center font-semibold text-gray-600">Unidade</th>
+                             <th class="px-4 py-3 text-center font-semibold text-gray-600">Ações</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         <tr class="border-b border-gray-100 linha-par">
+                             <td class="px-4 py-3">14/11/2026</td>
+                             <td class="px-4 py-3">Venda de mercadoria — NF-001245</td>
+                             <td class="px-4 py-3">Caixa / Receita Vendas</td>
+                             <td class="px-4 py-3 text-right debito">2.500,00</td>
+                             <td class="px-4 py-3 text-right credito">2.500,00</td>
+                             <td class="px-4 py-3 text-center text-xs">Centro</td>
+                             <td class="px-4 py-3 text-center">
+                                 <button class="text-blue-600 hover:text-blue-800"><i class="ri-eye-line"></i></button>
+                             </td>
+                         </tr>
+                         <tr class="border-b border-gray-100">
+                             <td class="px-4 py-3">14/11/2026</td>
+                             <td class="px-4 py-3">Pagamento fornecedor — Distribuidora XYZ</td>
+                             <td class="px-4 py-3">Fornecedores / Caixa</td>
+                             <td class="px-4 py-3 text-right debito">1.800,00</td>
+                             <td class="px-4 py-3 text-right credito">1.800,00</td>
+                             <td class="px-4 py-3 text-center text-xs">Centro</td>
+                             <td class="px-4 py-3 text-center">
+                                 <button class="text-blue-600 hover:text-blue-800"><i class="ri-eye-line"></i></button>
+                             </td>
+                         </tr>
+                         <tr class="border-b border-gray-100 linha-par">
+                             <td class="px-4 py-3">13/11/2026</td>
+                             <td class="px-4 py-3">Recebimento cliente — Carlos Alberto</td>
+                             <td class="px-4 py-3">Caixa / Clientes</td>
+                             <td class="px-4 py-3 text-right debito">450,00</td>
+                             <td class="px-4 py-3 text-right credito">450,00</td>
+                             <td class="px-4 py-3 text-center text-xs">Bacacheri</td>
+                             <td class="px-4 py-3 text-center">
+                                 <button class="text-blue-600 hover:text-blue-800"><i class="ri-eye-line"></i></button>
+                             </td>
+                         </tr>
+                         <tr class="border-b border-gray-100">
+                             <td class="px-4 py-3">13/11/2026</td>
+                             <td class="px-4 py-3">Pagamento salários — Folha 11/2026</td>
+                             <td class="px-4 py-3">Despesas Pessoal / Caixa</td>
+                             <td class="px-4 py-3 text-right debito">7.500,00</td>
+                             <td class="px-4 py-3 text-right credito">7.500,00</td>
+                             <td class="px-4 py-3 text-center text-xs">Centro</td>
+                             <td class="px-4 py-3 text-center">
+                                 <button class="text-blue-600 hover:text-blue-800"><i class="ri-eye-line"></i></button>
+                             </td>
+                         </tr>
+                         <tr class="border-b border-gray-100 linha-par">
+                             <td class="px-4 py-3">12/11/2026</td>
+                             <td class="px-4 py-3">Compra de estoque — Entrada NF-e 34567</td>
+                             <td class="px-4 py-3">Estoques / Fornecedores</td>
+                             <td class="px-4 py-3 text-right debito">3.200,00</td>
+                             <td class="px-4 py-3 text-right credito">3.200,00</td>
+                             <td class="px-4 py-3 text-center text-xs">Bacacheri</td>
+                             <td class="px-4 py-3 text-center">
+                                 <button class="text-blue-600 hover:text-blue-800"><i class="ri-eye-line"></i></button>
+                             </td>
+                         </tr>
+                     </tbody>
+                     <tfoot class="bg-gray-50 border-t-2 border-gray-200 font-semibold">
+                         <tr>
+                             <td class="px-4 py-3" colspan="3">Total do Período</td>
+                             <td class="px-4 py-3 text-right">15.450,00</td>
+                             <td class="px-4 py-3 text-right">15.450,00</td>
+                             <td class="px-4 py-3 text-center" colspan="2"></td>
+                         </tr>
+                     </tfoot>
+                 </table>
+             </div>
+         </div>
+         <!-- Paginação -->
+         <div class="mt-6 flex justify-between items-center">
+             <p class="text-sm text-gray-500">Exibindo 1–5 de 128 lançamentos</p>
+             <div class="flex gap-2">
+                 <button class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100">Anterior</button>
+                 <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">1</button>
+                 <button class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100">2</button>
+                 <button class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100">3</button>
+                 <button class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100">Próxima</button>
+             </div>
+         </div>
+         <!-- Navegação -->
+         <div class="mt-6 flex flex-wrap gap-3 justify-between">
+             <a href="dre.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 <i class="ri-arrow-left-line"></i> Voltar para DRE
+             </a>
+             <a href="plano-contas.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 Ver Plano de Contas <i class="ri-arrow-right-line"></i>
+             </a>
+         </div>
+     </div>
+ </body>
+ </html>
