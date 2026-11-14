@@ -3112,5 +3112,15 @@ app.post('/api/site/cliente', async (req,res)=>{
     res.json({sucesso:true}); // não quebra o site mesmo se falhar
   }
 });
+// ✅ Cola ISSO no FINAL do seu server.js existente (antes do app.listen)
+const contabilRoutes = require('./routes/contabil');
+const edrasRoutes = require('./routes/edras');
+const unidadesRoutes = require('./routes/unidades');
+const auditoriaRoutes = require('./routes/auditoria');
+
+app.use('/api/contabil', contabilRoutes);
+app.use('/api/edras', edrasRoutes);
+app.use('/api/unidades', unidadesRoutes);
+app.use('/api/auditoria', auditoriaRoutes);
   
 })();
