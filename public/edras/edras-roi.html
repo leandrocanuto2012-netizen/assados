@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>EDRAS — Retorno sobre Investimento | Assados ERP</title>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+     <style>
+         body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+         .roi-bom { color: #16a34a; }
+         .roi-regular { color: #eab308; }
+         .roi-ruim { color: #dc2626; }
+         .progress-bar { height: 8px; border-radius: 4px; background: #e5e7eb; overflow: hidden; }
+         .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+     </style>
+ </head>
+ <body class="min-h-screen">
+     <div class="container mx-auto px-4 py-6 max-w-7xl">
+         <!-- Cabeçalho -->
+         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+             <div>
+                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                     <i class="ri-line-chart-line text-indigo-600"></i> EDRAS — ROI & Desempenho
+                 </h1>
+                 <p class="text-gray-500 mt-1">Análise de Retorno sobre Investimento por unidade e período</p>
+             </div>
+             <div class="mt-4 md:mt-0 flex gap-2">
+                 <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                     <i class="ri-download-line"></i> Relatório
+                 </button>
+                 <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                     <option>Outubro / 2026</option>
+                     <option>Setembro / 2026</option>
+                     <option>Últimos 12 meses</option>
+                 </select>
+             </div>
+         </div>
+         <!-- Cards Principais -->
+         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+             <div class="card p-5">
+                 <p class="text-sm text-gray-500">Investimento Total</p>
+                 <p class="text-2xl font-bold text-gray-800 mt-1">R$ 145.000,00</p>
+                 <p class="text-xs text-gray-400 mt-1">Capital aplicado nas 2 unidades</p>
+             </div>
+             <div class="card p-5">
+                 <p class="text-sm text-gray-500">Retorno Acumulado</p>
+                 <p class="text-2xl font-bold text-green-600 mt-1">R$ 28.450,00</p>
+                 <p class="text-xs text-green-500 mt-1">+12,8% vs período anterior</p>
+             </div>
+             <div class="card p-5">
+                 <p class="text-sm text-gray-500">ROI do Período</p>
+                 <p class="text-2xl font-bold roi-bom mt-1">19,62%</p>
+                 <div class="progress-bar mt-2">
+                     <div class="progress-fill bg-green-500" style="width: 19.62%"></div>
+                 </div>
+                 <p class="text-xs text-gray-400 mt-1">Meta: 15,0% ✓</p>
+             </div>
+             <div class="card p-5">
+                 <p class="text-sm text-gray-500">Prazo Retorno</p>
+                 <p class="text-2xl font-bold text-blue-600 mt-1">~5,1 meses</p>
+                 <p class="text-xs text-green-500 mt-1">Estimado</p>
+             </div>
+         </div>
+         <!-- Gráfico + Detalhe Unidades -->
+         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+             <!-- Gráfico Evolução -->
+             <div class="card p-6">
+                 <h2 class="text-lg font-semibold text-gray-800 mb-4">Evolução do ROI</h2>
+                 <canvas id="roiChart" height="220"></canvas>
+             </div>
+             <!-- Desempenho por Unidade -->
+             <div class="card p-6">
+                 <h2 class="text-lg font-semibold text-gray-800 mb-4">Desempenho por Unidade</h2>
+                 <div class="space-y-5">
+                     <div>
+                         <div class="flex justify-between items-center mb-1">
+                             <span class="font-medium text-gray-700">Filial Centro</span>
+                             <span class="font-bold roi-bom">22,4%</span>
+                         </div>
+                         <div class="progress-bar">
+                             <div class="progress-fill bg-green-500" style="width: 85%"></div>
+                         </div>
+                         <p class="text-xs text-gray-500 mt-1">Investimento: R$ 75.000 • Retorno: R$ 16.800</p>
+                     </div>
+                     <div>
+                         <div class="flex justify-between items-center mb-1">
+                             <span class="font-medium text-gray-700">Filial Bacacheri</span>
+                             <span class="font-bold roi-regular">16,8%</span>
+                         </div>
+                         <div class="progress-bar">
+                             <div class="progress-fill bg-yellow-500" style="width: 65%"></div>
+                         </div>
+                         <p class="text-xs text-gray-500 mt-1">Investimento: R$ 70.000 • Retorno: R$ 11.650</p>
+                     </div>
+                     <div class="pt-3 border-t border-gray-200">
+                         <div class="flex justify-between items-center mb-1">
+                             <span class="font-semibold text-gray-800">Consolidado</span>
+                             <span class="font-bold text-indigo-600">19,62%</span>
+                         </div>
+                         <div class="progress-bar">
+                             <div class="progress-fill bg-indigo-500" style="width: 75%"></div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         </div>
+         <!-- Indicadores Chave -->
+         <div class="card p-6 mb-6">
+             <h2 class="text-lg font-semibold text-gray-800 mb-4">Indicadores de Rentabilidade</h2>
+             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                 <div class="text-center">
+                     <p class="text-sm text-gray-500">Margem Bruta</p>
+                     <p class="text-xl font-bold text-gray-800 mt-1">57,1%</p>
+                 </div>
+                 <div class="text-center">
+                     <p class="text-sm text-gray-500">Margem Líquida</p>
+                     <p class="text-xl font-bold text-green-600 mt-1">18,2%</p>
+                 </div>
+                 <div class="text-center">
+                     <p class="text-sm text-gray-500">Giro Ativos</p>
+                     <p class="text-xl font-bold text-blue-600 mt-1">0,27x</p>
+                 </div>
+                 <div class="text-center">
+                     <p class="text-sm text-gray-500">ROE</p>
+                     <p class="text-xl font-bold text-indigo-600 mt-1">31,8%</p>
+                 </div>
+             </div>
+         </div>
+         <!-- Navegação -->
+         <div class="flex flex-wrap gap-3 justify-between">
+             <span></span>
+             <a href="edras-comparativo.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 Ver Comparativo <i class="ri-arrow-right-line"></i>
+             </a>
+         </div>
+     </div>
+     <script>
+         const ctx = document.getElementById('roiChart').getContext('2d');
+         new Chart(ctx, {
+             type: 'line',
+             data: {
+                 labels: ['Jul', 'Ago', 'Set', 'Out'],
+                 datasets: [{
+                     label: 'ROI Mensal (%)',
+                     data: [14.2, 16.5, 18.1, 19.62],
+                     borderColor: '#4f46e5',
+                     backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                     fill: true,
+                     tension: 0.4,
+                     borderWidth: 2
+                 }, {
+                     label: 'Meta (%)',
+                     data: [15, 15, 15, 15],
+                     borderColor: '#9ca3af',
+                     borderDash: [5, 5],
+                     fill: false,
+                     borderWidth: 1
+                 }]
+             },
+             options: {
+                 responsive: true,
+                 plugins: { legend: { position: 'bottom' } },
+                 scales: { y: { beginAtZero: true, max: 25 } }
+             }
+         });
+     </script>
+ </body>
+ </html>
