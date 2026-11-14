@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Balanço Patrimonial | Assados ERP</title>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <style>
+         body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+         .linha-total { border-top: 2px solid #e5e7eb; font-weight: 600; }
+         .nivel-1 { padding-left: 0; font-weight: 600; color: #1f2937; }
+         .nivel-2 { padding-left: 1.25rem; color: #4b5563; }
+         .nivel-3 { padding-left: 2.5rem; color: #6b7280; }
+         .valor-positivo { color: #16a34a; }
+         .valor-destaque { color: #1e40af; font-weight: 600; }
+     </style>
+ </head>
+ <body class="min-h-screen">
+     <div class="container mx-auto px-4 py-6 max-w-5xl">
+         <!-- Cabeçalho -->
+         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+             <div>
+                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                     <i class="ri-scales-3-line text-blue-600"></i> Balanço Patrimonial
+                 </h1>
+                 <p class="text-gray-500 mt-1">Posição patrimonial — Ativo, Passivo e Patrimônio Líquido</p>
+             </div>
+             <div class="mt-4 md:mt-0 flex gap-2">
+                 <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                     <i class="ri-download-line"></i> PDF
+                 </button>
+                 <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                     <i class="ri-file-excel-line"></i> Excel
+                 </button>
+             </div>
+         </div>
+         <!-- Filtros -->
+         <div class="card p-4 mb-6">
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div>
+                     <label class="text-sm font-medium text-gray-600 mb-1 block">Unidade</label>
+                     <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                         <option>Assados — Filial Centro</option>
+                         <option>Assados — Filial Bacacheri</option>
+                         <option>LC Bank — Matriz (Consolidado)</option>
+                     </select>
+                 </div>
+                 <div>
+                     <label class="text-sm font-medium text-gray-600 mb-1 block">Data de Referência</label>
+                     <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                         <option>31 de Outubro de 2026</option>
+                         <option>30 de Setembro de 2026</option>
+                         <option>31 de Agosto de 2026</option>
+                     </select>
+                 </div>
+             </div>
+         </div>
+         <!-- Resumo Rápido -->
+         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+             <div class="card p-4 text-center">
+                 <p class="text-sm text-gray-500">Total do Ativo</p>
+                 <p class="text-xl font-bold text-blue-600 mt-1">R$ 158.400,00</p>
+             </div>
+             <div class="card p-4 text-center">
+                 <p class="text-sm text-gray-500">Total do Passivo</p>
+                 <p class="text-xl font-bold text-orange-600 mt-1">R$ 68.900,00</p>
+             </div>
+             <div class="card p-4 text-center">
+                 <p class="text-sm text-gray-500">Patrimônio Líquido</p>
+                 <p class="text-xl font-bold text-green-600 mt-1">R$ 89.500,00</p>
+             </div>
+         </div>
+         <!-- ATIVO -->
+         <div class="card p-6 mb-6">
+             <h2 class="text-lg font-bold text-blue-700 mb-4 border-b pb-2">⚫ ATIVO</h2>
+             
+             <div class="space-y-2 text-sm">
+                 <div class="nivel-1">1. ATIVO CIRCULANTE</div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Caixa e Equivalentes de Caixa</span>
+                     <span class="valor-destaque">45.200,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Clientes e Contas a Receber</span>
+                     <span>12.500,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Estoques</span>
+                     <span>28.700,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Outros Ativos Circulantes</span>
+                     <span>3.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2 mt-2">
+                     <span>Total Ativo Circulante</span>
+                     <span class="font-bold">89.400,00</span>
+                 </div>
+                 <div class="nivel-1 mt-4">2. ATIVO NÃO CIRCULANTE</div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Imobilizado</span>
+                     <span>75.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-3">
+                     <span>(-) Depreciação Acumulada</span>
+                     <span class="text-red-500">- 6.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Intangível</span>
+                     <span>0,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2 mt-2">
+                     <span>Total Ativo Não Circulante</span>
+                     <span class="font-bold">69.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-3 mt-2 text-lg">
+                     <span class="font-bold">TOTAL DO ATIVO</span>
+                     <span class="font-bold text-blue-700">158.400,00</span>
+                 </div>
+             </div>
+         </div>
+         <!-- PASSIVO E PATRIMÔNIO -->
+         <div class="card p-6">
+             <h2 class="text-lg font-bold text-orange-700 mb-4 border-b pb-2">⚫ PASSIVO E PATRIMÔNIO LÍQUIDO</h2>
+             
+             <div class="space-y-2 text-sm">
+                 <div class="nivel-1">3. PASSIVO CIRCULANTE</div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Fornecedores</span>
+                     <span>18.500,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Obrigações Trabalhistas</span>
+                     <span>9.800,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Obrigações Fiscais</span>
+                     <span>4.600,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Empréstimos e Financiamentos</span>
+                     <span>6.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2 mt-2">
+                     <span>Total Passivo Circulante</span>
+                     <span class="font-bold">38.900,00</span>
+                 </div>
+                 <div class="nivel-1 mt-4">4. PASSIVO NÃO CIRCULANTE</div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Empréstimos de Longo Prazo</span>
+                     <span>30.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2 mt-2">
+                     <span>Total Passivo Não Circulante</span>
+                     <span class="font-bold">30.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2">
+                     <span>Total do Passivo</span>
+                     <span class="font-bold text-orange-700">68.900,00</span>
+                 </div>
+                 <div class="nivel-1 mt-4">5. PATRIMÔNIO LÍQUIDO</div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Capital Social</span>
+                     <span>80.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Reservas de Lucros</span>
+                     <span>1.850,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span>Lucro / Prejuízo do Exercício</span>
+                     <span class="valor-positivo">7.650,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2 mt-2">
+                     <span>Total do Patrimônio Líquido</span>
+                     <span class="font-bold text-green-700">89.500,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-3 mt-2 text-lg">
+                     <span class="font-bold">TOTAL DO PASSIVO + PL</span>
+                     <span class="font-bold text-blue-700">158.400,00</span>
+                 </div>
+             </div>
+             <!-- Verificação -->
+             <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                 <p class="text-sm text-green-700 flex items-center gap-2">
+                     <i class="ri-checkbox-circle-fill"></i>
+                     <strong>Balanço conferido:</strong> Ativo = Passivo + Patrimônio Líquido ✓
+                 </p>
+             </div>
+         </div>
+         <!-- Navegação -->
+         <div class="mt-6 flex flex-wrap gap-3 justify-between">
+             <a href="dre.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 <i class="ri-arrow-left-line"></i> Voltar para DRE
+             </a>
+             <a href="plano-contas.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 Ver Plano de Contas <i class="ri-arrow-right-line"></i>
+             </a>
+         </div>
+     </div>
+ </body>
+ </html>
