@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>DRE — Demonstração do Resultado | Assados ERP</title>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <style>
+         body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+         .linha-total { border-top: 2px solid #e5e7eb; font-weight: 600; }
+         .valor-positivo { color: #16a34a; }
+         .valor-negativo { color: #dc2626; }
+         .nivel-1 { padding-left: 0; }
+         .nivel-2 { padding-left: 1.5rem; }
+         .nivel-3 { padding-left: 3rem; }
+     </style>
+ </head>
+ <body class="min-h-screen">
+     <div class="container mx-auto px-4 py-6 max-w-5xl">
+         <!-- Cabeçalho -->
+         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+             <div>
+                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                     <i class="ri-file-list-3-line text-blue-600"></i> DRE — Demonstração do Resultado
+                 </h1>
+                 <p class="text-gray-500 mt-1">Análise de receitas, custos e despesas por período</p>
+             </div>
+             <div class="mt-4 md:mt-0 flex gap-2">
+                 <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                     <i class="ri-download-line"></i> PDF
+                 </button>
+                 <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                     <i class="ri-file-excel-line"></i> Excel
+                 </button>
+             </div>
+         </div>
+         <!-- Filtros -->
+         <div class="card p-4 mb-6">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <div>
+                     <label class="text-sm font-medium text-gray-600 mb-1 block">Unidade</label>
+                     <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                         <option>Assados — Filial Centro</option>
+                         <option>Assados — Filial Bacacheri</option>
+                         <option>LC Bank — Matriz (Consolidado)</option>
+                     </select>
+                 </div>
+                 <div>
+                     <label class="text-sm font-medium text-gray-600 mb-1 block">Mês / Ano</label>
+                     <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                         <option>Outubro / 2026</option>
+                         <option>Setembro / 2026</option>
+                         <option>Agosto / 2026</option>
+                     </select>
+                 </div>
+                 <div>
+                     <label class="text-sm font-medium text-gray-600 mb-1 block">Regime Tributário</label>
+                     <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                         <option>Simples Nacional</option>
+                         <option>Lucro Presumido</option>
+                         <option>Lucro Real</option>
+                     </select>
+                 </div>
+             </div>
+         </div>
+         <!-- Resumo Executivo -->
+         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+             <div class="card p-4 text-center">
+                 <p class="text-sm text-gray-500">Receita Líquida</p>
+                 <p class="text-xl font-bold text-gray-800 mt-1">R$ 42.000,00</p>
+             </div>
+             <div class="card p-4 text-center">
+                 <p class="text-sm text-gray-500">Lucro Bruto</p>
+                 <p class="text-xl font-bold text-blue-600 mt-1">R$ 24.000,00</p>
+             </div>
+             <div class="card p-4 text-center">
+                 <p class="text-sm text-gray-500">Despesas</p>
+                 <p class="text-xl font-bold text-red-500 mt-1">R$ 15.000,00</p>
+             </div>
+             <div class="card p-4 text-center">
+                 <p class="text-sm text-gray-500">Lucro Líquido</p>
+                 <p class="text-xl font-bold text-green-600 mt-1">R$ 7.650,00</p>
+             </div>
+         </div>
+         <!-- Tabela DRE -->
+         <div class="card p-6">
+             <h2 class="text-lg font-semibold text-gray-800 mb-6">Demonstração — Outubro/2026</h2>
+             
+             <div class="space-y-3 text-sm">
+                 <!-- RECEITAS -->
+                 <div class="font-semibold text-gray-800">1. RECEITAS OPERACIONAIS</div>
+                 
+                 <div class="flex justify-between items-center nivel-2">
+                     <span class="text-gray-600">1.1 — Vendas de Mercadorias</span>
+                     <span class="font-medium">45.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span class="text-gray-600">1.2 — Prestação de Serviços</span>
+                     <span class="font-medium">5.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span class="text-gray-600">1.3 — (-) Deduções e Impostos</span>
+                     <span class="valor-negativo">- 8.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2">
+                     <span>1.4 — RECEITA LÍQUIDA</span>
+                     <span class="font-bold">42.000,00</span>
+                 </div>
+                 <!-- CUSTOS -->
+                 <div class="font-semibold text-gray-800 mt-4">2. CUSTOS OPERACIONAIS</div>
+                 
+                 <div class="flex justify-between items-center nivel-2">
+                     <span class="text-gray-600">2.1 — Custo de Mercadorias Vendidas</span>
+                     <span class="valor-negativo">- 18.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2">
+                     <span>2.2 — LUCRO BRUTO</span>
+                     <span class="font-bold text-blue-600">24.000,00</span>
+                 </div>
+                 <!-- DESPESAS -->
+                 <div class="font-semibold text-gray-800 mt-4">3. DESPESAS OPERACIONAIS</div>
+                 
+                 <div class="flex justify-between items-center nivel-2">
+                     <span class="text-gray-600">3.1 — Pessoal / Salários</span>
+                     <span class="valor-negativo">- 7.500,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span class="text-gray-600">3.2 — Aluguel e Utilidades</span>
+                     <span class="valor-negativo">- 3.500,00</span>
+                 </div>
+                 <div class="flex justify-between items-center nivel-2">
+                     <span class="text-gray-600">3.3 — Outras Despesas</span>
+                     <span class="valor-negativo">- 4.000,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2">
+                     <span>3.4 — Total Despesas</span>
+                     <span class="valor-negativo">- 15.000,00</span>
+                 </div>
+                 <!-- RESULTADO ANTES IMPOSTOS -->
+                 <div class="flex justify-between items-center linha-total py-2 mt-4">
+                     <span>4. RESULTADO ANTES DOS IMPOSTOS</span>
+                     <span class="font-bold">9.000,00</span>
+                 </div>
+                 <!-- IMPOSTOS -->
+                 <div class="font-semibold text-gray-800 mt-4">5. APURAÇÃO DE IMPOSTOS</div>
+                 
+                 <div class="flex justify-between items-center nivel-2">
+                     <span class="text-gray-600">5.1 — Simples Nacional</span>
+                     <span class="valor-negativo">- 1.350,00</span>
+                 </div>
+                 <div class="flex justify-between items-center linha-total py-2">
+                     <span>5.2 — LUCRO LÍQUIDO DO EXERCÍCIO</span>
+                     <span class="font-bold text-lg text-green-600">7.650,00</span>
+                 </div>
+             </div>
+             <!-- Margem -->
+             <div class="mt-6 pt-4 border-t border-gray-200">
+                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                     <div>
+                         <p class="text-sm text-gray-500">Margem Bruta</p>
+                         <p class="font-bold text-gray-800">57,14%</p>
+                     </div>
+                     <div>
+                         <p class="text-sm text-gray-500">Margem Líquida</p>
+                         <p class="font-bold text-green-600">18,21%</p>
+                     </div>
+                     <div>
+                         <p class="text-sm text-gray-500">Comparativo</p>
+                         <p class="font-bold text-green-600">+2,3% ↗</p>
+                     </div>
+                     <div>
+                         <p class="text-sm text-gray-500">Meta</p>
+                         <p class="font-bold text-gray-800">15,0%</p>
+                     </div>
+                 </div>
+             </div>
+         </div>
+         <!-- Navegação Rápida -->
+         <div class="mt-6 flex flex-wrap gap-3">
+             <a href="lancamentos-contabeis.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 <i class="ri-arrow-left-line"></i> Ver Lançamentos
+             </a>
+             <a href="balanco-patrimonial.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 Ver Balanço Patrimonial <i class="ri-arrow-right-line"></i>
+             </a>
+         </div>
+     </div>
+ </body>
+ </html>
