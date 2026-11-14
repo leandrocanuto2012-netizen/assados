@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Governança & Auditoria | Assados ERP</title>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <style>
+         body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+         .critica { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+         .alerta { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+         .informativo { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+         .resolvido { opacity: 0.75; }
+     </style>
+ </head>
+ <body class="min-h-screen">
+     <div class="container mx-auto px-4 py-6 max-w-7xl">
+         <!-- Cabeçalho -->
+         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+             <div>
+                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                     <i class="ri-shield-check-line text-indigo-600"></i> Governança de Dados
+                 </h1>
+                 <p class="text-gray-500 mt-1">Auditoria, conformidade e integridade dos dados</p>
+             </div>
+             <div class="mt-4 md:mt-0">
+                 <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
+                     <i class="ri-download-line"></i> Exportar Relatório
+                 </button>
+             </div>
+         </div>
+         <!-- Resumo Geral -->
+         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+             <div class="card p-5">
+                 <p class="text-gray-500 text-sm">Verificações Realizadas</p>
+                 <p class="text-3xl font-bold text-gray-800 mt-1">1.284</p>
+                 <p class="text-xs text-gray-400 mt-1">Últimos 30 dias</p>
+             </div>
+             <div class="card p-5">
+                 <p class="text-gray-500 text-sm">Críticas Pendentes</p>
+                 <p class="text-3xl font-bold text-red-600 mt-1">2</p>
+                 <p class="text-xs text-red-400 mt-1">Requer atenção</p>
+             </div>
+             <div class="card p-5">
+                 <p class="text-gray-500 text-sm">Alertas Ativos</p>
+                 <p class="text-3xl font-bold text-yellow-600 mt-1">5</p>
+                 <p class="text-xs text-yellow-400 mt-1">Acompanhar</p>
+             </div>
+             <div class="card p-5">
+                 <p class="text-gray-500 text-sm">Conformidade Geral</p>
+                 <p class="text-3xl font-bold text-green-600 mt-1">98,2%</p>
+                 <p class="text-xs text-green-400 mt-1">Sistema saudável</p>
+             </div>
+         </div>
+         <!-- Filtros -->
+         <div class="card p-4 mb-6">
+             <div class="flex flex-col md:flex-row gap-4 items-center">
+                 <span class="text-sm font-medium text-gray-600">Filtrar por:</span>
+                 <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1">
+                     <option>Todos os módulos</option>
+                     <option>Contábil</option>
+                     <option>Estoque</option>
+                     <option>Financeiro</option>
+                     <option>Vendas</option>
+                 </select>
+                 <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                     <option>Todas as gravidades</option>
+                     <option>Crítica</option>
+                     <option>Alerta</option>
+                     <option>Informativo</option>
+                 </select>
+                 <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                     <option>Últimos 7 dias</option>
+                     <option>Últimos 30 dias</option>
+                     <option>Este mês</option>
+                     <option>Período personalizado</option>
+                 </select>
+                 <button class="bg-gray-100 px-3 py-2 rounded-lg text-sm hover:bg-gray-200">
+                     <i class="ri-refresh-line"></i> Atualizar
+                 </button>
+             </div>
+         </div>
+         <!-- Lista de Logs -->
+         <h2 class="text-lg font-semibold text-gray-700 mb-4">Registros de Auditoria</h2>
+         <div class="space-y-4">
+             <!-- Crítica 1 -->
+             <div class="card p-5 critica">
+                 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                     <div class="flex-1">
+                         <div class="flex items-center gap-2 mb-2">
+                             <span class="font-bold text-sm uppercase tracking-wide">Crítica</span>
+                             <span class="text-xs bg-black/10 px-2 py-0.5 rounded">Contábil</span>
+                         </div>
+                         <h3 class="font-semibold text-gray-800">Inconsistência no fechamento — Filial Centro</h3>
+                         <p class="text-sm mt-1">Saldo de caixa informado diverge do total de lançamentos em R$ 145,80. Conferência obrigatória antes do próximo lançamento.</p>
+                         <p class="text-xs mt-2 opacity-70">
+                             <i class="ri-time-line"></i> 14/11/2026 — 18:15 • Unidade: Filial Centro • Operador: Sistema Automático
+                         </p>
+                     </div>
+                     <div class="flex flex-col gap-2 shrink-0">
+                         <button class="bg-red-600 text-white text-xs px-3 py-1.5 rounded hover:bg-red-700">
+                             Resolver
+                         </button>
+                         <button class="text-xs text-gray-600 hover:underline">Ver detalhes</button>
+                     </div>
+                 </div>
+             </div>
+             <!-- Crítica 2 -->
+             <div class="card p-5 critica">
+                 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                     <div class="flex-1">
+                         <div class="flex items-center gap-2 mb-2">
+                             <span class="font-bold text-sm uppercase tracking-wide">Crítica</span>
+                             <span class="text-xs bg-black/10 px-2 py-0.5 rounded">Estoque</span>
+                         </div>
+                         <h3 class="font-semibold text-gray-800">Estoque negativo detectado — Produto #P-1045</h3>
+                         <p class="text-sm mt-1">Saída registrada sem saldo disponível. Pode indicar falha no registro de entrada ou perda não contabilizada.</p>
+                         <p class="text-xs mt-2 opacity-70">
+                             <i class="ri-time-line"></i> 14/11/2026 — 16:42 • Unidade: Bacacheri • Operador: Sistema Automático
+                         </p>
+                     </div>
+                     <div class="flex flex-col gap-2 shrink-0">
+                         <button class="bg-red-600 text-white text-xs px-3 py-1.5 rounded hover:bg-red-700">
+                             Resolver
+                         </button>
+                         <button class="text-xs text-gray-600 hover:underline">Ver detalhes</button>
+                     </div>
+                 </div>
+             </div>
+             <!-- Alerta -->
+             <div class="card p-5 alerta">
+                 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                     <div class="flex-1">
+                         <div class="flex items-center gap-2 mb-2">
+                             <span class="font-bold text-sm uppercase tracking-wide">Alerta</span>
+                             <span class="text-xs bg-black/10 px-2 py-0.5 rounded">Financeiro</span>
+                         </div>
+                         <h3 class="font-semibold text-gray-800">Vencimento próximo — 3 contas a pagar</h3>
+                         <p class="text-sm mt-1">Contas de fornecedores vencem nos próximos 4 dias. Valor total: R$ 8.450,00.</p>
+                         <p class="text-xs mt-2 opacity-70">
+                             <i class="ri-time-line"></i> 14/11/2026 — 08:00 • Operador: Sistema Automático
+                         </p>
+                     </div>
+                     <div class="flex flex-col gap-2 shrink-0">
+                         <button class="bg-yellow-500 text-white text-xs px-3 py-1.5 rounded hover:bg-yellow-600">
+                             Visualizar
+                         </button>
+                     </div>
+                 </div>
+             </div>
+             <!-- Informativo / Resolvido -->
+             <div class="card p-5 informativo resolvido">
+                 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                     <div class="flex-1">
+                         <div class="flex items-center gap-2 mb-2">
+                             <span class="font-bold text-sm uppercase tracking-wide">Informativo</span>
+                             <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">✓ Resolvido</span>
+                         </div>
+                         <h3 class="font-semibold text-gray-800">Conferência diária concluída — Filial Centro</h3>
+                         <p class="text-sm mt-1">Fechamento do dia anterior conferido e assinado sem divergências.</p>
+                         <p class="text-xs mt-2 opacity-70">
+                             <i class="ri-time-line"></i> 13/11/2026 — 22:15 • Resolvido por: Maria S.
+                         </p>
+                     </div>
+                     <div class="shrink-0">
+                         <span class="text-xs text-green-600">Concluído</span>
+                     </div>
+                 </div>
+             </div>
+         </div>
+         <!-- Super Senha Acesso -->
+         <div class="mt-8 card p-6 border-t-4 border-indigo-500">
+             <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                 <i class="ri-key-box-line text-indigo-600"></i> Área de Super Administrador
+             </h3>
+             <p class="text-sm text-gray-500 mb-4">Acesso restrito — requer chave de super senha para operações sensíveis.</p>
+             <div class="flex gap-3">
+                 <input type="password" placeholder="Digite a chave de acesso especial" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                 <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                     Desbloquear
+                 </button>
+             </div>
+         </div>
+     </div>
+ </body>
+ </html>
