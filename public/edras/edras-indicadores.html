@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>EDRAS — Indicadores Chave | Assados ERP</title>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+     <style>
+         body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+         .indicador-positivo { color: #16a34a; }
+         .indicador-atencao { color: #eab308; }
+         .indicador-negativo { color: #dc2626; }
+         .card-destaque { border-top: 3px solid #4f46e5; }
+     </style>
+ </head>
+ <body class="min-h-screen">
+     <div class="container mx-auto px-4 py-6 max-w-7xl">
+         <!-- Cabeçalho -->
+         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+             <div>
+                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                     <i class="ri-pulse-line text-indigo-600"></i> EDRAS — Painel de Indicadores
+                 </h1>
+                 <p class="text-gray-500 mt-1">Métricas operacionais, financeiras e de crescimento</p>
+             </div>
+             <div class="mt-4 md:mt-0 flex gap-2">
+                 <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                     <option>Consolidado — Todas Unidades</option>
+                     <option>Filial Centro</option>
+                     <option>Filial Bacacheri</option>
+                 </select>
+                 <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                     <i class="ri-download-line"></i> Exportar
+                 </button>
+             </div>
+         </div>
+         <!-- 🔹 Financeiros -->
+         <div class="mb-8">
+             <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                 <i class="ri-money-dollar-circle-line text-green-600"></i> Financeiros
+             </h2>
+             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                 <div class="card p-5 card-destaque">
+                     <p class="text-sm text-gray-500">Faturamento Mensal</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">R$ 45.000,00</p>
+                     <p class="text-sm indicador-positivo mt-1">↑ 8,2% vs mês anterior</p>
+                 </div>
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Ticket Médio</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">R$ 42,80</p>
+                     <p class="text-sm indicador-positivo mt-1">↑ 3,5%</p>
+                 </div>
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Margem de Contribuição</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">42,3%</p>
+                     <p class="text-sm indicador-atencao mt-1">— Estável</p>
+                 </div>
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Capital de Giro</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">R$ 45.900,00</p>
+                     <p class="text-sm indicador-positivo mt-1">↑ 5,1%</p>
+                 </div>
+             </div>
+         </div>
+         <!-- 🔹 Operacionais -->
+         <div class="mb-8">
+             <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                 <i class="ri-store-2-line text-blue-600"></i> Operacionais
+             </h2>
+             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Pedidos/Dia (média)</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">35</p>
+                     <p class="text-sm indicador-positivo mt-1">↑ 12%</p>
+                 </div>
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Taxa de Conversão</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">28,5%</p>
+                     <p class="text-sm indicador-atencao mt-1">Meta: 30%</p>
+                 </div>
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Tempo Médio Atend.</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">4,2 min</p>
+                     <p class="text-sm indicador-positivo mt-1">↓ 0,8 min</p>
+                 </div>
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Satisfação Cliente</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">4,7/5,0</p>
+                     <p class="text-sm indicador-positivo mt-1">⭐ Acima da média</p>
+                 </div>
+             </div>
+         </div>
+         <!-- 🔹 Estoque & Entregas -->
+         <div class="mb-8">
+             <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                 <i class="ri-package-line text-orange-500"></i> Estoque & Entregas
+             </h2>
+             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Giro de Estoque</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">4,8x/mês</p>
+                     <p class="text-sm indicador-positivo mt-1">Ideal para perecíveis</p>
+                 </div>
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Produtos Sem Movimento</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">8/120</p>
+                     <p class="text-sm indicador-atencao mt-1">6,7% — revisar</p>
+                 </div>
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Taxa Entregue no Prazo</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">96%</p>
+                     <p class="text-sm indicador-positivo mt-1">✓ Excelente</p>
+                 </div>
+                 <div class="card p-5">
+                     <p class="text-sm text-gray-500">Devoluções/Mês</p>
+                     <p class="text-2xl font-bold text-gray-800 mt-1">0,8%</p>
+                     <p class="text-sm indicador-positivo mt-1">↓ 0,3%</p>
+                 </div>
+             </div>
+         </div>
+         <!-- 🔹 Gráficos Lado a Lado -->
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+             <div class="card p-6">
+                 <h3 class="text-base font-semibold text-gray-800 mb-4">Evolução Faturamento (R$ mil)</h3>
+                 <canvas id="faturamentoChart" height="200"></canvas>
+             </div>
+             <div class="card p-6">
+                 <h3 class="text-base font-semibold text-gray-800 mb-4">Distribuição de Custos (%)</h3>
+                 <canvas id="custosChart" height="200"></canvas>
+             </div>
+         </div>
+         <!-- 🔹 Metas Acompanhadas -->
+         <div class="card p-6 mb-6">
+             <h2 class="text-lg font-semibold text-gray-800 mb-4">Metas do Período</h2>
+             <div class="space-y-4">
+                 <div>
+                     <div class="flex justify-between text-sm mb-1">
+                         <span class="font-medium">Faturamento — Filial Centro</span>
+                         <span>R$ 26.800 / R$ 25.000</span>
+                     </div>
+                     <div class="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                         <div class="bg-green-500 h-full rounded-full" style="width: 107%"></div>
+                     </div>
+                     <p class="text-xs text-green-600 mt-1">✓ Meta superada em 7%</p>
+                 </div>
+                 <div>
+                     <div class="flex justify-between text-sm mb-1">
+                         <span class="font-medium">Faturamento — Filial Bacacheri</span>
+                         <span>R$ 18.200 / R$ 20.000</span>
+                     </div>
+                     <div class="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                         <div class="bg-yellow-500 h-full rounded-full" style="width: 91%"></div>
+                     </div>
+                     <p class="text-xs text-yellow-600 mt-1">⚠️ Faltam R$ 1.800 — 9% abaixo da meta</p>
+                 </div>
+                 <div>
+                     <div class="flex justify-between text-sm mb-1">
+                         <span class="font-medium">Margem Líquida Consolidada</span>
+                         <span>18,2% / 15,0%</span>
+                     </div>
+                     <div class="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                         <div class="bg-green-500 h-full rounded-full" style="width: 121%"></div>
+                     </div>
+                     <p class="text-xs text-green-600 mt-1">✓ Meta superada em 3,2 pontos percentuais</p>
+                 </div>
+             </div>
+         </div>
+         <!-- Navegação -->
+         <div class="flex flex-wrap gap-3 justify-between">
+             <a href="edras-comparativo.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 <i class="ri-arrow-left-line"></i> Voltar para Comparativo
+             </a>
+             <span class="text-sm text-gray-500">Módulo de Segurança de Câmeras — em breve 📷</span>
+         </div>
+     </div>
+     <script>
+         new Chart(document.getElementById('faturamentoChart'), {
+             type: 'line',
+             data: {
+                 labels: ['Jul', 'Ago', 'Set', 'Out'],
+                 datasets: [{
+                     label: 'Faturamento',
+                     data: [38, 41, 43, 45],
+                     borderColor: '#4f46e5',
+                     backgroundColor: 'rgba(79,70,229,0.08)',
+                     fill: true,
+                     tension: 0.4
+                 }]
+             },
+             options: { responsive: true, plugins: { legend: { display: false } } }
+         });
+         new Chart(document.getElementById('custosChart'), {
+             type: 'doughnut',
+             data: {
+                 labels: ['CMV', 'Pessoal', 'Aluguel/Utilidades', 'Outros', 'Lucro'],
+                 datasets: [{
+                     data: [42.8, 17.8, 8.3, 12.9, 18.2],
+                     backgroundColor: ['#f97316', '#3b82f6', '#eab308', '#9ca3af', '#22c55e']
+                 }]
+             },
+             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+         });
+     </script>
+ </body>
+ </html>
