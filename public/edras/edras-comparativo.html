@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>EDRAS — Comparativo de Desempenho | Assados ERP</title>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+     <style>
+         body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+         .melhor { color: #16a34a; font-weight: 600; }
+         .pior { color: #dc2626; font-weight: 600; }
+         .igual { color: #6b7280; font-weight: 500; }
+     </style>
+ </head>
+ <body class="min-h-screen">
+     <div class="container mx-auto px-4 py-6 max-w-7xl">
+         <!-- Cabeçalho -->
+         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+             <div>
+                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                     <i class="ri-bar-chart-grouped-line text-indigo-600"></i> EDRAS — Comparativo
+                 </h1>
+                 <p class="text-gray-500 mt-1">Confronto entre unidades e períodos</p>
+             </div>
+             <div class="mt-4 md:mt-0 flex gap-2">
+                 <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                     <option>Filial Centro × Filial Bacacheri</option>
+                     <option>Centro × Período Anterior</option>
+                     <option>Bacacheri × Período Anterior</option>
+                 </select>
+                 <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                     <i class="ri-download-line"></i> PDF
+                 </button>
+             </div>
+         </div>
+         <!-- Tabela Comparativa -->
+         <div class="card p-6 mb-6 overflow-x-auto">
+             <h2 class="text-lg font-semibold text-gray-800 mb-4">Visão Geral — Outubro/2026</h2>
+             <table class="w-full text-sm">
+                 <thead class="bg-gray-50 border-b border-gray-200">
+                     <tr>
+                         <th class="px-4 py-3 text-left font-semibold text-gray-600">Indicador</th>
+                         <th class="px-4 py-3 text-center font-semibold text-blue-600">Centro</th>
+                         <th class="px-4 py-3 text-center font-semibold text-orange-500">Bacacheri</th>
+                         <th class="px-4 py-3 text-center font-semibold text-gray-600">Diferença</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                     <tr class="border-b border-gray-100">
+                         <td class="px-4 py-3 font-medium">Receita Bruta</td>
+                         <td class="px-4 py-3 text-center">R$ 26.800,00</td>
+                         <td class="px-4 py-3 text-center">R$ 18.200,00</td>
+                         <td class="px-4 py-3 text-center melhor">+47,3% ↗</td>
+                     </tr>
+                     <tr class="border-b border-gray-100 bg-gray-50/50">
+                         <td class="px-4 py-3 font-medium">Custos Operacionais</td>
+                         <td class="px-4 py-3 text-center">R$ 11.200,00</td>
+                         <td class="px-4 py-3 text-center">R$ 9.800,00</td>
+                         <td class="px-4 py-3 text-center pior">+14,3%</td>
+                     </tr>
+                     <tr class="border-b border-gray-100">
+                         <td class="px-4 py-3 font-medium">Lucro Bruto</td>
+                         <td class="px-4 py-3 text-center">R$ 15.600,00</td>
+                         <td class="px-4 py-3 text-center">R$ 8.400,00</td>
+                         <td class="px-4 py-3 text-center melhor">+85,7% ↗</td>
+                     </tr>
+                     <tr class="border-b border-gray-100 bg-gray-50/50">
+                         <td class="px-4 py-3 font-medium">Despesas Fixas</td>
+                         <td class="px-4 py-3 text-center">R$ 7.800,00</td>
+                         <td class="px-4 py-3 text-center">R$ 7.200,00</td>
+                         <td class="px-4 py-3 text-center pior">+8,3%</td>
+                     </tr>
+                     <tr class="border-b border-gray-100">
+                         <td class="px-4 py-3 font-medium">Resultado Líquido</td>
+                         <td class="px-4 py-3 text-center font-bold text-green-600">R$ 7.800,00</td>
+                         <td class="px-4 py-3 text-center font-bold text-green-600">R$ 3.900,00</td>
+                         <td class="px-4 py-3 text-center melhor">+100,0% ↗</td>
+                     </tr>
+                     <tr class="border-b border-gray-100 bg-gray-50/50">
+                         <td class="px-4 py-3 font-medium">Margem Líquida</td>
+                         <td class="px-4 py-3 text-center">29,1%</td>
+                         <td class="px-4 py-3 text-center">21,4%</td>
+                         <td class="px-4 py-3 text-center melhor">+7,7 p.p.</td>
+                     </tr>
+                     <tr>
+                         <td class="px-4 py-3 font-medium">ROI Mensal</td>
+                         <td class="px-4 py-3 text-center font-bold">22,4%</td>
+                         <td class="px-4 py-3 text-center font-bold">16,8%</td>
+                         <td class="px-4 py-3 text-center melhor">+5,6 p.p.</td>
+                     </tr>
+                 </tbody>
+             </table>
+         </div>
+         <!-- Gráficos Lado a Lado -->
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+             <div class="card p-5">
+                 <h3 class="text-base font-semibold text-gray-800 mb-3">Receita vs Meta (R$ mil)</h3>
+                 <canvas id="graficoReceita" height="180"></canvas>
+             </div>
+             <div class="card p-5">
+                 <h3 class="text-base font-semibold text-gray-800 mb-3">Estrutura de Custos (%)</h3>
+                 <canvas id="graficoCustos" height="180"></canvas>
+             </div>
+         </div>
+         <!-- Análise Rápida -->
+         <div class="card p-6 border-l-4 border-indigo-500 mb-6">
+             <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                 <i class="ri-lightbulb-flash-line text-indigo-600"></i> Resumo da Análise
+             </h3>
+             <ul class="space-y-2 text-sm text-gray-600">
+                 <li class="flex items-start gap-2">
+                     <i class="ri-check-line text-green-600 mt-0.5"></i>
+                     <strong>Filial Centro</strong> apresenta desempenho superior em receita e margem — volume de vendas 47% maior.
+                 </li>
+                 <li class="flex items-start gap-2">
+                     <i class="ri-alert-line text-yellow-600 mt-0.5"></i>
+                     <strong>Filial Bacacheri</strong> tem custo fixo proporcionalmente maior — representa 39,6% da receita vs 29,1% da Centro. Revisar despesas.
+                 </li>
+                 <li class="flex items-start gap-2">
+                     <i class="ri-line-chart-line text-blue-600 mt-0.5"></i>
+                     Ambas acima da meta de ROI de 15% — Consolidado: <strong class="text-indigo-600">19,62%</strong> ✓
+                 </li>
+             </ul>
+         </div>
+         <!-- Navegação -->
+         <div class="flex flex-wrap gap-3 justify-between">
+             <a href="edras-roi.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 <i class="ri-arrow-left-line"></i> Voltar para ROI
+             </a>
+             <a href="edras-indicadores.html" class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                 Ver Indicadores Chave <i class="ri-arrow-right-line"></i>
+             </a>
+         </div>
+     </div>
+     <script>
+         // Gráfico de Receita
+         new Chart(document.getElementById('graficoReceita'), {
+             type: 'bar',
+             data: {
+                 labels: ['Centro', 'Bacacheri'],
+                 datasets: [
+                     { label: 'Real', data: [26.8, 18.2], backgroundColor: '#4f46e5', borderRadius: 6 },
+                     { label: 'Meta', data: [25.0, 20.0], backgroundColor: '#e5e7eb', borderRadius: 6 }
+                 ]
+             },
+             options: { responsive: true, plugins: { legend: { position: 'bottom' } }, barThickness: 30 }
+         });
+         // Gráfico de Custos
+         new Chart(document.getElementById('graficoCustos'), {
+             type: 'doughnut',
+             data: {
+                 labels: ['Centro — Custo', 'Centro — Despesas', 'Centro — Lucro'],
+                 datasets: [{
+                     data: [41.8, 29.1, 29.1],
+                     backgroundColor: ['#f97316', '#eab308', '#22c55e']
+                 }]
+             },
+             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+         });
+     </script>
+ </body>
+ </html>
