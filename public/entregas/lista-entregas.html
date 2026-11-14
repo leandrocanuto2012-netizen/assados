@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Controle de Entregas | Assados ERP</title>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+     <script src="https://cdn.tailwindcss.com"></script>
+     <style>
+         body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+         .status-pendente { background: #fef3c7; color: #92400e; }
+         .status-rota { background: #dbeafe; color: #1e40af; }
+         .status-entregue { background: #dcfce7; color: #166534; }
+         .status-problema { background: #fee2e2; color: #991b1b; }
+     </style>
+ </head>
+ <body class="min-h-screen">
+     <div class="container mx-auto px-4 py-6 max-w-7xl">
+         <!-- Cabeçalho -->
+         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+             <div>
+                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                     <i class="ri-truck-line text-orange-600"></i> Controle de Entregas
+                 </h1>
+                 <p class="text-gray-500 mt-1">Acompanhamento de pedidos e entregadores</p>
+             </div>
+             <div class="mt-4 md:mt-0 flex gap-2">
+                 <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                     <i class="ri-add-line"></i> Nova Entrega
+                 </button>
+                 <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+                     <i class="ri-filter-3-line"></i> Filtros
+                 </button>
+             </div>
+         </div>
+         <!-- Filtros Rápidos -->
+         <div class="card p-4 mb-6">
+             <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                 <button class="bg-blue-5 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium border-2 border-blue-500">
+                     Todas <span class="ml-1 bg-blue-100 px-2 py-0.5 rounded-full text-xs">24</span>
+                 </button>
+                 <button class="bg-gray-50 text-gray-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100">
+                     Pendentes <span class="ml-1 bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs">8</span>
+                 </button>
+                 <button class="bg-gray-50 text-gray-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100">
+                     Em Rota <span class="ml-1 bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">5</span>
+                 </button>
+                 <button class="bg-gray-50 text-gray-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100">
+                     Entregues <span class="ml-1 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs">10</span>
+                 </button>
+                 <button class="bg-gray-50 text-gray-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100">
+                     Problema <span class="ml-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs">1</span>
+                 </button>
+             </div>
+         </div>
+         <!-- Lista de Entregas -->
+         <div class="space-y-4">
+             <!-- Entrega 1 -->
+             <div class="card p-5 hover:shadow-md transition">
+                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                     <div class="flex-1">
+                         <div class="flex items-center gap-3 mb-2">
+                             <h3 class="font-semibold text-gray-800">#ENT-2026-1145</h3>
+                             <span class="px-2 py-0.5 rounded-full text-xs font-medium status-pendente">Pendente</span>
+                         </div>
+                         <p class="text-sm text-gray-600 mb-1">
+                             <i class="ri-map-pin-line text-gray-400 mr-1"></i>
+                             Av. Paraná, 500 — Apto 302, Centro — Curitiba/PR
+                         </p>
+                         <p class="text-sm text-gray-500">
+                             <i class="ri-user-line text-gray-400 mr-1"></i>
+                             Cliente: Carlos Alberto • Tel: (41) 99999-1234
+                         </p>
+                     </div>
+                     <div class="flex flex-col items-start md:items-end gap-2">
+                         <p class="text-sm font-medium text-gray-700">Até 20:00</p>
+                         <select class="text-sm border border-gray-300 rounded px-2 py-1">
+                             <option>Selecionar entregador</option>
+                             <option>Pedro (Entregador)</option>
+                             <option>Ana (Entregadora)</option>
+                             <option>Marcos (Entregador)</option>
+                         </select>
+                         <div class="flex gap-2 mt-1">
+                             <button class="text-blue-600 hover:text-blue-800 text-sm">
+                                 <i class="ri-eye-line"></i> Ver
+                             </button>
+                             <button class="text-orange-600 hover:text-orange-800 text-sm">
+                                 <i class="ri-edit-line"></i> Editar
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+             <!-- Entrega 2 -->
+             <div class="card p-5 hover:shadow-md transition">
+                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                     <div class="flex-1">
+                         <div class="flex items-center gap-3 mb-2">
+                             <h3 class="font-semibold text-gray-800">#ENT-2026-1144</h3>
+                             <span class="px-2 py-0.5 rounded-full text-xs font-medium status-rota">Em Rota</span>
+                         </div>
+                         <p class="text-sm text-gray-600 mb-1">
+                             <i class="ri-map-pin-line text-gray-400 mr-1"></i>
+                             Rua das Flores, 120 — Casa, Bacacheri — Curitiba/PR
+                         </p>
+                         <p class="text-sm text-gray-500">
+                             <i class="ri-user-line text-gray-400 mr-1"></i>
+                             Cliente: Mariana Costa • Tel: (41) 98888-5678
+                         </p>
+                         <p class="text-sm text-blue-600 mt-1">
+                             <i class="ri-bike-line"></i>
+                             Entregador: Pedro Silva • Saída: 18:32
+                         </p>
+                     </div>
+                     <div class="flex flex-col items-start md:items-end gap-2">
+                         <p class="text-sm font-medium text-green-600">Previsto: 19:15</p>
+                         <div class="flex gap-2 mt-1">
+                             <button class="text-blue-600 hover:text-blue-800 text-sm">
+                                 <i class="ri-map-pin-2-line"></i> Rastrear
+                             </button>
+                             <button class="text-green-600 hover:text-green-800 text-sm">
+                                 <i class="ri-check-line"></i> Concluir
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+             <!-- Entrega 3 -->
+             <div class="card p-5 hover:shadow-md transition">
+                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                     <div class="flex-1">
+                         <div class="flex items-center gap-3 mb-2">
+                             <h3 class="font-semibold text-gray-800">#ENT-2026-1143</h3>
+                             <span class="px-2 py-0.5 rounded-full text-xs font-medium status-entregue">Entregue</span>
+                         </div>
+                         <p class="text-sm text-gray-600 mb-1">
+                             <i class="ri-map-pin-line text-gray-400 mr-1"></i>
+                             Av. Sete de Setembro, 3000 — Loja, Centro — Curitiba/PR
+                         </p>
+                         <p class="text-sm text-green-600">
+                             <i class="ri-check-double-line"></i>
+                             Entregue hoje às 17:45 • Assinatura recebida
+                         </p>
+                     </div>
+                     <div class="flex flex-col items-start md:items-end gap-2">
+                         <p class="text-sm text-gray-500">Entregue por: Ana Carolina</p>
+                         <button class="text-gray-600 hover:text-gray-800 text-sm">
+                             <i class="ri-file-text-line"></i> Comprovante
+                         </button>
+                     </div>
+                 </div>
+             </div>
+         </div>
+         <!-- Resumo -->
+         <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+             <div class="card p-4 text-center">
+                 <p class="text-gray-500 text-sm">Pendentes</p>
+                 <p class="text-2xl font-bold text-yellow-600">8</p>
+             </div>
+             <div class="card p-4 text-center">
+                 <p class="text-gray-500 text-sm">Em Rota</p>
+                 <p class="text-2xl font-bold text-blue-600">5</p>
+             </div>
+             <div class="card p-4 text-center">
+                 <p class="text-gray-500 text-sm">Entregues Hoje</p>
+                 <p class="text-2xl font-bold text-green-600">10</p>
+             </div>
+             <div class="card p-4 text-center">
+                 <p class="text-gray-500 text-sm">Taxa Sucesso</p>
+                 <p class="text-2xl font-bold text-gray-800">96%</p>
+             </div>
+         </div>
+     </div>
+ </body>
+ </html>
