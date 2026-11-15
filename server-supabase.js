@@ -236,7 +236,7 @@ function setBackupSettings(payload = {}) {
     destino: payload.destino || cfg.destino || 'local',
     intervalo_horas: Number(payload.intervalo_horas || cfg.intervalo_horas || 24),
     retencao: Number(payload.retencao || cfg.retencao || 7),
-    atualizado_em: agora()
+    atualizado_em: agora()ncao || cfg.retencao || 7),
   };
   DB.backup_settings = [{ ...dados, id: 1 }];
   saveDB();
@@ -3122,5 +3122,5 @@ app.use('/api/contabil', contabilRoutes);
 app.use('/api/edras', edrasRoutes);
 app.use('/api/unidades', unidadesRoutes);
 app.use('/api/auditoria', auditoriaRoutes);
-  
 })();
+module.exports = { supabase };
