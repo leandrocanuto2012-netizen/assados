@@ -1,6 +1,6 @@
 const express = require('express');
  const router = express.Router();
- const { supabase } = require('../supabase-client');
+ const { supabase } = require('../server-supabase.js');
  const { verificarSessao, verificarUnidade } = require('../middleware/auth');
  // 📊 DRE Mensal
  router.get('/dre/:idUnidade/:mes', verificarSessao, verificarUnidade, async (req, res) => {
