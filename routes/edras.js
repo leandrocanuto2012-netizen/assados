@@ -1,6 +1,6 @@
 const express = require('express');
  const router = express.Router();
- const { supabase } = require('../supabase-client');
+ const { supabase } = require('../server-supabase');
  const { verificarSessao, verificarUnidade } = require('../middleware/auth');
  // 📈 Indicadores EDRAS — Único/Mês
  router.get('/indicadores/:idUnidade/:mes', verificarSessao, verificarUnidade, async (req, res) => {
