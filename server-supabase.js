@@ -236,7 +236,7 @@ function setBackupSettings(payload = {}) {
     destino: payload.destino || cfg.destino || 'local',
     intervalo_horas: Number(payload.intervalo_horas || cfg.intervalo_horas || 24),
     atualizado_em: new Date(),
-    retencao: Number(payload.retencao || cfg.retencao || 7);
+    retencao: Number(payload.retencao || cfg.retencao || 7)
   };
   DB.backup_settings = [{ ...dados, id: 1 }];
   saveDB();
