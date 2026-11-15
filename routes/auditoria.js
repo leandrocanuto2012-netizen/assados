@@ -1,6 +1,6 @@
 const express = require('express');
  const router = express.Router();
- const { supabase } = require('../server-supabase');
+ const { supabase } = require('../server-supabase.js');
  const { verificarSessao } = require('../middleware/auth');
  // 🔒 Verificar Super Senha
  router.post('/super-login', async (req, res) => {
