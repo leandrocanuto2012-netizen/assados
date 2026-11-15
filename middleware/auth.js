@@ -1,4 +1,4 @@
-const { supabase } = require('../supabase-client');
+const { supabase } = require('../server-supabase.js');
   // MIDDLEWARE: VERIFICAR SESSÃO DO USUÁRIO
  const verificarSessao = async (req, res, next) => {
    const token = req.headers.authorization?.replace('Bearer ', '');
