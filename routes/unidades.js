@@ -1,6 +1,6 @@
 const express = require('express');
  const router = express.Router();
- const { supabase } = require('../supabase-client');
+ const { supabase } = require('../server-supabase');
  const { verificarSessao } = require('../middleware/auth');
  // 📋 Listar Todas Unidades
  router.get('/', verificarSessao, async (req, res) => {
