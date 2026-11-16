@@ -6,7 +6,7 @@
 <title>Login - Assados Nobre ERP</title>
 <link rel="icon" type="image/png" href="/icons/nobre_premium_moderno.png">
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Importando o SDK oficial do Supabase -->
+<!-- SDK do Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Quicksand',sans-serif}
@@ -37,7 +37,7 @@ input:focus{border-color:#d4a72c}
   <p class="sub">Acesso da equipe</p>
   
   <label>E-mail ou Matrícula</label>
-  <input id="mat" placeholder="seu-email@dominio.com ou matrícula" value="" autocomplete="username">
+  <input id="mat" placeholder="Ex: seu-email@exemplo.com" value="" autocomplete="username">
   
   <label>Senha</label>
   <div class="senha-wrap">
@@ -48,20 +48,20 @@ input:focus{border-color:#d4a72c}
   <button class="btn-entrar" id="btnEntrar" onclick="fazerLogin()">Entrar</button>
   <div id="error"></div>
   <div id="ok"></div>
-  <div class="hint">Conectado diretamente ao Supabase Auth.</div>
+  <div class="hint">Autenticação direta via Supabase JS Client no navegador.</div>
   <a class="link-voltar" href="/site.html">← Voltar para a loja</a>
   <button onclick="sair()" style="margin-top:10px;background:none;border:none;color:#999;font-size:11px;cursor:pointer;width:100%">Limpar sessão e tentar novamente</button>
 </div>
 
 <script>
-// Inicialize aqui com suas credenciais públicas do Supabase (mesmas do projeto)
-const SUPABASE_URL = 'SUA_SUPABASE_URL_AQUI'; 
+// Coloque aqui suas credenciais reais do Supabase
+const SUPABASE_URL = 'SUA_SUPABASE_URL_AQUI';
 const SUPABASE_ANON_KEY = 'SUA_SUPABASE_ANON_KEY_AQUI';
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function sair(){
-  supabaseClient.auth.signOut().catch(()=>{});
+  supabase.auth.signOut().catch(()=>{});
   localStorage.removeItem('erp_user');
   localStorage.removeItem('erp_token');
   localStorage.removeItem('token');
@@ -70,7 +70,7 @@ function sair(){
 }
 
 async function fazerLogin(){
-  const loginInput = document.getElementById('mat').value.trim();
+  const inputVal = document.getElementById('mat').value.trim();
   const senha = document.getElementById('sen').value.trim();
   const err = document.getElementById('error');
   const ok = document.getElementById('ok');
@@ -79,47 +79,47 @@ async function fazerLogin(){
   err.textContent = ''; 
   ok.textContent = '';
   
-  if(!loginInput || !senha){ 
-    err.textContent = 'Informe o e-mail/matrícula e a senha.'; 
+  if(!inputVal || !senha){ 
+    err.textContent = 'Informe o e-mail e a senha.'; 
     return; 
   }
   
   btn.disabled = true; 
   btn.textContent = 'Entrando...';
+  err.textContent = 'Autenticando no Supabase...';
   
   try {
-    // Se o usuário digitou uma matrícula em vez de e-mail, você pode mapear aqui 
-    // ou garantir que o campo receba o e-mail de acesso do Supabase Auth.
-    let emailParaLogar = loginInput;
-    if(!emailParaLogar.includes('@')) {
-      // Exemplo de fallback caso use matrícula: busca o e-mail na tabela de operadores/funcionarios
-      // Ou configure para o usuário digitar o e-mail diretamente no campo.
-      emailParaLogar = loginInput + '@casadeassados.com'; 
+    // Se o usuário digitou matrícula em vez de email, você pode ajustar aqui se necessário
+    let email = inputVal;
+    if(!email.includes('@')) {
+      email = inputVal + '@casadeassados.com'; // Ajuste conforme seu padrão de e-mail no auth
     }
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: emailParaLogar,
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
       password: senha,
     });
 
     if (error) throw error;
 
-    if (data.session && data.user) {
+    if (data.session) {
       localStorage.setItem('erp_user', JSON.stringify(data.user));
       localStorage.setItem('erp_token', data.session.access_token);
       localStorage.setItem('token', data.session.access_token);
       
       ok.textContent = 'Login OK! Indo para o dashboard...';
+      err.textContent = '';
       setTimeout(() => { 
-        location.href = 'dashboard.html'; 
+        location.href = '/dashboard.html'; 
       }, 600);
     } else {
-      throw new Error('Sessão não retornada pelo Supabase.');
+      throw new Error('Sessão não retornada.');
     }
 
   } catch(e) {
     console.error('Erro no login:', e);
-    err.textContent = 'Erro ao entrar: ' + (e.message || 'Credenciais inválidas');
+    err.textContent = 'Erro: ' + (e.message || 'Credenciais inválidas');
+    ok.textContent = '';
     btn.disabled = false; 
     btn.textContent = 'Entrar';
   }
