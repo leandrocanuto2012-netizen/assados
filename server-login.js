@@ -3,7 +3,6 @@ const express = require('express');
  const path = require('path');
  const crypto = require('crypto');
  const cookieParser = require('cookie-parser');
- const { createClient } = require('@supabase/supabase-js');
  const app = express();
  const PORT = process.env.PORT || 8080;
  app.use(cors());
