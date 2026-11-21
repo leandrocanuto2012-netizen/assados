@@ -184,9 +184,4 @@ const express = require('express');
    res.clearCookie('assados_session');
    res.json({ sucesso: true });
  });
- app.listen(PORT, () => {
-   console.log(`✅ Servidor rodando na porta ${PORT}`);
-   console.log(`🔒 Máximo de tentativas: ${LOGIN_MAX_ATTEMPTS}`);
-   console.log(`📱 WhatsApp Admin: ${ADMIN1_WHATSAPP}`);
-   console.log(`🗄️ Conectado ao Supabase`);
- });
+ 
