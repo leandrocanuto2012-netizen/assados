@@ -3122,5 +3122,17 @@ app.use('/api/contabil', contabilRoutes);
 app.use('/api/edras', edrasRoutes);
 app.use('/api/unidades', unidadesRoutes);
 app.use('/api/auditoria', auditoriaRoutes);
-})();
+// ✅ Disponibilizar conexão do Supabase para os módulos
+app.set('supabase', supabase);
+
+// ✅ Importar e usar rotas de login (sem criar servidor novo)
+const loginRotas = require('./server-login.js');
+app.use('/', loginRotas);  
+})
+  
+  ();
 module.exports = { supabase };
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`✅ Servidor rodando na porta ${PORT}`);
+});
