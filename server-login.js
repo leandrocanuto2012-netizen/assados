@@ -1,6 +1,5 @@
 const express = require('express');
  const cors = require('cors');
- const fs = require('fs');
  const path = require('path');
  const crypto = require('crypto');
  const cookieParser = require('cookie-parser');
@@ -130,4 +129,64 @@ const express = require('express');
      
      await supabase
        .from('funcionarios')
-       .update({ tentativas_login: novasTentat
+       .update({ tentativas_login: novasTentativas })
+       .eq('id', usuario.id);
+     
+     return res.status(401).json({
+       erro: `Senha incorreta. Tentativas restantes: ${LOGIN_MAX_ATTEMPTS - novasTentativas}`
+     });
+     
+   } catch (erro) {
+     console.error('Erro no login:', erro);
+     res.status(500).json({ erro: 'Erro interno. Tente novamente.' });
+   }
+ });
+ // 🔓 ROTA DE DESBLOQUEIO MANUAL
+ app.post('/api/admin/desbloquear', async (req, res) => {
+   try {
+     const { id_usuario, senha_admin } = req.body;
+     
+     // Buscar admin
+     const { data: admin, error: erroAdmin } = await supabase
+       .from('funcionarios')
+       .select('*')
+       .eq('matricula', ADMIN1_MATRICULA)
+       .single();
+     
+     if (erroAdmin || !admin || admin.ativo !== true) {
+       return res.status(403).json({ erro: 'Sem permissão.' });
+     }
+     
+     // ✅ Verificar senha do admin
+     const senhaAdminCorreta = senha_admin === 'admin123';
+     if (!senhaAdminCorreta) {
+       return res.status(403).json({ erro: 'Senha de administrador incorreta.' });
+     }
+     
+     // ✅ Desbloquear o usuário
+     const { error } = await supabase
+       .from('funcionarios')
+       .update({ bloqueado: false, tentativas_login: 0 })
+       .eq('id', parseInt(id_usuario));
+     
+     if (error) {
+       return res.status(404).json({ erro: 'Usuário não encontrado.' });
+     }
+     
+     res.json({ sucesso: true, mensagem: 'Usuário desbloqueado com sucesso!' });
+     
+   } catch {
+     res.status(500).json({ erro: 'Erro ao desbloquear.' });
+   }
+ });
+ // 🚪 LOGOUT
+ app.post('/api/logout', (req, res) => {
+   res.clearCookie('assados_session');
+   res.json({ sucesso: true });
+ });
+ app.listen(PORT, () => {
+   console.log(`✅ Servidor rodando na porta ${PORT}`);
+   console.log(`🔒 Máximo de tentativas: ${LOGIN_MAX_ATTEMPTS}`);
+   console.log(`📱 WhatsApp Admin: ${ADMIN1_WHATSAPP}`);
+   console.log(`🗄️ Conectado ao Supabase`);
+ });
