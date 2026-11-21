@@ -16,7 +16,112 @@ const LOGIN_MAX_ATTEMPTS = 5;
 const ADMIN1_MATRICULA = "SV-2026-0001";
 const ADMIN1_WHATSAPP = "5541999999999"; // SEU NÚMERO COM DDD — ALTERE AQUI
 const DATA_FILE = path.join(__dirname, 'data.json');
+// ==========================================
+ // VALIDA FORÇA DA SENHA
+ // ==========================================
+ function validarSenha(senha) {
+     const erros = [];
+     
+     // Mínimo 6 números
+     const numeros = senha.match(/\d/g) || [];
+     if (numeros.length < 6) erros.push("mínimo 6 números");
+     
+     // Pelo menos 2 letras
+     const letras = senha.match(/[a-zA-Z]/g) || [];
+     if (letras.length < 2) erros.push("mínimo 2 letras");
+     
+     // Pelo menos 1 maiúscula
+     if (!/[A-Z]/.test(senha)) erros.push("1 letra maiúscula");
+     
+     // Pelo menos 1 minúscula
+     if (!/[a-z]/.test(senha)) erros.push("1 letra minúscula");
+     
+     // Pelo menos 1 caractere especial
+     if (!/[!@#$%&*?]/.test(senha)) erros.push("1 caractere especial (!@#$%&*?)");
+     
+     if (erros.length === 0) return { valida: true };
+     return { valida: false, mensagem: "A senha precisa de: " + erros.join(", ") };
+ }
+// ==========================================
+// PERMISSÃO DE RESET DE SENHA
+// ==========================================
+const ADMIN_MATRICULA = "SV-2026-0001";
+const ADMIN_CELULAR = "+5541984865913";
 
+function podeResetarSenha(matricula) {
+    // SÓ o admin mestre pode resetar
+    if (matricula === ADMIN_MATRICULA) {
+        return { permitido: true, celular: ADMIN_CELULAR };
+    }
+    return { 
+        permitido: false, 
+        mensagem: "Usuário não permite reset de senha. Contate o administrador."
+    };
+}
+// ==========================================
+ // VERIFICA SE PRECISA TROCAR SENHA
+ // ==========================================
+ function precisaTrocarSenha(usuario) {
+     // Se senha atual é 123 → OBRIGA troca
+     return usuario.senha_temporaria === true;
+ }
+ function processarTrocaSenha(usuario, senhaNova, senhaRepetida) {
+     // 1. Verifica se são iguais
+     if (senhaNova !== senhaRepetida) {
+         return { sucesso: false, mensagem: "As senhas não coincidem. Tente novamente." };
+     }
+     
+     // 2. Valida regras da senha
+     const validacao = validarSenha(senhaNova);
+     if (!validacao.valida) {
+         return { sucesso: false, mensagem: validacao.mensagem };
+     }
+     
+     // 3. Tudo certo → salva nova senha
+     usuario.senha_hash = hashSenha(senhaNova);
+     usuario.senha_temporaria = false; // libera acesso
+     
+     return { sucesso: true, mensagem: "Senha alterada com sucesso!" };
+ }
+// ==========================================
+ // FLUXO DE RESET DE SENHA
+ // ==========================================
+ async function solicitarResetSenha(matricula) {
+     // Verifica permissão
+     const permissao = podeResetarSenha(matricula);
+     if (!permissao.permitido) {
+         return { sucesso: false, mensagem: permissao.mensagem };
+     }
+     
+     // Gera código de confirmação
+     const codigoConfirmacao = gerarCodigo();
+     
+     // Salva solicitação pendente
+     salvarPendenciaReset(matricula, codigoConfirmacao);
+     
+     // Envia SMS
+     await enviarSMS(permissao.celular, 
+         `Seu pedido de reset de senha foi recebido. Responda SIM para confirmar.`);
+     
+     return { sucesso: true, mensagem: "SMS enviado. Confirme respondendo SIM." };
+ }
+ async function confirmarResetSenha(matricula, resposta) {
+     // Verifica se resposta é SIM
+     if (resposta.trim().toUpperCase() !== "SIM") {
+         return { sucesso: false, mensagem: "Reset cancelado." };
+     }
+     
+     // Reseta senha para 123 temporariamente
+     const usuario = buscarUsuario(matricula);
+     usuario.senha_hash = hashSenha("123");
+     usuario.senha_temporaria = true; // força troca no próximo login
+     
+     // Envia SMS de confirmação
+     await enviarSMS(ADMIN_CELULAR,
+         "Senha resetada com sucesso. Use 123 e cadastre uma nova agora.");
+     
+     return { sucesso: true, mensagem: "Senha resetada. Use 123 para entrar e cadastre uma nova." };
+ }
 // 🔐 Funções de senha
 async function hashSenha(senha) {
   return new Promise((resolve) => {
