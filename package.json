@@ -1,18 +1,23 @@
 {
-   "name": "assados-nobre-erp",
-   "version": "1.0.0",
-   "description": "Assados Nobre — Sistema de Gestão Comercial",
-   "main": "server-login.js",
-   "scripts": {
-     "start": "node server-login.js",
-     "dev": "nodemon server-login.js"
-   },
-   "dependencies": {
-     "cookie-parser": "^1.4.7",
-     "cors": "^2.8.5",
-     "express": "^4.19.2"
-   },
-   "keywords": ["erp", "login", "assados-nobre"],
-   "author": "Assados Nobre",
-   "license": "MIT"
- }
+  "name": "assados-nobre-erp",
+  "version": "1.0.0",
+  "description": "Assados Nobre — Sistema de Gestão Comercial",
+  "main": "server-supabase.js",
+  "scripts": {
+    "start": "node server-supabase.js",
+    "dev": "node server-supabase.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "docx": "^9.0.0",
+    "express": "^4.19.2",
+    "node-localstorage": "^3.0.5",
+    "nodemailer": "^6.9.0",
+    "xlsx": "^0.18.5"
+  },
+  "keywords": ["erp", "assados-nobre"],
+  "author": "Assados Nobre",
+  "license": "MIT"
+}
