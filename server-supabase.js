@@ -3119,3 +3119,4 @@ app.use('/api/auditoria', auditoriaRoutes);
 
 app.set('supabase', supabase);
 module.exports = { supabase };
+})();
