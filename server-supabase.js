@@ -1330,40 +1330,75 @@ app.get('/api/gerente/relatorio-vendas', (req, res) => {
 });
 
 // ===== SITE (página pública com chatbot para celular) =====
-app.get('/api/site/produtos', (req, res) => res.json({ produtos: (DB.produtos || []).filter(p => p.categoria !== 'Insumos' && p.status === 'ATIVO') }));
+app.get('/api/site/produtos', (req, res) => {
+  const produtos = (DB.produtos || []).filter(
+    p => p.categoria !== 'Insumos' && p.status === 'ATIVO'
+  );
+  res.json({ produtos });
+});
+
 const CONFIG_SITE_PADRAO = {
-  nomeLoja: 'Assados Nobre', titulo: 'Seu sabor favorito, no conforto da sua casa',
-  descricao: 'Faça seu pedido online e receba com praticidade.', corPrincipal: '#a63b25', corFundo: '#fffaf5',
-  logo: '', imagemDestaque: '', animacao: 'suave', promocaoAtiva: false, promocaoTitulo: 'Oferta relâmpago',
-  promocaoTexto: '', cupomAtivo: false, cupomCodigo: 'BEMVINDO', cupomDesconto: 10, taxaEntrega: 0,
-  instagram: '', facebook: '', whatsapp: ''
+  nomeLoja: 'Assados Nobre',
+  titulo: 'Seu sabor favorito, no conforto da sua casa',
+  descricao: 'Faça seu pedido online e receba com praticidade.',
+  corPrincipal: '#a63b25',
+  corFundo: '#fffaf5',
+  logo: '',
+  imagemDestaque: '',
+  animacao: 'suave',
+  promocaoAtiva: false,
+  promocaoTitulo: 'Oferta relâmpago',
+  promocaoTexto: '',
+  cupomAtivo: false,
+  cupomCodigo: 'BEMVINDO',
+  cupomDesconto: 10,
+  taxaEntrega: 0,
+  instagram: '',
+  facebook: '',
+  whatsapp: ''
 };
-function lerConfigSite(){
+
+function lerConfigSite() {
   const registro = (DB.bot_config || []).find(x => x.nome === 'site_config');
-  try { return { ...CONFIG_SITE_PADRAO, ...(registro ? JSON.parse(registro.valor || '{}') : {}) }; }
-  catch { return { ...CONFIG_SITE_PADRAO }; }
+  try {
+    return { ...CONFIG_SITE_PADRAO, ...(registro ? JSON.parse(registro.valor || '{}') : {}) };
+  } catch {
+    return { ...CONFIG_SITE_PADRAO };
+  }
 }
-function textoSite(valor, max = 180){ return String(valor == null ? '' : valor).trim().slice(0, max); }
-function urlSite(valor){
+
+function textoSite(valor, max = 180) {
+  return String(valor == null ? '' : valor).trim().slice(0, max);
+}
+
+function urlSite(valor) {
   const url = textoSite(valor, 1000);
   if (!url) return '';
-  try { const parsed = new URL(url); return ['https:', 'http:'].includes(parsed.protocol) ? url : ''; }
-  catch { return ''; }
+  try {
+    const parsed = new URL(url);
+    return ['https:', 'http:'].includes(parsed.protocol) ? url : '';
+  } catch {
+    return '';
+  }
 }
-function imagemSite(valor){
+
+function imagemSite(valor) {
   const imagem = String(valor || '');
   if (imagem.length > 6 * 1024 * 1024) return '';
   return /^data:image\/(png|jpeg|webp|gif);base64,[a-z0-9+/=]+$/i.test(imagem) ? imagem : urlSite(imagem);
 }
-function normalizarConfigSite(input = {}){
+
+function normalizarConfigSite(input = {}) {
   const padrao = CONFIG_SITE_PADRAO;
-  const cor = (v, fallback) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v) : fallback;
+  const cor = (v, fallback) => (/^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v) : fallback);
   return {
     nomeLoja: textoSite(input.nomeLoja, 80) || padrao.nomeLoja,
     titulo: textoSite(input.titulo, 120) || padrao.titulo,
     descricao: textoSite(input.descricao, 300),
-    corPrincipal: cor(input.corPrincipal, padrao.corPrincipal), corFundo: cor(input.corFundo, padrao.corFundo),
-    logo: imagemSite(input.logo), imagemDestaque: imagemSite(input.imagemDestaque),
+    corPrincipal: cor(input.corPrincipal, padrao.corPrincipal),
+    corFundo: cor(input.corFundo, padrao.corFundo),
+    logo: imagemSite(input.logo),
+    imagemDestaque: imagemSite(input.imagemDestaque),
     animacao: ['suave', 'brilho', 'nenhuma'].includes(input.animacao) ? input.animacao : 'suave',
     promocaoAtiva: input.promocaoAtiva === true || input.promocaoAtiva === 'true',
     promocaoTitulo: textoSite(input.promocaoTitulo, 80) || padrao.promocaoTitulo,
@@ -1372,43 +1407,103 @@ function normalizarConfigSite(input = {}){
     cupomCodigo: textoSite(input.cupomCodigo, 24).toUpperCase().replace(/[^A-Z0-9_-]/g, ''),
     cupomDesconto: Math.max(0, Math.min(80, Number(input.cupomDesconto) || 0)),
     taxaEntrega: Math.max(0, Math.min(500, Number(input.taxaEntrega) || 0)),
-    instagram: urlSite(input.instagram), facebook: urlSite(input.facebook),
+    instagram: urlSite(input.instagram),
+    facebook: urlSite(input.facebook),
     whatsapp: textoSite(input.whatsapp, 30).replace(/[^0-9+]/g, '')
   };
 }
-function cadastrarClienteDoPedido(pedido){
+
+function cadastrarClienteDoPedido(pedido) {
   DB.clientes = DB.clientes || [];
   DB.fidelidade = DB.fidelidade || [];
   const telefone = String(pedido.telefone || '').replace(/\D/g, '');
   let cliente = DB.clientes.find(c => String(c.telefone || '').replace(/\D/g, '') === telefone);
   if (!cliente) {
-    cliente = { id: nextId('clientes'), nome: pedido.cliente_nome, cpf_cnpj: '', telefone: pedido.telefone, email: pedido.email || '', ativo: true, pontos_disponiveis: 0, valor_total_gasto: 0, data_cadastro: hoje(), origem: 'site' };
+    cliente = {
+      id: nextId('clientes'),
+      nome: pedido.cliente_nome,
+      cpf_cnpj: '',
+      telefone: pedido.telefone,
+      email: pedido.email || '',
+      ativo: true,
+      pontos_disponiveis: 0,
+      valor_total_gasto: 0,
+      data_cadastro: hoje(),
+      origem: 'site'
+    };
     DB.clientes.push(cliente);
   } else {
     cliente.nome = pedido.cliente_nome || cliente.nome;
     cliente.email = pedido.email || cliente.email || '';
   }
-  if (!DB.fidelidade.some(f => f.cliente_id == cliente.id)) DB.fidelidade.push({ id: nextId('fidelidade'), cliente_id: cliente.id, pontos_total: 0, pontos_disponiveis: 0, pontos_resgatados: 0, valor_total_gasto: 0, atualizado_em: agora() });
+  if (!DB.fidelidade.some(f => f.cliente_id == cliente.id)) {
+    DB.fidelidade.push({
+      id: nextId('fidelidade'),
+      cliente_id: cliente.id,
+      pontos_total: 0,
+      pontos_disponiveis: 0,
+      pontos_resgatados: 0,
+      valor_total_gasto: 0,
+      atualizado_em: agora()
+    });
+  }
   return cliente;
 }
-function gerarEntregaPedidoSite(pedido){
+
+function gerarEntregaPedidoSite(pedido) {
   DB.logistica = DB.logistica || [];
-  const entrega = { id: nextId('logistica'), tipo: 'ENTREGA_SITE', origem: 'site', pedido_site_id: pedido.id, produto_nome: `Pedido site #${pedido.id} - ${(pedido.itens || []).map(i => i.nome).join(', ')}`, qty: (pedido.itens || []).reduce((s, i) => s + Number(i.quantidade || 0), 0), destino: pedido.endereco, motorista: 'A definir', placa: '-', status: 'AGUARDANDO_DESPACHO', created_at: agora() };
+  const entrega = {
+    id: nextId('logistica'),
+    tipo: 'ENTREGA_SITE',
+    origem: 'site',
+    pedido_site_id: pedido.id,
+    produto_nome: `Pedido site #${pedido.id} - ${(pedido.itens || []).map(i => i.nome).join(', ')}`,
+    qty: (pedido.itens || []).reduce((s, i) => s + Number(i.quantidade || 0), 0),
+    destino: pedido.endereco,
+    motorista: 'A definir',
+    placa: '-',
+    status: 'AGUARDANDO_DESPACHO',
+    created_at: agora()
+  };
   DB.logistica.push(entrega);
   pedido.entrega_id = entrega.id;
 }
-function registrarVendaPedidoSite(pedido){
+
+function registrarVendaPedidoSite(pedido) {
   const unidadeId = (pedido.itens || [])[0]?.unidade_id || 1;
   const caixa = (DB.caixas || []).find(c => c.status === 'aberto' && c.unidade_id == unidadeId);
   const tesouraria = (DB.tesouraria || []).find(t => t.status === 'aberta' && t.data === hoje() && t.unidade_id == unidadeId);
-  if (!caixa || !tesouraria) return { sucesso: false, erro: 'Abra a tesouraria e o caixa da unidade antes de marcar o pedido como entregue.' };
+  if (!caixa || !tesouraria) {
+    return { sucesso: false, erro: 'Abra a tesouraria e o caixa da unidade antes de marcar o pedido como entregue.' };
+  }
   for (const item of pedido.itens || []) {
     const estoque = (DB.estoque || []).find(e => e.produto_id == item.produto_id && e.unidade_id == (item.unidade_id || 1));
-    if (estoque && Number(estoque.qty) < Number(item.quantidade)) return { sucesso: false, erro: `Estoque insuficiente para ${item.nome}.` };
+    if (estoque && Number(estoque.qty) < Number(item.quantidade)) {
+      return { sucesso: false, erro: `Estoque insuficiente para ${item.nome}.` };
+    }
   }
   DB.vendas = DB.vendas || [];
   const total = Number(pedido.total || 0);
-  const venda = { id: nextId('vendas'), data: agora(), cliente_id: pedido.cliente_id, cliente_nome: pedido.cliente_nome, forma_pagamento: pedido.forma_pagamento || 'A_COMBINAR', origem: 'site', total, itens: (pedido.itens || []).map(i => ({ product_id: i.produto_id, nome: i.nome, qty: i.quantidade, preco: i.preco_unitario, total: i.total })), status: 'CONCLUIDA', operador_matricula: 'SITE', pedido_site_id: pedido.id, tipo_entrega: pedido.tipo_entrega };
+  const venda = {
+    id: nextId('vendas'),
+    data: agora(),
+    cliente_id: pedido.cliente_id,
+    cliente_nome: pedido.cliente_nome,
+    forma_pagamento: pedido.forma_pagamento || 'A_COMBINAR',
+    origem: 'site',
+    total,
+    itens: (pedido.itens || []).map(i => ({
+      product_id: i.produto_id,
+      nome: i.nome,
+      qty: i.quantidade,
+      preco: i.preco_unitario,
+      total: i.total
+    })),
+    status: 'CONCLUIDA',
+    operador_matricula: 'SITE',
+    pedido_site_id: pedido.id,
+    tipo_entrega: pedido.tipo_entrega
+  };
   for (const item of pedido.itens || []) {
     const estoque = (DB.estoque || []).find(e => e.produto_id == item.produto_id && e.unidade_id == (item.unidade_id || 1));
     if (estoque) estoque.qty = Number(estoque.qty) - Number(item.quantidade);
@@ -1416,7 +1511,15 @@ function registrarVendaPedidoSite(pedido){
   caixa.saldo_atual = Number(caixa.saldo_atual || 0) + total;
   tesouraria.saldo_atual = Number(tesouraria.saldo_atual || 0) + total;
   DB.mov_caixa = DB.mov_caixa || [];
-  DB.mov_caixa.push({ id: nextId('mov_caixa'), tipo: 'VENDA', valor: total, descricao: `Venda site #${pedido.id}`, origem: 'site', created_at: agora(), responsavel: 'SITE' });
+  DB.mov_caixa.push({
+    id: nextId('mov_caixa'),
+    tipo: 'VENDA',
+    valor: total,
+    descricao: `Venda site #${pedido.id}`,
+    origem: 'site',
+    created_at: agora(),
+    responsavel: 'SITE'
+  });
   const fidelidade = (DB.fidelidade || []).find(f => f.cliente_id == pedido.cliente_id);
   if (fidelidade) {
     const pontos = Math.floor(total);
@@ -1432,75 +1535,151 @@ function registrarVendaPedidoSite(pedido){
   if (entrega) entrega.status = 'CONCLUIDO';
   return { sucesso: true };
 }
+
 app.get('/api/site/config', (req, res) => res.json({ config: lerConfigSite() }));
+
 app.post('/api/site/config', (req, res) => {
-  const matricula = textoSite(req.body?.usuario?.matricula, 100);
+  const authUser = req.body?.__authFuncionario || null;
+  const matricula = textoSite(req.body?.usuario?.matricula || authUser?.matricula, 100);
   const senha = String(req.body?.senha_usuario || '');
-  const funcionario = (DB.funcionarios || []).find(f => f.matricula === matricula && f.status !== 'INATIVO');
-  if (!funcionario || !verificarSenha(funcionario.senha_hash, senha)) return res.status(401).json({ sucesso: false, erro: 'Confirme sua senha para salvar as alterações.' });
-  if (funcionario.role !== 'admin' && funcionario.unidade_tipo !== 'matriz') return res.status(403).json({ sucesso: false, erro: 'Somente a administração da matriz pode editar o site.' });
+  const funcionario = authUser || (DB.funcionarios || []).find(f => f.matricula === matricula && f.status !== 'INATIVO');
+  if (!funcionario) return res.status(401).json({ sucesso: false, erro: 'Autenticação necessária para salvar as alterações.' });
+  if (senha && !verificarSenha(funcionario.senha_hash, senha)) {
+    return res.status(401).json({ sucesso: false, erro: 'Confirme sua senha para salvar as alterações.' });
+  }
+  if (funcionario.role !== 'admin' && funcionario.unidade_tipo !== 'matriz') {
+    return res.status(403).json({ sucesso: false, erro: 'Somente a administração da matriz pode editar o site.' });
+  }
   const recebido = req.body?.config || {};
-  if (String(recebido.logo || '').length > 6 * 1024 * 1024 || String(recebido.imagemDestaque || '').length > 6 * 1024 * 1024) return res.status(413).json({ sucesso: false, erro: 'Cada imagem deve ter no máximo 4 MB.' });
+  if (String(recebido.logo || '').length > 6 * 1024 * 1024 || String(recebido.imagemDestaque || '').length > 6 * 1024 * 1024) {
+    return res.status(413).json({ sucesso: false, erro: 'Cada imagem deve ter no máximo 4 MB.' });
+  }
   const config = normalizarConfigSite(recebido);
   DB.bot_config = DB.bot_config || [];
   let registro = DB.bot_config.find(x => x.nome === 'site_config');
-  if (!registro) { registro = { id: nextId('bot_config'), nome: 'site_config', valor: '' }; DB.bot_config.push(registro); }
+  if (!registro) {
+    registro = { id: nextId('bot_config'), nome: 'site_config', valor: '' };
+    DB.bot_config.push(registro);
+  }
   registro.valor = JSON.stringify(config);
   saveDB();
   res.json({ sucesso: true, config });
 });
+
 app.post('/api/site/pedido', async (req, res) => {
-  const nome = textoSite(req.body?.cliente_nome, 100);
-  const telefone = textoSite(req.body?.telefone, 24);
-  const telefoneDigitos = telefone.replace(/\D/g, '');
-  const itensRecebidos = Array.isArray(req.body?.itens) ? req.body.itens : [];
-  if (nome.length < 2 || telefoneDigitos.length < 10 || !itensRecebidos.length || itensRecebidos.length > 50) return res.status(400).json({ sucesso: false, erro: 'Informe nome, telefone válido e ao menos um produto.' });
-  const itens = [];
-  for (const item of itensRecebidos) {
-    const produto = (DB.produtos || []).find(p => String(p.id) === String(item.produto_id) && p.status === 'ATIVO' && p.categoria !== 'Insumos');
-    const quantidade = Number(item.quantidade);
-    if (!produto || !Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 50) return res.status(400).json({ sucesso: false, erro: 'Um produto do pedido não está disponível ou tem quantidade inválida.' });
-    const preco = Number(produto.preco_venda || 0);
-    itens.push({ produto_id: produto.id, unidade_id: produto.unidade_id || 1, nome: textoSite(produto.nome, 100), quantidade, preco_unitario: preco, total: Math.round(preco * quantidade * 100) / 100 });
-  }
-  const subtotal = Math.round(itens.reduce((s, item) => s + item.total, 0) * 100) / 100;
-  const config = lerConfigSite();
-  const codigo = textoSite(req.body?.cupom, 24).toUpperCase();
-  const cupomValido = !!(codigo && config.cupomAtivo && config.cupomCodigo && codigo === config.cupomCodigo);
-  const desconto = cupomValido ? Math.round(subtotal * Math.min(80, Number(config.cupomDesconto) || 0)) / 100 : 0;
-  const tipoEntrega = ['entrega', 'retirada', 'encomenda'].includes(req.body?.tipo_entrega) ? req.body.tipo_entrega : 'entrega';
-  const endereco = textoSite(req.body?.endereco, 300);
-  if (tipoEntrega === 'entrega' && endereco.length < 5) return res.status(400).json({ sucesso: false, erro: 'Informe o endereço para entrega.' });
-  const taxaEntrega = tipoEntrega === 'entrega' ? Math.max(0, Number(config.taxaEntrega) || 0) : 0;
-  const pedido = {
-    id: nextId('pedidos_site'), cliente_nome: nome, telefone, email: textoSite(req.body?.email, 120),
-    tipo_entrega: tipoEntrega, endereco, data_encomenda: textoSite(req.body?.data_encomenda, 40),
-    observacao: textoSite(req.body?.observacao, 500), itens, subtotal, cupom: cupomValido ? codigo : '', desconto,
-    taxa_entrega: taxaEntrega, total: Math.max(0, Math.round((subtotal - desconto + taxaEntrega) * 100) / 100),
-    origem: 'site', status: 'SOLICITADO', nf_emitida: false, data: agora()
-  };
-  pedido.cliente_id = cadastrarClienteDoPedido(pedido).id;
-  DB.pedidos_site.push(pedido);
-  if (tipoEntrega === 'entrega') gerarEntregaPedidoSite(pedido);
-  // Integração contábil automática: gera 1 lançamento de receita por unidade (itens rateados).
   try {
-    if (!DB.gestao_lancamentos_contabeis) DB.gestao_lancamentos_contabeis = [];
-    const porUnidade = {};
-    for (const it of itens) { const uid = Number(it.unidade_id) || 1; porUnidade[uid] = (porUnidade[uid] || 0) + Number(it.total || 0); }
-    const comp = new Date().toISOString().slice(0, 7) + '-01';
-    const linhas = Object.entries(porUnidade).map(([uid, valor]) => ({
-      id: nextId('gestao_lancamentos_contabeis'), unidade_id: Number(uid), competencia: comp,
-      tipo: 'receita', categoria: 'Vendas do site', descricao: `Pedido #${pedido.id} via site (${pedido.origem})`,
-      documento_ref: `site_pedido_${pedido.id}`, valor: Math.round(valor * 100) / 100,
-      status: 'confirmado', origem: 'site', usuario_id: 'site', data_lancamento: hoje().slice(0, 10)
-    }));
-    if (linhas.length) {
-      DB.gestao_lancamentos_contabeis.push(...linhas);
-      if (USAR_SUPABASE) { try { await supabase.from('gestao_lancamentos_contabeis').insert(linhas); } catch (e) { console.error('Erro ao gerar lançamento contábil do pedido site:', e.message); } }
+    const nome = textoSite(req.body?.cliente_nome, 100);
+    const telefone = textoSite(req.body?.telefone, 24);
+    const telefoneDigitos = telefone.replace(/\D/g, '');
+    const itensRecebidos = Array.isArray(req.body?.itens) ? req.body.itens : [];
+    if (nome.length < 2 || telefoneDigitos.length < 10 || !itensRecebidos.length || itensRecebidos.length > 50) {
+      return res.status(400).json({ sucesso: false, erro: 'Informe nome, telefone válido e ao menos um produto.' });
     }
-  } catch (e) { console.error('Erro na integração contábil do pedido site:', e.message); }
-  saveDB();
-  res.json({ sucesso: true, pedido_id: pedido.id, total: pedido.total, cupom_aplicado: cupomValido });
+
+    const itens = [];
+    for (const item of itensRecebidos) {
+      const pid = item.produto_id ?? item.id;
+      const qtd = Number(item.quantidade ?? item.qty);
+      const produto = (DB.produtos || []).find(
+        p => String(p.id) === String(pid) && p.status === 'ATIVO' && p.categoria !== 'Insumos'
+      );
+      if (!produto || !Number.isFinite(qtd) || qtd <= 0 || qtd > 50) {
+        return res.status(400).json({ sucesso: false, erro: 'Um produto do pedido não está disponível ou tem quantidade inválida.' });
+      }
+      const preco = Number(produto.preco_venda || 0);
+      itens.push({
+        produto_id: produto.id,
+        unidade_id: produto.unidade_id || 1,
+        nome: textoSite(produto.nome, 100),
+        quantidade: qtd,
+        preco_unitario: preco,
+        total: Math.round(preco * qtd * 100) / 100
+      });
+    }
+
+    const subtotal = Math.round(itens.reduce((s, item) => s + item.total, 0) * 100) / 100;
+    const config = lerConfigSite();
+    const codigo = textoSite(req.body?.cupom, 24).toUpperCase();
+    const cupomValido = !!(codigo && config.cupomAtivo && config.cupomCodigo && codigo === config.cupomCodigo);
+    const desconto = cupomValido ? Math.round(subtotal * Math.min(80, Number(config.cupomDesconto) || 0)) / 100 : 0;
+    const tipoEntrega = ['entrega', 'retirada', 'encomenda'].includes(req.body?.tipo_entrega) ? req.body.tipo_entrega : 'retirada';
+    const endereco = textoSite(req.body?.endereco, 300) || (tipoEntrega === 'retirada' ? 'Retirada no local' : '');
+    if (tipoEntrega === 'entrega' && endereco.length < 5) {
+      return res.status(400).json({ sucesso: false, erro: 'Informe o endereço para entrega.' });
+    }
+
+    const taxaEntrega = tipoEntrega === 'entrega' ? Math.max(0, Number(config.taxaEntrega) || 0) : 0;
+    DB.pedidos_site = DB.pedidos_site || [];
+    DB.site_pedidos = DB.pedidos_site;
+
+    const pedido = {
+      id: nextId('pedidos_site'),
+      cliente_nome: nome,
+      telefone,
+      email: textoSite(req.body?.email, 120),
+      tipo_entrega: tipoEntrega,
+      endereco,
+      data_encomenda: textoSite(req.body?.data_encomenda, 40),
+      observacao: textoSite(req.body?.observacao, 500),
+      itens,
+      subtotal,
+      cupom: cupomValido ? codigo : '',
+      desconto,
+      taxa_entrega: taxaEntrega,
+      total: Math.max(0, Math.round((subtotal - desconto + taxaEntrega) * 100) / 100),
+      origem: 'site',
+      status: 'SOLICITADO',
+      nf_emitida: false,
+      data: agora(),
+      created_at: agora()
+    };
+
+    pedido.cliente_id = cadastrarClienteDoPedido(pedido).id;
+    DB.pedidos_site.push(pedido);
+    if (tipoEntrega === 'entrega') gerarEntregaPedidoSite(pedido);
+
+    // Integração contábil automática: gera 1 lançamento de receita por unidade (itens rateados).
+    try {
+      if (!DB.gestao_lancamentos_contabeis) DB.gestao_lancamentos_contabeis = [];
+      const porUnidade = {};
+      for (const it of itens) {
+        const uid = Number(it.unidade_id) || 1;
+        porUnidade[uid] = (porUnidade[uid] || 0) + Number(it.total || 0);
+      }
+      const comp = new Date().toISOString().slice(0, 7) + '-01';
+      const linhas = Object.entries(porUnidade).map(([uid, valor]) => ({
+        id: nextId('gestao_lancamentos_contabeis'),
+        unidade_id: Number(uid),
+        competencia: comp,
+        tipo: 'receita',
+        categoria: 'Vendas do site',
+        descricao: `Pedido #${pedido.id} via site (${pedido.origem})`,
+        documento_ref: `site_pedido_${pedido.id}`,
+        valor: Math.round(valor * 100) / 100,
+        status: 'confirmado',
+        origem: 'site',
+        usuario_id: 'site',
+        data_lancamento: hoje().slice(0, 10)
+      }));
+      if (linhas.length) {
+        DB.gestao_lancamentos_contabeis.push(...linhas);
+        if (USAR_SUPABASE && supabase) {
+          try {
+            await supabase.from('gestao_lancamentos_contabeis').insert(linhas);
+          } catch (e) {
+            console.error('Erro ao gerar lançamento contábil do pedido site:', e.message);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Erro na integração contábil do pedido site:', e.message);
+    }
+
+    saveDB();
+    return res.json({ sucesso: true, pedido_id: pedido.id, total: pedido.total, cupom_aplicado: cupomValido });
+  } catch (e) {
+    return res.status(500).json({ sucesso: false, erro: e.message });
+  }
 });
 
 // ===== CRM / CONTATOS =====
