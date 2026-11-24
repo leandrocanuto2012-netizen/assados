@@ -1,3 +1,4 @@
+
 // =====================================================
 // ASSADOS ERP - BACKEND COM SUPABASE
 // Configure no Render (env vars):
@@ -3129,4 +3130,5 @@ app.post('/api/site/cliente', async (req,res)=>{
 
 app.set('supabase', supabase);
 module.exports = { supabase };
+module.exports = { usuarioPorToken };
 })();
