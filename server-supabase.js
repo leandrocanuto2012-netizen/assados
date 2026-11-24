@@ -143,7 +143,6 @@ async function loadDB() {
   }
 }
 
-let salvando = false;
 // ===== SAVE com fila por tabela =====
 const tabelasSujas = new Set();
 let salvando = false;
@@ -155,7 +154,7 @@ function saveDB() {
 }
 
 async function processarFilaSave() {
-  if (salvando) return; // o lote atual já vai incluir as tabelas que chegaram depois
+  if (salvando) return;
   salvando = true;
   try {
     while (tabelasSujas.size > 0) {
@@ -168,8 +167,12 @@ async function processarFilaSave() {
         const { error } = await supabase.from(tabela).upsert(dados, { onConflict: 'id' });
         if (error) { console.error(`Erro ao salvar ${tabela}:`, error.message); falhas.push(tabela); }
       }
-      if (falhas.length === lote.length) break; // tudo falhou: não fica em loop infinito
-      falhas.forEach(t => tabelasSujas.add(t)); // falha parcial segue na próxima rodada
+      if (DB.controle_sistema) {
+        const { error } = await supabase.from('controle_sistema').upsert(DB.controle_sistema, { onConflict: 'id' });
+        if (error) console.error('Erro ao salvar controle_sistema:', error.message);
+      }
+      if (falhas.length === lote.length) break;
+      falhas.forEach(t => tabelasSujas.add(t));
     }
   } finally {
     salvando = false;
