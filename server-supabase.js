@@ -51,7 +51,15 @@ const supabase = USAR_SUPABASE ? createClient(SUPABASE_URL, SUPABASE_KEY, {
 }) : null;
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 
-app.use(cors({ origin: true, credentials: true }));
+const ORIGENS_PERMITIDAS = (process.env.CORS_ORIGENS || '').split(',').map(o => o.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, cb) => {
+    // requisições do próprio site não enviam Origin e sempre passam
+    if (!origin || ORIGENS_PERMITIDAS.includes(origin)) return cb(null, true);
+    return cb(new Error('Origem não permitida'));
+  },
+  credentials: true
+}));
 app.use(bodyParser.json({ limit: '12mb' }));
 
 // ===== PORTÃO DE LOGIN (lado servidor) =====
@@ -72,9 +80,14 @@ app.use((req, res, next) => {
   if (!valido) return res.redirect(302, '/login.html');
   next();
 });
-
+app.use((req, res, next) => {
+  if (req.path.startsWith('/data.json') || req.path.startsWith('/backups')) {
+    return res.status(404).send('Não encontrado');
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(__dirname)); // fallback: se login.html estiver na raiz, serve também
+// fallback: se login.html estiver na raiz, serve também
 
 // Rota explícita para garantir dashboard.html
 app.get('/login.html', (req, res) => {
