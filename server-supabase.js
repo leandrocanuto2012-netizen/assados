@@ -482,9 +482,14 @@ async function loginSeguro(req, res) {
   res.cookie('assados_session', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
   res.json({ sucesso: true, token, usuario, unidade: (DB.unidades || []).find(u => u.id === f.unidade_id) });
 }
-
-
-
+if (usuario.precisa_alterar_senha === true) {
+  // Redireciona para a tela de alteração obrigatória de senha
+  return res.json({
+    sucesso: true,
+    trocaSenhaObrigatoria: true,
+    mensagem: "É obrigatório alterar a senha antes de acessar o painel"
+  });
+}
 
 // ===== PERFIS DE PERMISSÃO =====
 function perfisPermissaoNormalize(lista){
