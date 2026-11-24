@@ -1,155 +1,518 @@
-<!doctype html>
- <html lang="pt-BR">
- <head>
- <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#a63b25"><title>Loja | Assados Nobre</title>
- <style>
- :root{--accent:#a63b25;--paper:#fffaf5;--ink:#28231f;--muted:#776e67;--line:#eee5dc}
- *{box-sizing:border-box}
- body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,sans-serif}
- button,input,textarea,select{font:inherit}
- button{cursor:pointer}
- .wrap{max-width:1160px;width:calc(100% - 32px);margin:auto}
- .top{height:70px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
- .top .wrap{height:100%;display:flex;align-items:center;gap:14px}
- .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:850;font-size:19px}
- .brand img{width:42px;height:42px;object-fit:contain;border-radius:10px}
- .nav{margin-left:auto;display:flex;gap:8px;align-items:center}
- .nav a,.nav button{padding:10px 12px;border:0;border-radius:10px;background:transparent;color:var(--ink);text-decoration:none;font-weight:700}
- .nav a:hover,.nav button:hover{background:#f6eee7}
- .btn{border:0;border-radius:11px;background:var(--accent);color:#fff;padding:11px 15px;font-weight:800}
- .btn-light{background:#fff;color:var(--ink);border:1px solid var(--line)}
- .count{background:var(--accent);color:#fff;border-radius:50px;padding:2px 8px;font-size:12px}
- .hero{margin:26px auto 22px;min-height:290px;border-radius:24px;padding:clamp(28px,6vw,64px);display:flex;align-items:center;color:#fff;background:linear-gradient(100deg,#241a17d9,#241a1744),linear-gradient(135deg,#b55333,#efbe82);background-size:cover;background-position:center}
- .hero-copy{max-width:620px}
- .hero h1{font-size:clamp(32px,5vw,56px);line-height:1.04;margin:8px 0 14px;letter-spacing:-1.3px}
- .hero p{font-size:17px;max-width:540px}
- .section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:34px 0 16px;flex-wrap:wrap}
- .section-head h2{margin:2px 0;font-size:28px}
- .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:850}
- .search{max-width:290px;width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fff}
- .promo{margin:18px auto;padding:15px 18px;border:1px solid #efd38d;background:#fff3ce;border-radius:14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
- .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
- .product{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden}
- .image{height:165px;background:linear-gradient(145deg,#fff1e0,#f6d5bd);display:grid;place-items:center;font-size:58px}
- .image img{width:100%;height:100%;object-fit:cover}
- .pinfo{padding:14px;display:flex;flex-direction:column;flex:1}
- .category{color:var(--accent);font-size:11px;font-weight:850;text-transform:uppercase}
- .product h3{margin:5px 0;font-size:17px;line-height:1.25}
- .product p{font-size:13px;color:var(--muted);margin:0 0 12px}
- .buy{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px}
- .price{font-size:19px;font-weight:850}
- .estoque-info{font-size:11px;color:var(--muted)}
- .empty{grid-column:1/-1;text-align:center;padding:46px;background:#fff;border:1px solid var(--line);border-radius:16px;color:var(--muted)}
- .how{margin:45px 0 34px;padding:22px;background:#fff;border:1px solid var(--line);border-radius:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
- .footer{border-top:1px solid var(--line);padding:24px 0;color:var(--muted);display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}
- .floating{position:fixed;right:20px;bottom:20px;z-index:8}
- .chat-toggle{border:0;border-radius:50px;padding:14px 18px;background:#1a4935;color:#fff;font-weight:850;box-shadow:0 9px 28px #0002}
- .chat{display:none;position:fixed;right:18px;bottom:78px;width:min(360px,calc(100vw - 28px));height:430px;background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:0 18px 50px #0003;z-index:10;overflow:hidden;flex-direction:column}
- .chat.open{display:flex}
- .chathead{padding:13px 15px;background:#1a4935;color:#fff;font-weight:800;display:flex;justify-content:space-between}
- .messages{flex:1;overflow:auto;background:#faf8f5;padding:13px;display:flex;flex-direction:column;gap:8px}
- .bubble{max-width:88%;white-space:pre-wrap;padding:10px 12px;border-radius:13px;background:#fff;border:1px solid var(--line)}
- .bubble.me{align-self:flex-end;background:#e6f4ea}
- .chatform{display:flex;gap:7px;padding:9px;border-top:1px solid var(--line)}
- .chatform input{flex:1;min-width:0;padding:10px;border:1px solid var(--line);border-radius:9px}
- .chatform button{border:0;border-radius:9px;background:var(--accent);color:#fff;padding:0 14px}
- .overlay{display:none;position:fixed;inset:0;background:#17110db8;z-index:20;align-items:center;justify-content:center;padding:14px}
- .overlay.open{display:flex}
- .modal{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;padding:22px}
- .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
- .field{display:flex;flex-direction:column;gap:5px}
- .field.full{grid-column:1/-1}
- .field label{font-size:12px;font-weight:800}
- .field input,.field select,.field textarea{min-width:0;border:1px solid var(--line);border-radius:9px;padding:10px 11px;background:#fff}
- .actions{display:flex;justify-content:flex-end;gap:9px;margin-top:16px}
- .lines{display:flex;flex-direction:column}
- .line{padding:11px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
- .qty{display:flex;align-items:center;gap:7px;margin-top:4px}
- .qty button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:2px 8px}
- .sum{display:flex;justify-content:space-between;margin:9px 0}
- .notice{padding:12px;border-radius:10px;background:#eef8f0;color:#19552d;margin-top:10px}
- .notice.warn{background:#fff3cd;color:#664d03}
- .notice.err{background:#fee;color:#a00}
- .tabs{display:flex;gap:6px;margin:0 0 14px;background:#f6f0e8;padding:4px;border-radius:10px}
- .tabs button{flex:1;padding:9px;border:0;border-radius:8px;background:transparent;font-weight:800}
- .tabs button.active{background:#fff;box-shadow:0 1px 4px #0001;color:var(--accent)}
- @media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}.nav a,.nav button{font-size:11px;padding:8px}}
- </style>
- </head>
- <body>
- <header class="top"><div class="wrap"><a class="brand" href="/site.html"><img id="logo" src="/icons/nobre_premium_moderno.png" alt=""><span id="brand">Assados Nobre</span></a><nav class="nav"><button onclick="abrirConta()"><span id="nomeClienteTop">Minha conta</span></button><a href="/login.html" class="btn btn-light" style="font-size:12px">ERP • Equipe</a><button class="btn" onclick="abrirCarrinho()">Carrinho <span class="count" id="count">0</span></button></nav></div></header>
- <main class="wrap">
- <section class="hero" id="hero"><div class="hero-copy"><span class="eyebrow" style="color:#fff">Feito com carinho</span><h1 id="title">Seu sabor favorito, no conforto da sua casa</h1><p id="description">Faça seu pedido online e receba com praticidade.</p><button class="btn" onclick="document.getElementById('catalog').scrollIntoView({behavior:'smooth'})">Ver produtos</button></div></section>
- <div id="promotion"></div>
- <section id="catalog"><div class="section-head"><div><span class="eyebrow">Cardápio online</span><h2>Escolha seus favoritos</h2><small id="prodInfo" style="color:#888"></small></div><input class="search" id="search" placeholder="Buscar produto..." oninput="filtrar()"></div><div class="grid" id="products"><div class="empty">Carregando produtos do banco…</div></div></section>
- <section class="how"><div>🛒<b>1. Escolha</b><span>Adicione ao carrinho.</span></div><div>📍<b>2. Combine</b><span>Entrega, retirada ou encomenda.</span></div><div>💬<b>3. Tire dúvidas</b><span>Converse com nosso assistente.</span></div></section>
- <footer class="footer"><span>© <span id="year"></span> <b id="footerName">Assados Nobre</b></span><div id="social"></div></footer>
- </main>
- <div class="floating"><button class="chat-toggle" onclick="toggleChat()">💬 Precisa de ajuda? Pergunte aqui!</button></div>
- <section class="chat" id="chat"><div class="chathead"><span id="botName">Assistente Nobre</span><button onclick="toggleChat()" style="border:0;background:none;color:#fff">✕</button></div><div class="messages" id="messages"></div><form class="chatform" onsubmit="enviarChat(event)"><input id="chatText" placeholder="Ex: Qual o horário de atendimento? Tem promoção?"><button>➤</button></form></section>
- <!-- CARRINHO -->
- <div class="overlay" id="cart" onclick="fecharFora(event,'cart')"><div class="modal"><h2>Seu carrinho</h2><div id="cartLines" class="lines"></div><div style="margin-top:12px"><div class="sum"><span>Subtotal</span><span id="subtotal">R$ 0,00</span></div><div class="sum"><span>Taxa entrega</span><span id="fee">R$ 0,00</span></div><div class="sum"><b>Total</b><b id="total">R$ 0,00</b></div></div><div class="formgrid" style="margin-top:14px"><div class="field full"><label>Tipo</label><select id="deliveryType" onchange="atualizarTotal()"><option value="entrega">Entrega</option><option value="retirada">Retirada</option><option value="encomenda">Encomenda</option></select></div><div class="field full"><label>Nome</label><input id="customerName"></div><div class="field"><label>Telefone</label><input id="customerPhone"></div><div class="field"><label>E-mail</label><input id="customerEmail"></div><div class="field full"><label>Endereço (se entrega)</label><input id="address"></div><div class="field"><label>Data encomenda</label><input id="orderDate" type="date"></div><div class="field"><label>Cupom</label><input id="coupon"></div><div class="field full"><label>Observação</label><textarea id="note"></textarea></div></div><div id="orderMessage"></div><div class="actions"><button class="btn btn-light" onclick="closeModal('cart')">Continuar comprando</button><button class="btn" id="submitOrder" onclick="finalizar(event)">✅ Enviar pedido</button></div></div></div>
- <!-- CONTA COM LOGIN + CADASTRO -->
- <div class="overlay" id="account" onclick="fecharFora(event,'account')"><div class="modal">
-   <h2 id="accountTitle">Minha conta</h2>
-   <p id="lastOrder" style="font-size:13px;color:#666;margin-bottom:8px"></p>
-   <div class="tabs" id="accountTabs"><button id="tabLogin" class="active" onclick="trocarTab('login')">Já sou cadastrado - Entrar</button><button id="tabCadastro" onclick="trocarTab('cadastro')">Novo cadastro</button></div>
-   <form id="formLogin" onsubmit="loginCliente(event)">
-     <div class="formgrid">
-       <div class="field full"><label>Telefone ou E-mail</label><input id="loginIdent" placeholder="Ex: 41999999999 ou email@email.com" required></div>
-       <div class="field full"><label>Senha</label><input id="loginSenha" type="password" required></div>
-     </div>
-     <div id="loginMsg"></div>
-     <div class="actions"><button type="button" class="btn btn-light" onclick="closeModal('account')">Fechar</button><button class="btn">Entrar</button></div>
-   </form>
-   <form id="formCadastro" onsubmit="cadastrarCliente(event)" style="display:none">
-     <div class="formgrid">
-       <div class="field full"><label>Nome completo *</label><input id="accountName" required></div>
-       <div class="field"><label>Telefone *</label><input id="accountPhone" required></div>
-       <div class="field"><label>E-mail *</label><input id="accountEmail" type="email" required></div>
-       <div class="field"><label>Senha *</label><input id="accountSenha" type="password" required minlength="8" autocomplete="new-password"></div>
-       <div class="field"><label>Confirmar senha *</label><input id="accountSenha2" type="password" required minlength="8" autocomplete="new-password"></div>
-     </div>
-     <div id="cadastroMsg"></div>
-     <div class="actions"><button type="button" class="btn btn-light" onclick="closeModal('account')">Fechar</button><button class="btn">Criar conta e entrar</button></div>
-   </form>
-   <div id="areaLogada" style="display:none">
-     <div class="notice">✅ Logado como <b id="nomeLogado"></b></div>
-     <div class="formgrid" style="margin-top:10px"><div class="field"><label>Telefone</label><input id="logadoTel" disabled></div><div class="field"><label>E-mail</label><input id="logadoEmail" disabled></div></div>
-     <div class="actions"><button class="btn btn-light" onclick="sairCliente()">Sair da conta</button><button class="btn" onclick="closeModal('account'); abrirCarrinho()">Ir para o carrinho →</button></div>
-   </div>
- </div></div>
- <script>
- const API='';
- let config={}, products=[], cart=(()=>{try{return JSON.parse(localStorage.getItem('assados_cart')||'[]')}catch(e){return []}})(), account=(()=>{try{return JSON.parse(localStorage.getItem('assados_site_account')||'null')}catch(e){return null}})();
- function money(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',')}
- function esc(s){return String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))}
- async function get(path){
-   const sep=path.includes('?')?'&':'?';
-   const r=await fetch(API+path+sep+'_cb='+Date.now(),{cache:'no-store', headers:{'Cache-Control':'no-cache'}});
-   if(!r.ok) throw new Error('GET '+path+' '+r.status);
-   return r.json();
- }
- async function post(path,data){
-   const sep=path.includes('?')?'&':'?';
-   const r=await fetch(API+path+sep+'_cb='+Date.now(),{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify(data),cache:'no-store'});
-   const j=await r.json().catch(()=>({}));
-   if(!r.ok) throw new Error(j.erro||('HTTP '+r.status));
-   return j;
- }
- function saveCart(){ localStorage.setItem('assados_cart', JSON.stringify(cart)); document.getElementById('count').textContent=cart.reduce((a,b)=>a+b.qtd,0); }
- function filtrar(){ 
-   const q=document.getElementById('search').value.toLowerCase(); 
-   const filtered=products.filter(p=>
-     (p.nome||'').toLowerCase().includes(q) || 
-     (p.descricao||'').toLowerCase().includes(q) ||
-     (p.categoria||'').toLowerCase().includes(q)
-   ); 
-   renderProducts(filtered); 
- }
- function renderProducts(list){
-   const box=document.getElementById('products');
-   document.getElementById('prodInfo').textContent = list.length+' produtos disponíveis';
-   if(!list.length){ 
-     box.innerHTML='<div class="empty">Nenhum produto encontrado. Tente outro termo.</div>'; 
-     return;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loja Online — Pedidos, Conta e Atendimento</title>
+  <style>
+    :root {
+      --bg: #f6f4f0;
+      --card: #ffffff;
+      --text: #1f2421;
+      --muted: #5c6660;
+      --primary: #b43b1e;
+      --primary-hover: #932e16;
+      --accent: #1d6f42;
+      --border: #e2ddd5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.45; }
+    header {
+      background: #181c1a; color: #fff; padding: 14px 20px;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 20;
+    }
+    .brand { font-size: 1.15rem; font-weight: 700; }
+    .nav-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    button, input, select, textarea { font: inherit; }
+    .btn {
+      border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+      font-weight: 600; background: var(--primary); color: #fff;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-outline {
+      background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.35);
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.1); }
+    .btn-dark { background: #262c29; color: #fff; }
+    .btn-success { background: var(--accent); color: #fff; }
+    .container { max-width: 1180px; margin: 20px auto; padding: 0 16px; display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+    @media (max-width: 920px) { .container { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .toolbar input, .toolbar select {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff;
+    }
+    .grid-produtos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .prod-card {
+      border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+      display: flex; flex-direction: column; justify-content: space-between; gap: 8px; background: #fff;
+    }
+    .prod-cat { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
+    .prod-nome { font-size: 1rem; font-weight: 700; }
+    .prod-desc { font-size: 0.85rem; color: var(--muted); }
+    .prod-preco { font-size: 1.05rem; font-weight: 800; color: var(--primary); }
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .cart-item {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem;
+    }
+    .qty-controls { display: flex; align-items: center; gap: 6px; }
+    .qty-btn {
+      width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border);
+      background: #f2efe9; cursor: pointer; font-weight: 700;
+    }
+    .total-row { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.05rem; margin: 12px 0; }
+    .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .field label { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+    .field input, .field select, .field textarea {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; width: 100%;
+    }
+    .msg { font-size: 0.85rem; margin-top: 8px; padding: 8px 10px; border-radius: 8px; display: none; }
+    .msg.ok { display: block; background: #e7f6ed; color: #155724; }
+    .msg.err { display: block; background: #fdecea; color: #842029; }
+    .bot-box { display: flex; flex-direction: column; gap: 8px; }
+    .bot-log {
+      max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px; background: #faf9f6; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;
+    }
+    .bubble { padding: 8px 10px; border-radius: 8px; max-width: 90%; white-space: pre-line; }
+    .bubble.user { background: var(--primary); color: #fff; align-self: flex-end; }
+    .bubble.bot { background: #ece8e1; color: var(--text); align-self: flex-start; }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none;
+      align-items: center; justify-content: center; padding: 16px; z-index: 50;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: #fff; border-radius: 12px; width: 100%; max-width: 420px; padding: 20px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .tab-btn {
+      flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
+      background: #f5f3ef; cursor: pointer; font-weight: 600;
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .user-pill { font-size: 0.85rem; background: rgba(255,255,255,0.12); padding: 6px 10px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand" id="lojaNome">Loja Online</div>
+    <div class="nav-actions">
+      <span class="user-pill" id="contaStatus">Visitante</span>
+      <button class="btn btn-outline" id="btnAbrirConta" type="button">Minha Conta</button>
+      <button class="btn btn-outline" id="btnSairConta" type="button" style="display:none;">Sair</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1 class="section-title">Cardápio / Produtos</h1>
+      <div class="toolbar">
+        <input type="search" id="buscaProduto" placeholder="Buscar produto..." />
+        <select id="filtroCategoria">
+          <option value="">Todas as categorias</option>
+        </select>
+        <button class="btn btn-dark" id="btnRecarregarProdutos" type="button">Atualizar</button>
+      </div>
+      <div class="grid-produtos" id="listaProdutos">Carregando produtos...</div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="card">
+        <h2 class="section-title">Carrinho</h2>
+        <div id="itensCarrinho">Seu carrinho está vazio.</div>
+        <div class="total-row">
+          <span>Total</span>
+          <span id="totalCarrinho">R$ 0,00</span>
+        </div>
+
+        <div class="field">
+          <label for="cliNome">Seu nome</label>
+          <input type="text" id="cliNome" placeholder="Nome completo" />
+        </div>
+        <div class="field">
+          <label for="cliTelefone">Telefone / WhatsApp</label>
+          <input type="tel" id="cliTelefone" placeholder="(41) 99999-9999" />
+        </div>
+        <div class="field">
+          <label for="cliPagamento">Forma de pagamento</label>
+          <select id="cliPagamento">
+            <option value="PIX">PIX</option>
+            <option value="DINHEIRO">Dinheiro</option>
+            <option value="CARTAO">Cartão</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cliObs">Observações</label>
+          <input type="text" id="cliObs" placeholder="Ex.: sem cebola, troco..." />
+        </div>
+        <button class="btn btn-success" id="btnFinalizarPedido" type="button" style="width:100%;">Finalizar Pedido</button>
+        <div class="msg" id="msgPedido"></div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Atendimento / Bot</h2>
+        <div class="bot-box">
+          <div class="bot-log" id="botLog">
+            <div class="bubble bot">Olá! Como posso ajudar com os produtos ou seu pedido?</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="botInput" placeholder="Digite sua dúvida..." style="flex:1; padding:8px 10px; border:1px solid var(--border); border-radius:8px;" />
+            <button class="btn" id="btnEnviarBot" type="button">Enviar</button>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <div class="modal-backdrop" id="modalConta">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h2 class="section-title" style="margin:0;">Conta do Cliente</h2>
+        <button class="btn btn-dark" id="btnFecharConta" type="button">✕</button>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" id="tabLogin" type="button">Entrar</button>
+        <button class="tab-btn" id="tabCadastro" type="button">Cadastrar</button>
+      </div>
+
+      <form id="formLogin">
+        <div class="field">
+          <label for="loginIdentificador">Telefone ou E-mail</label>
+          <input type="text" id="loginIdentificador" required />
+        </div>
+        <div class="field">
+          <label for="loginSenha">Senha</label>
+          <input type="password" id="loginSenha" required />
+        </div>
+        <button class="btn" type="submit" style="width:100%;">Entrar na Conta</button>
+      </form>
+
+      <form id="formCadastro" style="display:none;">
+        <div class="field">
+          <label for="cadNome">Nome</label>
+          <input type="text" id="cadNome" required />
+        </div>
+        <div class="field">
+          <label for="cadTelefone">Telefone</label>
+          <input type="tel" id="cadTelefone" required />
+        </div>
+        <div class="field">
+          <label for="cadEmail">E-mail</label>
+          <input type="email" id="cadEmail" required />
+        </div>
+        <div class="field">
+          <label for="cadSenha">Senha (mín. 8 caracteres)</label>
+          <input type="password" id="cadSenha" minlength="8" maxlength="200" required />
+        </div>
+        <button class="btn btn-success" type="submit" style="width:100%;">Criar Conta</button>
+      </form>
+
+      <div class="msg" id="msgConta"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = '';
+    let produtosCache = [];
+    let carrinho = JSON.parse(localStorage.getItem('site_carrinho_v1') || '[]');
+    let clienteLogado = JSON.parse(localStorage.getItem('site_cliente_v1') || 'null');
+
+    const fmtBRL = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    function setMsg(el, texto, ok = false) {
+      el.textContent = texto;
+      el.className = 'msg ' + (ok ? 'ok' : 'err');
+    }
+
+    function atualizarHeaderConta() {
+      const statusEl = document.getElementById('contaStatus');
+      const btnSair = document.getElementById('btnSairConta');
+      if (clienteLogado && clienteLogado.nome) {
+        statusEl.textContent = 'Olá, ' + clienteLogado.nome;
+        btnSair.style.display = 'inline-block';
+        if (!document.getElementById('cliNome').value) document.getElementById('cliNome').value = clienteLogado.nome || '';
+        if (!document.getElementById('cliTelefone').value) document.getElementById('cliTelefone').value = clienteLogado.telefone || '';
+      } else {
+        statusEl.textContent = 'Visitante';
+        btnSair.style.display = 'none';
+      }
+    }
+
+    function salvarCarrinho() {
+      localStorage.setItem('site_carrinho_v1', JSON.stringify(carrinho));
+      renderCarrinho();
+    }
+
+    function adicionarAoCarrinho(prodId) {
+      const p = produtosCache.find(x => String(x.id) === String(prodId));
+      if (!p) return;
+      const preco = Number(p.preco_venda ?? p.preco ?? 0);
+      const existente = carrinho.find(i => String(i.id) === String(p.id));
+      if (existente) {
+        existente.qty += 1;
+      } else {
+        carrinho.push({ id: p.id, produto_id: p.id, nome: p.nome, produto_nome: p.nome, preco, qty: 1 });
+      }
+      salvarCarrinho();
+    }
+
+    function alterarQtd(idx, delta) {
+      if (!carrinho[idx]) return;
+      carrinho[idx].qty += delta;
+      if (carrinho[idx].qty <= 0) carrinho.splice(idx, 1);
+      salvarCarrinho();
+    }
+
+    function renderCarrinho() {
+      const box = document.getElementById('itensCarrinho');
+      const totalEl = document.getElementById('totalCarrinho');
+      if (!carrinho.length) {
+        box.innerHTML = 'Seu carrinho está vazio.';
+        totalEl.textContent = fmtBRL(0);
+        return;
+      }
+      let total = 0;
+      box.innerHTML = carrinho.map((item, idx) => {
+        const subtotal = Number(item.preco || 0) * Number(item.qty || 0);
+        total += subtotal;
+        return `
+          <div class="cart-item">
+            <div>
+              <div><strong>${item.nome}</strong></div>
+              <small>${fmtBRL(item.preco)} cada</small>
+            </div>
+            <div class="qty-controls">
+              <button class="qty-btn" type="button" onclick="alterarQtd(${idx}, -1)">-</button>
+              <span>${item.qty}</span>
+              <button class="qty-btn" type="button" onclick="alterarQtd(${idx}, 1)">+</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      totalEl.textContent = fmtBRL(total);
+    }
+
+    function renderProdutos() {
+      const termo = document.getElementById('buscaProduto').value.trim().toLowerCase();
+      const cat = document.getElementById('filtroCategoria').value;
+      const grid = document.getElementById('listaProdutos');
+
+      const filtrados = produtosCache.filter(p => {
+        const matchCat = !cat || String(p.categoria || '') === cat;
+        const matchBusca = !termo || String(p.nome || '').toLowerCase().includes(termo) || String(p.descricao || '').toLowerCase().includes(termo);
+        return matchCat && matchBusca;
+      });
+
+      if (!filtrados.length) {
+        grid.innerHTML = 'Nenhum produto encontrado.';
+        return;
+      }
+
+      grid.innerHTML = filtrados.map(p => {
+        const preco = Number(p.preco_venda ?? p.preco ?? 0);
+        return `
+          <article class="prod-card">
+            <div>
+              <div class="prod-cat">${p.categoria || 'Geral'}</div>
+              <div class="prod-nome">${p.nome}</div>
+              <div class="prod-desc">${p.descricao || p.sabor || ''}</div>
+            </div>
+            <div>
+              <div class="prod-preco" style="margin-bottom:8px;">${fmtBRL(preco)}</div>
+              <button class="btn" type="button" style="width:100%;" onclick="adicionarAoCarrinho('${p.id}')">Adicionar ao Carrinho</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function carregarConfigEProdutos() {
+      try {
+        const cfgRes = await fetch(API + '/api/site/config');
+        if (cfgRes.ok) {
+          const cfgData = await cfgRes.json();
+          const nomeLoja = cfgData?.config?.nome_loja || cfgData?.nome_loja;
+          if (nomeLoja) document.getElementById('lojaNome').textContent = nomeLoja;
+        }
+      } catch {}
+
+      try {
+        const res = await fetch(API + '/api/site/produtos');
+        const data = await res.json();
+        produtosCache = Array.isArray(data) ? data : (data.produtos || data.dados || []);
+        const selectCat = document.getElementById('filtroCategoria');
+        const cats = [...new Set(produtosCache.map(p => p.categoria).filter(Boolean))];
+        selectCat.innerHTML = '<option value="">Todas as categorias</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        renderProdutos();
+      } catch (e) {
+        document.getElementById('listaProdutos').textContent = 'Erro ao carregar produtos.';
+      }
+
+      try {
+        fetch(API + '/api/site/acesso', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pagina: '/site.html', referrer: document.referrer || '' })
+        }).catch(() => {});
+      } catch {}
+    }
+
+    document.getElementById('btnFinalizarPedido').addEventListener('click', async () => {
+      const msgEl = document.getElementById('msgPedido');
+      msgEl.className = 'msg';
+      if (!carrinho.length) return setMsg(msgEl, 'Adicione ao menos 1 item ao carrinho.');
+      const cliente_nome = document.getElementById('cliNome').value.trim();
+      const telefone = document.getElementById('cliTelefone').value.trim();
+      if (!cliente_nome || !telefone) return setMsg(msgEl, 'Informe seu nome e telefone.');
+
+      try {
+        const res = await fetch(API + '/api/site/pedido', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            origem: 'site',
+            cliente_id: clienteLogado?.id || null,
+            cliente_nome,
+            telefone,
+            forma_pagamento: document.getElementById('cliPagamento').value,
+            observacao: document.getElementById('cliObs').value.trim(),
+            itens: carrinho
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || data.sucesso === false) {
+          return setMsg(msgEl, data.erro || 'Não foi possível enviar o pedido.');
+        }
+        carrinho = [];
+        salvarCarrinho();
+        setMsg(msgEl, 'Pedido enviado com sucesso! Código #' + (data.pedido?.id || data.id || 'OK'), true);
+      } catch (e) {
+        setMsg(msgEl, 'Erro de conexão ao enviar pedido.');
+      }
+    });
+
+    function appendBotBubble(texto, tipo = 'bot') {
+      const log = document.getElementById('botLog');
+      const div = document.createElement('div');
+      div.className = 'bubble ' + tipo;
+      div.textContent = texto;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function enviarMensagemBot() {
+      const input = document.getElementById('botInput');
+      const mensagem = input.value.trim();
+      if (!mensagem) return;
+      appendBotBubble(mensagem, 'user');
+      input.value = '';
+      try {
+        const res = await fetch(API + '/api/bot/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensagem, cliente_id: clienteLogado?.id || null })
+        });
+        const data = await res.json();
+        appendBotBubble(data.resposta || data.mensagem || data.erro || 'Sem resposta do bot no momento.');
+      } catch {
+        appendBotBubble('Não foi possível falar com o bot agora.');
+      }
+    }
+
+    document.getElementById('btnEnviarBot').addEventListener('click', enviarMensagemBot);
+    document.getElementById('botInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') enviarMensagemBot();
+    });
+
+    // Conta (Login / Cadastro)
+    const modalConta = document.getElementById('modalConta');
+    const msgConta = document.getElementById('msgConta');
+    document.getElementById('btnAbrirConta').addEventListener('click', () => {
+      msgConta.className = 'msg';
+      modalConta.classList.add('open');
+    });
+    document.getElementById('btnFecharConta').addEventListener('click', () => modalConta.classList.remove('open'));
+    document.getElementById('btnSairConta').addEventListener('click', () => {
+      clienteLogado = null;
+      localStorage.removeItem('site_cliente_v1');
+      atualizarHeaderConta();
+    });
+
+    document.getElementById('tabLogin').addEventListener('click', () => {
+      document.getElementById('tabLogin').classList.add('active');
+      document.getElementById('tabCadastro').classList.remove('active');
+      document.getElementById('formLogin').style.display = 'block';
+      document.getElementById('formCadastro').style.display = 'none';
+    });
+    document.getElementById('tabCadastro').addEventListener('click', () => {
+      document.getElementById('tabCadastro').classList.add('active');
+      document.getElementById('tabLogin').classList.remove('active');
+      document.getElementById('formCadastro').style.display = 'block';
+      document.getElementById('formLogin').style.display = 'none';
+    });
+
+    document.getElementById('formLogin').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msgConta.className = 'msg';
+      try {
+        const res = await fetch(API + '/api/site/cliente/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            identificador: document.getElementById('loginIdentificador').value.trim(),
+            senha: document.getElementById('loginSenha').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || data.sucesso === false) return setMsg(msgConta, data.erro || 'Falha no login.');
+        clienteLogado = data.cliente;
+        localStorage.setItem('site_cliente_v1', JSON.stringify(clienteLogado));
+        atualizarHeaderConta();
+        setMsg(msgConta, 'Login realizado com sucesso!', true);
+        setTimeout(() => modalConta.classList.remove('open'), 600);
+      } catch {
+        setMsg(msgConta, 'Erro de conexão no login.');
+      }
+    });
+
+    document.getElementById('formCadastro').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msgConta.className = 'msg';
+      try {
+        const res = await fetch(API + '/api/site/cliente/cadastro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nome: document.getElementById('cadNome').value.trim(),
+            telefone: document.getElementById('cadTelefone').value.trim(),
+            email: document.getElementById('cadEmail').value.trim(),
+            senha: document.getElementById('cadSenha').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || data.sucesso === false) return setMsg(msgConta, data.erro || 'Não foi possível cadastrar.');
+        clienteLogado = data.cliente;
+        localStorage.setItem('site_cliente_v1', JSON.stringify(clienteLogado));
+        atualizarHeaderConta();
+        setMsg(msgConta, 'Conta criada com sucesso!', true);
+        setTimeout(() => modalConta.classList.remove('open'), 600);
+      } catch {
+        setMsg(msgConta, 'Erro de conexão no cadastro.');
+      }
+    });
+
+    document.getElementById('buscaProduto').addEventListener('input', renderProdutos);
+    document.getElementById('filtroCategoria').addEventListener('change', renderProdutos);
+    document.getElementById('btnRecarregarProdutos').addEventListener('click', carregarConfigEProdutos);
+
+    atualizarHeaderConta();
+    renderCarrinho();
+    carregarConfigEProdutos();
+  </script>
+</body>
+</html>
