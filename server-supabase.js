@@ -3112,10 +3112,10 @@ app.post('/api/site/cliente', async (req,res)=>{
     res.json({sucesso:true}); // não quebra o site mesmo se falhar
   }
 });
-app.use('/api/contabil', contabilRoutes);
-app.use('/api/edras', edrasRoutes);
-app.use('/api/unidades', unidadesRoutes);
-app.use('/api/auditoria', auditoriaRoutes);
+//app.use('/api/contabil', contabilRoutes);
+//app.use('/api/edras', edrasRoutes);
+//app.use('/api/unidades', unidadesRoutes);
+//app.use('/api/auditoria', auditoriaRoutes);
 
 app.set('supabase', supabase);
 module.exports = { supabase };
