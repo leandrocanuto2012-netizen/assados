@@ -3,516 +3,625 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Loja Online — Pedidos, Conta e Atendimento</title>
+  <title>Assados Nobre — Loja Online</title>
   <style>
     :root {
-      --bg: #f6f4f0;
-      --card: #ffffff;
-      --text: #1f2421;
-      --muted: #5c6660;
-      --primary: #b43b1e;
-      --primary-hover: #932e16;
-      --accent: #1d6f42;
-      --border: #e2ddd5;
+      --primary: #a63b25;
+      --primary-dark: #7e2a19;
+      --bg: #fffaf5;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: var(--bg); color: var(--text); line-height: 1.45; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
     header {
-      background: #181c1a; color: #fff; padding: 14px 20px;
-      display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 20;
+      background: var(--primary); color: #fff; padding: 14px 20px;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+      position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 8px rgba(0,0,0,.12);
     }
-    .brand { font-size: 1.15rem; font-weight: 700; }
-    .nav-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    button, input, select, textarea { font: inherit; }
+    .brand-title { margin: 0; font-size: 20px; font-weight: 700; }
+    .brand-sub { font-size: 12px; opacity: .9; }
+    .header-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .btn {
-      border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer;
-      font-weight: 600; background: var(--primary); color: #fff;
+      border: none; border-radius: 8px; padding: 9px 14px; font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: .15s;
     }
-    .btn:hover { background: var(--primary-hover); }
-    .btn-outline {
-      background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.35);
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-light { background: #fff; color: var(--primary); }
+    .btn-outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5); }
+    .btn-dark { background: #1f2937; color: #fff; }
+    .promo-banner {
+      background: #fef3c7; border-bottom: 1px solid #fcd34d; color: #92400e;
+      padding: 10px 20px; text-align: center; font-size: 14px; display: none;
     }
-    .btn-outline:hover { background: rgba(255,255,255,0.1); }
-    .btn-dark { background: #262c29; color: #fff; }
-    .btn-success { background: var(--accent); color: #fff; }
-    .container { max-width: 1180px; margin: 20px auto; padding: 0 16px; display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
-    @media (max-width: 920px) { .container { grid-template-columns: 1fr; } }
-    .card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    .hero {
+      max-width: 1180px; margin: 20px auto 0; padding: 0 16px;
     }
-    .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .hero-box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 22px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;
+    }
+    .container {
+      max-width: 1180px; margin: 20px auto 48px; padding: 0 16px;
+      display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
     .toolbar input, .toolbar select {
-      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff;
+      padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+      background: #fff; font-size: 14px;
     }
-    .grid-produtos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-    .prod-card {
-      border: 1px solid var(--border); border-radius: 10px; padding: 12px;
-      display: flex; flex-direction: column; justify-content: space-between; gap: 8px; background: #fff;
+    .toolbar input { flex: 1; min-width: 200px; }
+    .grid-produtos {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
     }
-    .prod-cat { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
-    .prod-nome { font-size: 1rem; font-weight: 700; }
-    .prod-desc { font-size: 0.85rem; color: var(--muted); }
-    .prod-preco { font-size: 1.05rem; font-weight: 800; color: var(--primary); }
-    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    }
+    .tag {
+      display: inline-block; font-size: 11px; font-weight: 600; background: #fff1ed;
+      color: var(--primary); padding: 3px 8px; border-radius: 999px;
+    }
+    .preco { font-size: 18px; font-weight: 700; color: var(--primary); margin: 6px 0 0; }
+    .aside-box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; margin-bottom: 16px;
+    }
+    .aside-box h3 { margin: 0 0 12px; font-size: 16px; }
     .cart-item {
       display: flex; justify-content: space-between; align-items: center; gap: 8px;
-      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem;
+      padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13px;
     }
     .qty-controls { display: flex; align-items: center; gap: 6px; }
     .qty-btn {
       width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border);
-      background: #f2efe9; cursor: pointer; font-weight: 700;
+      background: #f9fafb; cursor: pointer; font-weight: 700;
     }
-    .total-row { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.05rem; margin: 12px 0; }
-    .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-    .field label { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #374151; }
     .field input, .field select, .field textarea {
-      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; width: 100%;
+      width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
     }
-    .msg { font-size: 0.85rem; margin-top: 8px; padding: 8px 10px; border-radius: 8px; display: none; }
-    .msg.ok { display: block; background: #e7f6ed; color: #155724; }
-    .msg.err { display: block; background: #fdecea; color: #842029; }
-    .bot-box { display: flex; flex-direction: column; gap: 8px; }
-    .bot-log {
-      max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;
-      padding: 10px; background: #faf9f6; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;
-    }
-    .bubble { padding: 8px 10px; border-radius: 8px; max-width: 90%; white-space: pre-line; }
-    .bubble.user { background: var(--primary); color: #fff; align-self: flex-end; }
-    .bubble.bot { background: #ece8e1; color: var(--text); align-self: flex-start; }
+    .msg { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-top: 10px; display: none; }
+    .msg.ok { display: block; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .msg.err { display: block; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none;
+      position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none;
       align-items: center; justify-content: center; padding: 16px; z-index: 50;
     }
     .modal-backdrop.open { display: flex; }
-    .modal { background: #fff; border-radius: 12px; width: 100%; max-width: 420px; padding: 20px; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
-    .tab-btn {
-      flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
-      background: #f5f3ef; cursor: pointer; font-weight: 600;
+    .modal {
+      background: #fff; color: var(--text); width: 100%; max-width: 440px;
+      border-radius: 14px; padding: 20px; box-shadow: 0 12px 32px rgba(0,0,0,.25);
     }
-    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .user-pill { font-size: 0.85rem; background: rgba(255,255,255,0.12); padding: 6px 10px; border-radius: 8px; }
+    .tabs-mini { display: flex; gap: 8px; margin-bottom: 14px; }
+    .tabs-mini button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: #f9fafb; cursor: pointer; font-weight: 600; }
+    .tabs-mini button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .chat-box { max-height: 200px; overflow-y: auto; background: #f9fafb; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 13px; }
+    .chat-line { margin-bottom: 8px; }
+    .chat-line strong { color: var(--primary); }
   </style>
 </head>
 <body>
+  <div id="promoBanner" class="promo-banner"></div>
+
   <header>
-    <div class="brand" id="lojaNome">Loja Online</div>
-    <div class="nav-actions">
-      <span class="user-pill" id="contaStatus">Visitante</span>
-      <button class="btn btn-outline" id="btnAbrirConta" type="button">Minha Conta</button>
-      <button class="btn btn-outline" id="btnSairConta" type="button" style="display:none;">Sair</button>
+    <div>
+      <h1 class="brand-title" id="lojaNome">Assados Nobre</h1>
+      <div class="brand-sub" id="lojaSub">Pedidos online • Entrega, retirada e encomendas</div>
+    </div>
+    <div class="header-actions">
+      <span id="badgeCliente" style="font-size:13px;opacity:.95">Visitante</span>
+      <button class="btn btn-light" onclick="abrirModalConta('login')">Entrar / Cadastrar</button>
+      <button class="btn btn-outline" id="btnSairCliente" style="display:none" onclick="sairCliente()">Sair</button>
     </div>
   </header>
 
-  <main class="container">
-    <section class="card">
-      <h1 class="section-title">Cardápio / Produtos</h1>
+  <section class="hero">
+    <div class="hero-box">
+      <div>
+        <h2 style="margin:0 0 6px" id="heroTitulo">Seu sabor favorito, no conforto da sua casa</h2>
+        <p style="margin:0;color:var(--muted);font-size:14px" id="heroDescricao">Faça seu pedido online e acompanhe direto pela loja.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="apiBaseInput" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;width:220px" placeholder="URL API (vazio = mesmo host)" />
+        <button class="btn btn-dark" onclick="salvarApiBase()">Aplicar</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <!-- VITRINE -->
+    <div>
       <div class="toolbar">
-        <input type="search" id="buscaProduto" placeholder="Buscar produto..." />
-        <select id="filtroCategoria">
+        <input id="buscaProduto" type="text" placeholder="Buscar produto por nome ou sabor..." oninput="filtrarProdutos()" />
+        <select id="filtroCategoria" onchange="filtrarProdutos()">
           <option value="">Todas as categorias</option>
         </select>
-        <button class="btn btn-dark" id="btnRecarregarProdutos" type="button">Atualizar</button>
       </div>
-      <div class="grid-produtos" id="listaProdutos">Carregando produtos...</div>
-    </section>
+      <div id="gridProdutos" class="grid-produtos">
+        <div class="card">Carregando produtos...</div>
+      </div>
+    </div>
 
-    <aside class="sidebar">
-      <section class="card">
-        <h2 class="section-title">Carrinho</h2>
-        <div id="itensCarrinho">Seu carrinho está vazio.</div>
-        <div class="total-row">
-          <span>Total</span>
-          <span id="totalCarrinho">R$ 0,00</span>
+    <!-- CARRINHO, CHECKOUT E BOT -->
+    <div>
+      <div class="aside-box">
+        <h3>Carrinho (<span id="cartCount">0</span>)</h3>
+        <div id="cartItems"><div style="color:var(--muted);font-size:13px">Seu carrinho está vazio.</div></div>
+        <div style="margin-top:12px;font-size:14px">
+          <div>Subtotal: <strong id="vlSubtotal">R$ 0,00</strong></div>
+          <div>Taxa de entrega: <strong id="vlTaxa">R$ 0,00</strong></div>
+          <div>Desconto: <strong id="vlDesconto">R$ 0,00</strong></div>
+          <div style="font-size:16px;margin-top:6px;color:var(--primary)">Total: <strong id="vlTotal">R$ 0,00</strong></div>
         </div>
 
+        <hr style="border:none;border-top:1px solid var(--border);margin:14px 0" />
+
         <div class="field">
-          <label for="cliNome">Seu nome</label>
-          <input type="text" id="cliNome" placeholder="Nome completo" />
+          <label>Seu Nome *</label>
+          <input id="cliNome" type="text" placeholder="Nome completo" />
         </div>
         <div class="field">
-          <label for="cliTelefone">Telefone / WhatsApp</label>
-          <input type="tel" id="cliTelefone" placeholder="(41) 99999-9999" />
+          <label>Telefone / WhatsApp *</label>
+          <input id="cliTelefone" type="tel" placeholder="(41) 99999-9999" />
         </div>
         <div class="field">
-          <label for="cliPagamento">Forma de pagamento</label>
-          <select id="cliPagamento">
-            <option value="PIX">PIX</option>
-            <option value="DINHEIRO">Dinheiro</option>
-            <option value="CARTAO">Cartão</option>
+          <label>E-mail</label>
+          <input id="cliEmail" type="email" placeholder="cliente@email.com" />
+        </div>
+        <div class="field">
+          <label>Modalidade</label>
+          <select id="tipoEntrega" onchange="atualizarTotais()">
+            <option value="entrega">Entrega</option>
+            <option value="retirada">Retirada no Local</option>
+            <option value="encomenda">Encomenda</option>
           </select>
         </div>
+        <div class="field" id="boxEndereco">
+          <label>Endereço de Entrega *</label>
+          <input id="cliEndereco" type="text" placeholder="Rua, número, bairro" />
+        </div>
         <div class="field">
-          <label for="cliObs">Observações</label>
-          <input type="text" id="cliObs" placeholder="Ex.: sem cebola, troco..." />
+          <label>Cupom de Desconto</label>
+          <input id="cliCupom" type="text" placeholder="Ex: BEMVINDO" oninput="atualizarTotais()" />
         </div>
-        <button class="btn btn-success" id="btnFinalizarPedido" type="button" style="width:100%;">Finalizar Pedido</button>
-        <div class="msg" id="msgPedido"></div>
-      </section>
-
-      <section class="card">
-        <h2 class="section-title">Atendimento / Bot</h2>
-        <div class="bot-box">
-          <div class="bot-log" id="botLog">
-            <div class="bubble bot">Olá! Como posso ajudar com os produtos ou seu pedido?</div>
-          </div>
-          <div style="display:flex; gap:6px;">
-            <input type="text" id="botInput" placeholder="Digite sua dúvida..." style="flex:1; padding:8px 10px; border:1px solid var(--border); border-radius:8px;" />
-            <button class="btn" id="btnEnviarBot" type="button">Enviar</button>
-          </div>
+        <div class="field">
+          <label>Observações</label>
+          <textarea id="cliObs" rows="2" placeholder="Ponto de referência, preferências..."></textarea>
         </div>
-      </section>
-    </aside>
-  </main>
 
-  <div class="modal-backdrop" id="modalConta">
+        <button class="btn btn-primary" style="width:100%" onclick="finalizarPedido()">Finalizar Pedido</button>
+        <div id="msgPedido" class="msg"></div>
+      </div>
+
+      <div class="aside-box">
+        <h3>Atendimento Rápido (Bot)</h3>
+        <div id="chatBox" class="chat-box">
+          <div class="chat-line"><strong>Bot:</strong> Olá! Pergunte sobre cardápio, preços, horários, entregas ou encomendas.</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <input id="chatInput" type="text" placeholder="Digite sua dúvida..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px" onkeydown="if(event.key==='Enter') enviarChatBot()" />
+          <button class="btn btn-primary" onclick="enviarChatBot()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL LOGIN / CADASTRO CLIENTE -->
+  <div id="modalConta" class="modal-backdrop" onclick="if(event.target===this) fecharModalConta()">
     <div class="modal">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <h2 class="section-title" style="margin:0;">Conta do Cliente</h2>
-        <button class="btn btn-dark" id="btnFecharConta" type="button">✕</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0">Área do Cliente</h3>
+        <button class="qty-btn" onclick="fecharModalConta()">✕</button>
       </div>
-      <div class="tabs">
-        <button class="tab-btn active" id="tabLogin" type="button">Entrar</button>
-        <button class="tab-btn" id="tabCadastro" type="button">Cadastrar</button>
+      <div class="tabs-mini">
+        <button id="tabBtnLogin" class="active" onclick="alternarAbaConta('login')">Entrar</button>
+        <button id="tabBtnCadastro" onclick="alternarAbaConta('cadastro')">Cadastrar</button>
       </div>
 
-      <form id="formLogin">
+      <form id="formLoginCliente" onsubmit="handleLoginCliente(event)">
         <div class="field">
-          <label for="loginIdentificador">Telefone ou E-mail</label>
-          <input type="text" id="loginIdentificador" required />
+          <label>Telefone ou E-mail</label>
+          <input id="loginIdentificador" type="text" required />
         </div>
         <div class="field">
-          <label for="loginSenha">Senha</label>
-          <input type="password" id="loginSenha" required />
+          <label>Senha</label>
+          <input id="loginSenha" type="password" required />
         </div>
-        <button class="btn" type="submit" style="width:100%;">Entrar na Conta</button>
+        <button class="btn btn-primary" style="width:100%" type="submit">Entrar</button>
       </form>
 
-      <form id="formCadastro" style="display:none;">
+      <form id="formCadastroCliente" style="display:none" onsubmit="handleCadastroCliente(event)">
         <div class="field">
-          <label for="cadNome">Nome</label>
-          <input type="text" id="cadNome" required />
+          <label>Nome Completo</label>
+          <input id="cadNome" type="text" required />
         </div>
         <div class="field">
-          <label for="cadTelefone">Telefone</label>
-          <input type="tel" id="cadTelefone" required />
+          <label>Telefone</label>
+          <input id="cadTelefone" type="tel" required />
         </div>
         <div class="field">
-          <label for="cadEmail">E-mail</label>
-          <input type="email" id="cadEmail" required />
+          <label>E-mail</label>
+          <input id="cadEmail" type="email" required />
         </div>
         <div class="field">
-          <label for="cadSenha">Senha (mín. 8 caracteres)</label>
-          <input type="password" id="cadSenha" minlength="8" maxlength="200" required />
+          <label>Senha</label>
+          <input id="cadSenha" type="password" required minlength="4" />
         </div>
-        <button class="btn btn-success" type="submit" style="width:100%;">Criar Conta</button>
+        <button class="btn btn-primary" style="width:100%" type="submit">Criar Conta</button>
       </form>
 
-      <div class="msg" id="msgConta"></div>
+      <div id="msgConta" class="msg"></div>
     </div>
   </div>
 
   <script>
-    const API = '';
-    let produtosCache = [];
-    let carrinho = JSON.parse(localStorage.getItem('site_carrinho_v1') || '[]');
-    let clienteLogado = JSON.parse(localStorage.getItem('site_cliente_v1') || 'null');
+    const STORAGE_BASE_KEY = 'assados_site_api_base';
+    const STORAGE_CART_KEY = 'assados_site_cart';
+    const STORAGE_CLIENT_KEY = 'assados_site_cliente';
 
-    const fmtBRL = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    let configSite = {
+      nomeLoja: 'Assados Nobre',
+      titulo: 'Seu sabor favorito, no conforto da sua casa',
+      descricao: 'Faça seu pedido online e acompanhe direto pela loja.',
+      corPrincipal: '#a63b25',
+      corFundo: '#fffaf5',
+      promocaoAtiva: false,
+      promocaoTitulo: 'Oferta relâmpago',
+      promocaoTexto: '',
+      cupomAtivo: false,
+      cupomCodigo: 'BEMVINDO',
+      cupomDesconto: 10,
+      taxaEntrega: 0
+    };
+    let produtos = [];
+    let carrinho = [];
+    let clienteLogado = null;
 
-    function setMsg(el, texto, ok = false) {
+    function getApiBase() {
+      return (localStorage.getItem(STORAGE_BASE_KEY) || '').trim().replace(/\/+$/, '');
+    }
+    function salvarApiBase() {
+      const val = document.getElementById('apiBaseInput').value.trim().replace(/\/+$/, '');
+      localStorage.setItem(STORAGE_BASE_KEY, val);
+      carregarConfig();
+      carregarProdutos();
+    }
+    function fmtBRL(v) {
+      return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+    }
+    function mostrarMsg(elId, texto, ok = true) {
+      const el = document.getElementById(elId);
       el.textContent = texto;
       el.className = 'msg ' + (ok ? 'ok' : 'err');
     }
 
-    function atualizarHeaderConta() {
-      const statusEl = document.getElementById('contaStatus');
-      const btnSair = document.getElementById('btnSairConta');
+    function carregarEstadoLocal() {
+      document.getElementById('apiBaseInput').value = getApiBase();
+      try { carrinho = JSON.parse(localStorage.getItem(STORAGE_CART_KEY) || '[]'); } catch { carrinho = []; }
+      try { clienteLogado = JSON.parse(localStorage.getItem(STORAGE_CLIENT_KEY) || 'null'); } catch { clienteLogado = null; }
+      aplicarClienteNaTela();
+      renderCarrinho();
+    }
+
+    function aplicarClienteNaTela() {
+      const badge = document.getElementById('badgeCliente');
+      const btnSair = document.getElementById('btnSairCliente');
       if (clienteLogado && clienteLogado.nome) {
-        statusEl.textContent = 'Olá, ' + clienteLogado.nome;
+        badge.textContent = 'Olá, ' + clienteLogado.nome;
         btnSair.style.display = 'inline-block';
         if (!document.getElementById('cliNome').value) document.getElementById('cliNome').value = clienteLogado.nome || '';
         if (!document.getElementById('cliTelefone').value) document.getElementById('cliTelefone').value = clienteLogado.telefone || '';
+        if (!document.getElementById('cliEmail').value) document.getElementById('cliEmail').value = clienteLogado.email || '';
       } else {
-        statusEl.textContent = 'Visitante';
+        badge.textContent = 'Visitante';
         btnSair.style.display = 'none';
       }
     }
 
-    function salvarCarrinho() {
-      localStorage.setItem('site_carrinho_v1', JSON.stringify(carrinho));
-      renderCarrinho();
+    function sairCliente() {
+      clienteLogado = null;
+      localStorage.removeItem(STORAGE_CLIENT_KEY);
+      aplicarClienteNaTela();
     }
 
-    function adicionarAoCarrinho(prodId) {
-      const p = produtosCache.find(x => String(x.id) === String(prodId));
-      if (!p) return;
-      const preco = Number(p.preco_venda ?? p.preco ?? 0);
-      const existente = carrinho.find(i => String(i.id) === String(p.id));
-      if (existente) {
-        existente.qty += 1;
-      } else {
-        carrinho.push({ id: p.id, produto_id: p.id, nome: p.nome, produto_nome: p.nome, preco, qty: 1 });
+    function abrirModalConta(aba = 'login') {
+      document.getElementById('modalConta').classList.add('open');
+      document.getElementById('msgConta').className = 'msg';
+      alternarAbaConta(aba);
+    }
+    function fecharModalConta() {
+      document.getElementById('modalConta').classList.remove('open');
+    }
+    function alternarAbaConta(aba) {
+      const isLogin = aba === 'login';
+      document.getElementById('tabBtnLogin').classList.toggle('active', isLogin);
+      document.getElementById('tabBtnCadastro').classList.toggle('active', !isLogin);
+      document.getElementById('formLoginCliente').style.display = isLogin ? 'block' : 'none';
+      document.getElementById('formCadastroCliente').style.display = isLogin ? 'none' : 'block';
+    }
+
+    async function handleLoginCliente(e) {
+      e.preventDefault();
+      const identificador = document.getElementById('loginIdentificador').value.trim();
+      const senha = document.getElementById('loginSenha').value;
+      try {
+        const res = await fetch(getApiBase() + '/api/site/cliente/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identificador, senha })
+        });
+        const data = await res.json();
+        if (!data.sucesso || !data.cliente) {
+          mostrarMsg('msgConta', data.erro || 'Falha ao entrar.', false);
+          return;
+        }
+        clienteLogado = data.cliente;
+        localStorage.setItem(STORAGE_CLIENT_KEY, JSON.stringify(clienteLogado));
+        aplicarClienteNaTela();
+        mostrarMsg('msgConta', 'Login realizado com sucesso!', true);
+        setTimeout(fecharModalConta, 600);
+      } catch (err) {
+        mostrarMsg('msgConta', 'Erro de conexão: ' + err.message, false);
       }
-      salvarCarrinho();
     }
 
-    function alterarQtd(idx, delta) {
-      if (!carrinho[idx]) return;
-      carrinho[idx].qty += delta;
-      if (carrinho[idx].qty <= 0) carrinho.splice(idx, 1);
-      salvarCarrinho();
-    }
-
-    function renderCarrinho() {
-      const box = document.getElementById('itensCarrinho');
-      const totalEl = document.getElementById('totalCarrinho');
-      if (!carrinho.length) {
-        box.innerHTML = 'Seu carrinho está vazio.';
-        totalEl.textContent = fmtBRL(0);
-        return;
+    async function handleCadastroCliente(e) {
+      e.preventDefault();
+      const payload = {
+        nome: document.getElementById('cadNome').value.trim(),
+        telefone: document.getElementById('cadTelefone').value.trim(),
+        email: document.getElementById('cadEmail').value.trim(),
+        senha: document.getElementById('cadSenha').value
+      };
+      try {
+        const res = await fetch(getApiBase() + '/api/site/cliente/cadastro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!data.sucesso || !data.cliente) {
+          mostrarMsg('msgConta', data.erro || 'Não foi possível cadastrar.', false);
+          return;
+        }
+        clienteLogado = data.cliente;
+        localStorage.setItem(STORAGE_CLIENT_KEY, JSON.stringify(clienteLogado));
+        aplicarClienteNaTela();
+        mostrarMsg('msgConta', 'Cadastro concluído!', true);
+        setTimeout(fecharModalConta, 600);
+      } catch (err) {
+        mostrarMsg('msgConta', 'Erro de conexão: ' + err.message, false);
       }
-      let total = 0;
-      box.innerHTML = carrinho.map((item, idx) => {
-        const subtotal = Number(item.preco || 0) * Number(item.qty || 0);
-        total += subtotal;
-        return `
-          <div class="cart-item">
-            <div>
-              <div><strong>${item.nome}</strong></div>
-              <small>${fmtBRL(item.preco)} cada</small>
-            </div>
-            <div class="qty-controls">
-              <button class="qty-btn" type="button" onclick="alterarQtd(${idx}, -1)">-</button>
-              <span>${item.qty}</span>
-              <button class="qty-btn" type="button" onclick="alterarQtd(${idx}, 1)">+</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-      totalEl.textContent = fmtBRL(total);
     }
 
-    function renderProdutos() {
+    async function carregarConfig() {
+      try {
+        const res = await fetch(getApiBase() + '/api/site/config');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.config) return;
+        configSite = { ...configSite, ...data.config };
+        document.documentElement.style.setProperty('--primary', configSite.corPrincipal || '#a63b25');
+        document.documentElement.style.setProperty('--bg', configSite.corFundo || '#fffaf5');
+        document.title = (configSite.nomeLoja || 'Loja Online') + ' — Loja Online';
+        document.getElementById('lojaNome').textContent = configSite.nomeLoja || 'Loja Online';
+        document.getElementById('heroTitulo').textContent = configSite.titulo || '';
+        document.getElementById('heroDescricao').textContent = configSite.descricao || '';
+
+        const banner = document.getElementById('promoBanner');
+        if (configSite.promocaoAtiva && (configSite.promocaoTitulo || configSite.promocaoTexto)) {
+          banner.textContent = `${configSite.promocaoTitulo || 'Promoção'}: ${configSite.promocaoTexto || ''}`;
+          banner.style.display = 'block';
+        } else {
+          banner.style.display = 'none';
+        }
+        atualizarTotais();
+      } catch {}
+    }
+
+    async function carregarProdutos() {
+      const grid = document.getElementById('gridProdutos');
+      try {
+        const res = await fetch(getApiBase() + '/api/site/produtos');
+        const data = await res.json();
+        produtos = Array.isArray(data.produtos) ? data.produtos : [];
+
+        const cats = [...new Set(produtos.map(p => p.categoria).filter(Boolean))];
+        const sel = document.getElementById('filtroCategoria');
+        const atual = sel.value;
+        sel.innerHTML = '<option value="">Todas as categorias</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        sel.value = atual;
+
+        filtrarProdutos();
+      } catch (err) {
+        grid.innerHTML = `<div class="card">Erro ao carregar produtos: ${err.message}</div>`;
+      }
+    }
+
+    function filtrarProdutos() {
       const termo = document.getElementById('buscaProduto').value.trim().toLowerCase();
       const cat = document.getElementById('filtroCategoria').value;
-      const grid = document.getElementById('listaProdutos');
-
-      const filtrados = produtosCache.filter(p => {
-        const matchCat = !cat || String(p.categoria || '') === cat;
-        const matchBusca = !termo || String(p.nome || '').toLowerCase().includes(termo) || String(p.descricao || '').toLowerCase().includes(termo);
+      const lista = produtos.filter(p => {
+        const matchCat = !cat || p.categoria === cat;
+        const texto = `${p.nome || ''} ${p.sabor || ''} ${p.categoria || ''}`.toLowerCase();
+        const matchBusca = !termo || texto.includes(termo);
         return matchCat && matchBusca;
       });
 
-      if (!filtrados.length) {
-        grid.innerHTML = 'Nenhum produto encontrado.';
+      const grid = document.getElementById('gridProdutos');
+      if (!lista.length) {
+        grid.innerHTML = '<div class="card">Nenhum produto encontrado.</div>';
         return;
       }
 
-      grid.innerHTML = filtrados.map(p => {
-        const preco = Number(p.preco_venda ?? p.preco ?? 0);
-        return `
-          <article class="prod-card">
-            <div>
-              <div class="prod-cat">${p.categoria || 'Geral'}</div>
-              <div class="prod-nome">${p.nome}</div>
-              <div class="prod-desc">${p.descricao || p.sabor || ''}</div>
-            </div>
-            <div>
-              <div class="prod-preco" style="margin-bottom:8px;">${fmtBRL(preco)}</div>
-              <button class="btn" type="button" style="width:100%;" onclick="adicionarAoCarrinho('${p.id}')">Adicionar ao Carrinho</button>
-            </div>
-          </article>
-        `;
-      }).join('');
+      grid.innerHTML = lista.map(p => `
+        <div class="card">
+          <div>
+            <span class="tag">${p.categoria || 'Produto'}</span>
+            <h4 style="margin:8px 0 4px;font-size:16px">${p.nome}</h4>
+            <div style="font-size:13px;color:var(--muted)">${p.sabor || ''}</div>
+          </div>
+          <div>
+            <div class="preco">${fmtBRL(p.preco_venda)}</div>
+            <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="adicionarAoCarrinho(${p.id})">Adicionar</button>
+          </div>
+        </div>
+      `).join('');
     }
 
-    async function carregarConfigEProdutos() {
-      try {
-        const cfgRes = await fetch(API + '/api/site/config');
-        if (cfgRes.ok) {
-          const cfgData = await cfgRes.json();
-          const nomeLoja = cfgData?.config?.nome_loja || cfgData?.nome_loja;
-          if (nomeLoja) document.getElementById('lojaNome').textContent = nomeLoja;
-        }
-      } catch {}
+    function adicionarAoCarrinho(id) {
+      const prod = produtos.find(p => String(p.id) === String(id));
+      if (!prod) return;
+      const item = carrinho.find(i => String(i.produto_id) === String(prod.id));
+      if (item) {
+        item.quantidade += 1;
+      } else {
+        carrinho.push({
+          produto_id: prod.id,
+          nome: prod.nome,
+          preco_unitario: Number(prod.preco_venda || 0),
+          quantidade: 1
+        });
+      }
+      persistirCarrinho();
+      renderCarrinho();
+    }
 
-      try {
-        const res = await fetch(API + '/api/site/produtos');
-        const data = await res.json();
-        produtosCache = Array.isArray(data) ? data : (data.produtos || data.dados || []);
-        const selectCat = document.getElementById('filtroCategoria');
-        const cats = [...new Set(produtosCache.map(p => p.categoria).filter(Boolean))];
-        selectCat.innerHTML = '<option value="">Todas as categorias</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
-        renderProdutos();
-      } catch (e) {
-        document.getElementById('listaProdutos').textContent = 'Erro ao carregar produtos.';
+    function alterarQtd(idx, delta) {
+      const item = carrinho[idx];
+      if (!item) return;
+      item.quantidade += delta;
+      if (item.quantidade <= 0) carrinho.splice(idx, 1);
+      persistirCarrinho();
+      renderCarrinho();
+    }
+
+    function persistirCarrinho() {
+      localStorage.setItem(STORAGE_CART_KEY, JSON.stringify(carrinho));
+    }
+
+    function renderCarrinho() {
+      const container = document.getElementById('cartItems');
+      const totalQtd = carrinho.reduce((s, i) => s + Number(i.quantidade || 0), 0);
+      document.getElementById('cartCount').textContent = totalQtd;
+
+      if (!carrinho.length) {
+        container.innerHTML = '<div style="color:var(--muted);font-size:13px">Seu carrinho está vazio.</div>';
+        atualizarTotais();
+        return;
       }
 
-      try {
-        fetch(API + '/api/site/acesso', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pagina: '/site.html', referrer: document.referrer || '' })
-        }).catch(() => {});
-      } catch {}
+      container.innerHTML = carrinho.map((item, idx) => `
+        <div class="cart-item">
+          <div>
+            <div><strong>${item.nome}</strong></div>
+            <div style="color:var(--muted)">${fmtBRL(item.preco_unitario)} un.</div>
+          </div>
+          <div class="qty-controls">
+            <button class="qty-btn" onclick="alterarQtd(${idx}, -1)">-</button>
+            <span>${item.quantidade}</span>
+            <button class="qty-btn" onclick="alterarQtd(${idx}, 1)">+</button>
+          </div>
+        </div>
+      `).join('');
+
+      atualizarTotais();
     }
 
-    document.getElementById('btnFinalizarPedido').addEventListener('click', async () => {
-      const msgEl = document.getElementById('msgPedido');
-      msgEl.className = 'msg';
-      if (!carrinho.length) return setMsg(msgEl, 'Adicione ao menos 1 item ao carrinho.');
-      const cliente_nome = document.getElementById('cliNome').value.trim();
-      const telefone = document.getElementById('cliTelefone').value.trim();
-      if (!cliente_nome || !telefone) return setMsg(msgEl, 'Informe seu nome e telefone.');
+    function atualizarTotais() {
+      const tipo = document.getElementById('tipoEntrega').value;
+      document.getElementById('boxEndereco').style.display = tipo === 'entrega' ? 'block' : 'none';
+
+      const subtotal = carrinho.reduce((s, i) => s + Number(i.preco_unitario || 0) * Number(i.quantidade || 0), 0);
+      const taxa = tipo === 'entrega' ? Math.max(0, Number(configSite.taxaEntrega || 0)) : 0;
+
+      const codDigitado = document.getElementById('cliCupom').value.trim().toUpperCase();
+      const cupomValido = !!(codDigitado && configSite.cupomAtivo && configSite.cupomCodigo && codDigitado === String(configSite.cupomCodigo).toUpperCase());
+      const pct = cupomValido ? Math.min(80, Math.max(0, Number(configSite.cupomDesconto || 0))) : 0;
+      const desconto = Math.round(subtotal * pct) / 100;
+      const total = Math.max(0, subtotal - desconto + taxa);
+
+      document.getElementById('vlSubtotal').textContent = fmtBRL(subtotal);
+      document.getElementById('vlTaxa').textContent = fmtBRL(taxa);
+      document.getElementById('vlDesconto').textContent = fmtBRL(desconto);
+      document.getElementById('vlTotal').textContent = fmtBRL(total);
+    }
+
+    async function finalizarPedido() {
+      if (!carrinho.length) {
+        mostrarMsg('msgPedido', 'Adicione ao menos um item ao carrinho.', false);
+        return;
+      }
+      const payload = {
+        cliente_nome: document.getElementById('cliNome').value.trim(),
+        telefone: document.getElementById('cliTelefone').value.trim(),
+        email: document.getElementById('cliEmail').value.trim(),
+        tipo_entrega: document.getElementById('tipoEntrega').value,
+        endereco: document.getElementById('cliEndereco').value.trim(),
+        cupom: document.getElementById('cliCupom').value.trim(),
+        observacao: document.getElementById('cliObs').value.trim(),
+        itens: carrinho.map(i => ({ produto_id: i.produto_id, quantidade: i.quantidade }))
+      };
 
       try {
-        const res = await fetch(API + '/api/site/pedido', {
+        const res = await fetch(getApiBase() + '/api/site/pedido', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            origem: 'site',
-            cliente_id: clienteLogado?.id || null,
-            cliente_nome,
-            telefone,
-            forma_pagamento: document.getElementById('cliPagamento').value,
-            observacao: document.getElementById('cliObs').value.trim(),
-            itens: carrinho
-          })
+          body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if (!res.ok || data.sucesso === false) {
-          return setMsg(msgEl, data.erro || 'Não foi possível enviar o pedido.');
+        if (!data.sucesso) {
+          mostrarMsg('msgPedido', data.erro || 'Não foi possível enviar o pedido.', false);
+          return;
         }
         carrinho = [];
-        salvarCarrinho();
-        setMsg(msgEl, 'Pedido enviado com sucesso! Código #' + (data.pedido?.id || data.id || 'OK'), true);
-      } catch (e) {
-        setMsg(msgEl, 'Erro de conexão ao enviar pedido.');
+        persistirCarrinho();
+        renderCarrinho();
+        mostrarMsg('msgPedido', `Pedido #${data.pedido_id} enviado! Total: ${fmtBRL(data.total)}`, true);
+      } catch (err) {
+        mostrarMsg('msgPedido', 'Erro ao enviar pedido: ' + err.message, false);
       }
-    });
-
-    function appendBotBubble(texto, tipo = 'bot') {
-      const log = document.getElementById('botLog');
-      const div = document.createElement('div');
-      div.className = 'bubble ' + tipo;
-      div.textContent = texto;
-      log.appendChild(div);
-      log.scrollTop = log.scrollHeight;
     }
 
-    async function enviarMensagemBot() {
-      const input = document.getElementById('botInput');
-      const mensagem = input.value.trim();
-      if (!mensagem) return;
-      appendBotBubble(mensagem, 'user');
+    async function enviarChatBot() {
+      const input = document.getElementById('chatInput');
+      const texto = input.value.trim();
+      if (!texto) return;
+      const box = document.getElementById('chatBox');
+      box.innerHTML += `<div class="chat-line"><strong>Você:</strong> ${texto}</div>`;
       input.value = '';
+      box.scrollTop = box.scrollHeight;
+
       try {
-        const res = await fetch(API + '/api/bot/chat', {
+        const res = await fetch(getApiBase() + '/api/bot/responder', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mensagem, cliente_id: clienteLogado?.id || null })
+          body: JSON.stringify({ mensagem: texto })
         });
         const data = await res.json();
-        appendBotBubble(data.resposta || data.mensagem || data.erro || 'Sem resposta do bot no momento.');
+        box.innerHTML += `<div class="chat-line"><strong>Bot:</strong> ${data.resposta || 'Sem resposta no momento.'}</div>`;
       } catch {
-        appendBotBubble('Não foi possível falar com o bot agora.');
+        box.innerHTML += `<div class="chat-line"><strong>Bot:</strong> Não consegui conectar ao servidor agora.</div>`;
       }
+      box.scrollTop = box.scrollHeight;
     }
 
-    document.getElementById('btnEnviarBot').addEventListener('click', enviarMensagemBot);
-    document.getElementById('botInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') enviarMensagemBot();
+    document.addEventListener('DOMContentLoaded', () => {
+      carregarEstadoLocal();
+      carregarConfig();
+      carregarProdutos();
+      fetch(getApiBase() + '/api/site/acesso', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pagina: window.location.pathname, referrer: document.referrer || '' })
+      }).catch(() => {});
     });
-
-    // Conta (Login / Cadastro)
-    const modalConta = document.getElementById('modalConta');
-    const msgConta = document.getElementById('msgConta');
-    document.getElementById('btnAbrirConta').addEventListener('click', () => {
-      msgConta.className = 'msg';
-      modalConta.classList.add('open');
-    });
-    document.getElementById('btnFecharConta').addEventListener('click', () => modalConta.classList.remove('open'));
-    document.getElementById('btnSairConta').addEventListener('click', () => {
-      clienteLogado = null;
-      localStorage.removeItem('site_cliente_v1');
-      atualizarHeaderConta();
-    });
-
-    document.getElementById('tabLogin').addEventListener('click', () => {
-      document.getElementById('tabLogin').classList.add('active');
-      document.getElementById('tabCadastro').classList.remove('active');
-      document.getElementById('formLogin').style.display = 'block';
-      document.getElementById('formCadastro').style.display = 'none';
-    });
-    document.getElementById('tabCadastro').addEventListener('click', () => {
-      document.getElementById('tabCadastro').classList.add('active');
-      document.getElementById('tabLogin').classList.remove('active');
-      document.getElementById('formCadastro').style.display = 'block';
-      document.getElementById('formLogin').style.display = 'none';
-    });
-
-    document.getElementById('formLogin').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      msgConta.className = 'msg';
-      try {
-        const res = await fetch(API + '/api/site/cliente/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            identificador: document.getElementById('loginIdentificador').value.trim(),
-            senha: document.getElementById('loginSenha').value
-          })
-        });
-        const data = await res.json();
-        if (!res.ok || data.sucesso === false) return setMsg(msgConta, data.erro || 'Falha no login.');
-        clienteLogado = data.cliente;
-        localStorage.setItem('site_cliente_v1', JSON.stringify(clienteLogado));
-        atualizarHeaderConta();
-        setMsg(msgConta, 'Login realizado com sucesso!', true);
-        setTimeout(() => modalConta.classList.remove('open'), 600);
-      } catch {
-        setMsg(msgConta, 'Erro de conexão no login.');
-      }
-    });
-
-    document.getElementById('formCadastro').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      msgConta.className = 'msg';
-      try {
-        const res = await fetch(API + '/api/site/cliente/cadastro', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            nome: document.getElementById('cadNome').value.trim(),
-            telefone: document.getElementById('cadTelefone').value.trim(),
-            email: document.getElementById('cadEmail').value.trim(),
-            senha: document.getElementById('cadSenha').value
-          })
-        });
-        const data = await res.json();
-        if (!res.ok || data.sucesso === false) return setMsg(msgConta, data.erro || 'Não foi possível cadastrar.');
-        clienteLogado = data.cliente;
-        localStorage.setItem('site_cliente_v1', JSON.stringify(clienteLogado));
-        atualizarHeaderConta();
-        setMsg(msgConta, 'Conta criada com sucesso!', true);
-        setTimeout(() => modalConta.classList.remove('open'), 600);
-      } catch {
-        setMsg(msgConta, 'Erro de conexão no cadastro.');
-      }
-    });
-
-    document.getElementById('buscaProduto').addEventListener('input', renderProdutos);
-    document.getElementById('filtroCategoria').addEventListener('change', renderProdutos);
-    document.getElementById('btnRecarregarProdutos').addEventListener('click', carregarConfigEProdutos);
-
-    atualizarHeaderConta();
-    renderCarrinho();
-    carregarConfigEProdutos();
   </script>
 </body>
 </html>
